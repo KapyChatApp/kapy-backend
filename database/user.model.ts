@@ -1,13 +1,13 @@
 import { Schema, models, model, Document } from "mongoose";
-import {IAudit,AuditSchema} from "./audit.model"
-export interface IUser extends Document, IAudit {
-  clerk_id: string;
+// import {IAudit,AuditSchema} from "./audit.model"
+export interface IUser extends Document{
   firstName: string;
   lastName: string;
   nickName: string;
   phoneNumber: string;
   email: string;
   password: string;
+  role:string[];
   avatar: string;
   background: string;
   gender: boolean;
@@ -27,7 +27,6 @@ export interface IUser extends Document, IAudit {
 
 
 const UserSchema = new Schema<IUser>({
-    clerk_id: { type: String, required: true },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     nickName: { type: String, required: false },
@@ -36,6 +35,7 @@ const UserSchema = new Schema<IUser>({
     password: { type: String, required: true },
     avatar: { type: String, required: false },
     background: { type: String, required: false },
+    role:{type:[String], required:false},
     gender: { type: Boolean, required: true },
     address: { type: String, required: false },
     job: { type: String, required: false },
@@ -46,12 +46,12 @@ const UserSchema = new Schema<IUser>({
     birthDay: { type: Date, required: true },
     attendDate: { type: Date, required: true },
     flag: { type: Boolean, required: true, default: true },
-    friendIds: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-    bestFriendIds: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-    blockedIds: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    friendIds: [{ type: [Schema.Types.ObjectId], ref: 'User' }],
+    bestFriendIds: [{ type: [Schema.Types.ObjectId], ref: 'User' }],
+    blockedIds: [{ type: [Schema.Types.ObjectId], ref: 'User' }],
   });
   
-UserSchema.add(AuditSchema);
+// UserSchema.add(AuditSchema);
 
 const User = models.User || model('User',UserSchema);
 

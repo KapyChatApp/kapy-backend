@@ -12,9 +12,9 @@ export interface IPost extends Document, IAudit {
 
 const PostSchema = new Schema<IPost>({
   userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  likedIds: [{ type: Schema.Types.ObjectId, ref: "User" }], 
-  shares: [{ type: Schema.Types.ObjectId, ref: "User" }], 
-  comments: [{ type: Schema.Types.ObjectId, ref: "Comment" }],
+  likedIds: [{ type: [Schema.Types.ObjectId], ref: "User" }], 
+  shares: [{ type: [Schema.Types.ObjectId], ref: "User" }], 
+  comments: [{ type: [Schema.Types.ObjectId], ref: "Comment" }],
   contentId: [{ type: Schema.Types.ObjectId, ref: "Content" }], 
   flag: { type: Boolean, required: true, default: true },
 });
