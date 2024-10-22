@@ -18,7 +18,6 @@ export interface UserLoginDTO {
 }
 
 export interface UserResponseDTO {
-  clerk_id: string;
   firstName: string;
   lastName: string;
   nickName: string;
@@ -42,4 +41,18 @@ export interface UserResponseDTO {
   blockedIds: Schema.Types.ObjectId[];
   createAt: Date;
   createBy: Schema.Types.ObjectId;
+}
+
+export interface UpdateUserDTO{
+  firstName: string;
+  lastName: string;
+  nickName: string;
+  gender: boolean;
+  address: string;
+  job: string;
+  hobbies: string;
+  bio: string;
+  point: number;
+  relationShip: string;
+  birthDay: Date;
 }

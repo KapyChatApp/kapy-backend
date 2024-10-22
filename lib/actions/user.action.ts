@@ -1,17 +1,36 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use server";
 
-import { CreateUserDTO, UserResponseDTO } from "@/dtos/UserDTO";
+import { CreateUserDTO, UpdateUserDTO, UserResponseDTO } from "@/dtos/UserDTO";
 import { connectToDatabase } from "../mongoose";
 import User from "@/database/user.model";
 import bcrypt from "bcrypt";
 import { Schema } from "mongoose";
 const saltRounds = 10;
-export async function createUser(params: CreateUserDTO, createBy: Schema.Types.ObjectId|undefined) {
+
+export async function getAllUsers(){
+  try{
+    connectToDatabase();
+    const result:UserResponseDTO[] = await User.find();
+  
+    return result;
+  }catch(error){
+    console.log(error);
+    throw error;
+  }
+}
+export async function createUser(
+  params: CreateUserDTO,
+  createBy: Schema.Types.ObjectId | undefined
+) {
   try {
     connectToDatabase();
 
     const existedUser = await User.findOne({
-      $or: [{ email: params.email }, { phoneNumber: params.phoneNumber }],
+      $or: [
+        { email: params.email, flag: true },
+        { phoneNumber: params.phoneNumber, flag: true },
+      ],
     });
 
     if (params.password !== params.rePassword) {
@@ -31,7 +50,7 @@ export async function createUser(params: CreateUserDTO, createBy: Schema.Types.O
       password: hashPassword,
       attendDate: new Date(),
       roles: ["user"],
-      createBy:createBy? createBy:"unknown"
+      createBy: createBy ? createBy : "unknown",
     });
 
     const newUser: UserResponseDTO = await User.create(createUserData);
@@ -42,7 +61,10 @@ export async function createUser(params: CreateUserDTO, createBy: Schema.Types.O
   }
 }
 
-export async function createAdmin(params: CreateUserDTO, createBy: Schema.Types.ObjectId|undefined) {
+export async function createAdmin(
+  params: CreateUserDTO,
+  createBy: Schema.Types.ObjectId | undefined
+) {
   try {
     connectToDatabase();
 
@@ -67,7 +89,7 @@ export async function createAdmin(params: CreateUserDTO, createBy: Schema.Types.
       password: hashPassword,
       attendDate: new Date(),
       roles: ["admin", "user"],
-      createBy:createBy? createBy:"unknown"
+      createBy: createBy ? createBy : "unknown",
     });
 
     const newUser: UserResponseDTO = await User.create(createUserData);
@@ -77,3 +99,64 @@ export async function createAdmin(params: CreateUserDTO, createBy: Schema.Types.
     console.log(error);
   }
 }
+
+export async function findUser(phoneNumber:string){
+  try{
+    connectToDatabase();
+    
+    const result:UserResponseDTO[] = await User.find({phoneNumber:phoneNumber});
+
+    if(!result){
+      throw new Error('User is not exist')
+    }
+
+    return result;
+
+  }catch(error){
+    console.log(error);
+    throw error;
+  }
+} 
+
+export async function updateUser(
+  userId: string,
+  params: UpdateUserDTO
+) {
+  try {
+    connectToDatabase();
+
+    const existingUser = await User.findById(userId);
+
+    if (!existingUser) {
+      throw new Error("User not found!");
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(userId, params, {
+      new: true,
+    });
+
+    return updatedUser;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function disableUser(userId: string) {
+  try {
+    connectToDatabase();
+    const existedUser = await User.findById(userId);
+
+    if (!existedUser) {
+      throw new Error(`User ${userId} is not exist`);
+    }
+
+    const disableUser = await User.findByIdAndUpdate(userId, { flag: false });
+
+    return disableUser;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
