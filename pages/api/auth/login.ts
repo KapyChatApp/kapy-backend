@@ -5,7 +5,7 @@ import { UserLoginDTO } from "@/dtos/UserDTO";
 import User from "@/database/user.model";
 import { connectToDatabase } from "@/lib/mongoose";
 
-const SECRET_KEY = process.env.JWT_SECRET!; 
+const SECRET_KEY = process.env.JWT_SECRET!;
 export default async function hanlder(
   req: NextApiRequest,
   res: NextApiResponse
@@ -34,7 +34,11 @@ export default async function hanlder(
   }
 
   const token = jwt.sign(
-    { id: existedUser.id, username: existedUser.phoneNumber },
+    {
+      id: existedUser.id,
+      username: existedUser.phoneNumber,
+      roles: existedUser.roles,
+    },
     SECRET_KEY,
     { expiresIn: "2h" }
   );

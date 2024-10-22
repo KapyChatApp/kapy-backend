@@ -40,4 +40,6 @@ export interface UserResponseDTO {
   friendIds: Schema.Types.ObjectId[];
   bestFriendIds: Schema.Types.ObjectId[];
   blockedIds: Schema.Types.ObjectId[];
+  createAt: Date;
+  createBy: Schema.Types.ObjectId;
 }

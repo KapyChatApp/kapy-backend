@@ -1,13 +1,13 @@
 import { Schema, models, model, Document } from "mongoose";
-// import {IAudit,AuditSchema} from "./audit.model"
-export interface IUser extends Document{
+import {IAudit,AuditSchema} from "./audit.model"
+export interface IUser extends Document, IAudit{
   firstName: string;
   lastName: string;
   nickName: string;
   phoneNumber: string;
   email: string;
   password: string;
-  role:string[];
+  roles:string[];
   avatar: string;
   background: string;
   gender: boolean;
@@ -33,9 +33,9 @@ const UserSchema = new Schema<IUser>({
     phoneNumber: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    roles:{type:[String], required:true},
     avatar: { type: String, required: false },
     background: { type: String, required: false },
-    role:{type:[String], required:false},
     gender: { type: Boolean, required: true },
     address: { type: String, required: false },
     job: { type: String, required: false },
@@ -51,7 +51,7 @@ const UserSchema = new Schema<IUser>({
     blockedIds: [{ type: [Schema.Types.ObjectId], ref: 'User' }],
   });
   
-// UserSchema.add(AuditSchema);
+UserSchema.add(AuditSchema);
 
 const User = models.User || model('User',UserSchema);
 
