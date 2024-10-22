@@ -100,7 +100,7 @@ export async function createAdmin(
   }
 }
 
-export async function findUser(phoneNumber:string){
+export async function findUser(phoneNumber:string|undefined){
   try{
     connectToDatabase();
     
