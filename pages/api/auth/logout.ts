@@ -6,7 +6,7 @@ export default function handler(res: NextApiResponse) {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
-    maxAge: -1, // 
+    maxAge: -1, //
     path: "/",
   });
 
