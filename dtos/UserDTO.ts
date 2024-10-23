@@ -16,6 +16,10 @@ export interface UserLoginDTO {
   phoneNumber: string;
   password: string;
 }
+export interface AuthenticationDTO{
+  message:string;
+  token:string;
+}
 
 export interface UserResponseDTO {
   firstName: string;
