@@ -1,4 +1,4 @@
-import { CreateUserDTO } from "@/dtos/UserDTO";
+import { UserRegisterDTO } from "@/dtos/UserDTO";
 import { createAdmin } from "@/lib/actions/user.action";
 import { authenticateToken, authorizeRole } from "@/middleware/auth-middleware";
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -11,7 +11,7 @@ export default async function handler(
     authorizeRole(["admin"])(req, res, async () => {
       if (req.method === "POST") {
         try {
-          const params: CreateUserDTO = req.body;
+          const params: UserRegisterDTO = req.body;
 
           const newUser = await createAdmin(params, req.user?.id);
 

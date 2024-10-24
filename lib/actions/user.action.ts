@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use server";
 
-import { CreateUserDTO, UpdateUserDTO, UserResponseDTO } from "@/dtos/UserDTO";
+import {UpdateUserDTO, UserRegisterDTO, UserResponseDTO } from "@/dtos/UserDTO";
 import { connectToDatabase } from "../mongoose";
 import User from "@/database/user.model";
 import bcrypt from "bcrypt";
@@ -20,7 +20,7 @@ export async function getAllUsers(){
   }
 }
 export async function createUser(
-  params: CreateUserDTO,
+  params: UserRegisterDTO,
   createBy: Schema.Types.ObjectId | undefined
 ) {
   try {
@@ -62,7 +62,7 @@ export async function createUser(
 }
 
 export async function createAdmin(
-  params: CreateUserDTO,
+  params: UserRegisterDTO,
   createBy: Schema.Types.ObjectId | undefined
 ) {
   try {

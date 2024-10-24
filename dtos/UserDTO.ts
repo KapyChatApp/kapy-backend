@@ -1,12 +1,12 @@
 import { Schema } from "mongoose";
-export interface CreateUserDTO {
+export interface UserRegisterDTO {
   firstName: string;
   lastName: string;
   nickName: string;
   phoneNumber: string;
   email: string;
   password: string;
-  rePassword: string;
+  rePassword:string;
   gender: boolean;
   address: string;
   birthDay: Date;
