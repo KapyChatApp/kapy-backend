@@ -104,6 +104,20 @@ export async function createAdmin(
   }
 }
 
+export async function findPairUser(id1: string, id2: string) {
+  try {
+    const stUser = await User.findById(id1);
+    const ndUser = await User.findById(id2);
+    if(!stUser || !ndUser){
+      throw new Error('Your require user is not exist!')
+    }
+    return {stUser,ndUser};
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
 export async function findUser(phoneNumber: string | undefined) {
   try {
     connectToDatabase();
@@ -162,7 +176,7 @@ export async function disableUser(userId: string) {
   }
 }
 
-export async function getMyProfile(id: Schema.Types.ObjectId |undefined) {
+export async function getMyProfile(id: Schema.Types.ObjectId | undefined) {
   try {
     connectToDatabase();
     const myProfile: UserResponseDTO | null = await User.findById(id);
