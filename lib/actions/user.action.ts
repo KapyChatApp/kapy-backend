@@ -1,20 +1,24 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use server";
 
-import {UpdateUserDTO, UserRegisterDTO, UserResponseDTO } from "@/dtos/UserDTO";
+import {
+  UpdateUserDTO,
+  UserRegisterDTO,
+  UserResponseDTO,
+} from "@/dtos/UserDTO";
 import { connectToDatabase } from "../mongoose";
 import User from "@/database/user.model";
 import bcrypt from "bcrypt";
 import { Schema } from "mongoose";
 const saltRounds = 10;
 
-export async function getAllUsers(){
-  try{
+export async function getAllUsers() {
+  try {
     connectToDatabase();
-    const result:UserResponseDTO[] = await User.find();
-  
+    const result: UserResponseDTO[] = await User.find();
+
     return result;
-  }catch(error){
+  } catch (error) {
     console.log(error);
     throw error;
   }
@@ -100,28 +104,26 @@ export async function createAdmin(
   }
 }
 
-export async function findUser(phoneNumber:string|undefined){
-  try{
+export async function findUser(phoneNumber: string | undefined) {
+  try {
     connectToDatabase();
-    
-    const result:UserResponseDTO[] = await User.find({phoneNumber:phoneNumber});
 
-    if(!result){
-      throw new Error('User is not exist')
+    const result: UserResponseDTO[] = await User.find({
+      phoneNumber: phoneNumber,
+    });
+
+    if (!result) {
+      throw new Error("User is not exist");
     }
 
     return result;
-
-  }catch(error){
+  } catch (error) {
     console.log(error);
     throw error;
   }
-} 
+}
 
-export async function updateUser(
-  userId: string,
-  params: UpdateUserDTO
-) {
+export async function updateUser(userId: string, params: UpdateUserDTO) {
   try {
     connectToDatabase();
 
@@ -160,3 +162,17 @@ export async function disableUser(userId: string) {
   }
 }
 
+export async function getMyProfile(id: Schema.Types.ObjectId |undefined) {
+  try {
+    connectToDatabase();
+    const myProfile: UserResponseDTO | null = await User.findById(id);
+    if (!myProfile) {
+      console.log(`Cannot get ${id} profile now`);
+      throw new Error(`Cannot get ${id} profile now`);
+    }
+    return myProfile;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
