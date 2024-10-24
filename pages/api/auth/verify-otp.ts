@@ -1,4 +1,5 @@
 import OTP from "@/database/opt.mode";
+import { SingleMessageResponseDTO } from "@/dtos/ShareDTO";
 import { connectToDatabase } from "@/lib/mongoose";
 import { authenticateToken } from "@/middleware/auth-middleware";
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -20,9 +21,9 @@ export default async function handler(
       connectToDatabase();
       console.log("User: ",req.user?.id);
       const storedOtp = await OTP.findOne({ receiver: phoneNumber });
-
       if (storedOtp.code === otp) {
-        res.status(200).json({ message: "OTP verified successfully" });
+        const result:SingleMessageResponseDTO = {message:"Verify OTP successfully"}
+        res.status(200).json(result);
       } else {
         res.status(400).json({ error: "Invalid OTP" });
       }
