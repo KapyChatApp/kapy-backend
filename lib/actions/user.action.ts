@@ -9,7 +9,7 @@ import {
 import { connectToDatabase } from "../mongoose";
 import User from "@/database/user.model";
 import bcrypt from "bcrypt";
-import { Schema } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 const saltRounds = 10;
 
 export async function getAllUsers() {
@@ -54,7 +54,7 @@ export async function createUser(
       password: hashPassword,
       attendDate: new Date(),
       roles: ["user"],
-      createBy: createBy ? createBy : "unknown",
+      createBy: createBy ? createBy : new mongoose.Types.ObjectId(),
     });
 
     const newUser: UserResponseDTO = await User.create(createUserData);
@@ -106,6 +106,7 @@ export async function createAdmin(
 
 export async function findPairUser(id1: string, id2: string) {
   try {
+    connectToDatabase();
     const stUser = await User.findById(id1);
     const ndUser = await User.findById(id2);
     if(!stUser || !ndUser){

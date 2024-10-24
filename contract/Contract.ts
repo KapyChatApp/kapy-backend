@@ -81,7 +81,7 @@ export const Contract = c.router({
       }),
 
       headers: z.object({
-        Authorization: z
+        authorization: z
           .string()
           .regex(/^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/),
       }),
@@ -91,14 +91,15 @@ export const Contract = c.router({
     getAllUsers: {
       method: "GET",
       path: "/api/user/all",
+      headers: z.object({
+        authorization: z
+          .string()
+          .regex(/^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/),
+          pagination: z.string().optional()
+      }),
       responses: {
         200: c.type<{ users: UserResponseDTO[]; total: number }>(),
       },
-      headers: z.object({
-        Authorization: z
-          .string()
-          .regex(/^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/),
-      }),
       summary: "Get all users",
       metadata: { role: "admin" } as const,
     },
@@ -120,8 +121,7 @@ export const Contract = c.router({
         address: z.string(),
         birthDay: z.date(),
       }),
-      headers: z.object({
-      }),
+      headers: z.object({}),
       summary: "Register",
       metadata: { role: "guest" } as const,
     },
@@ -186,6 +186,152 @@ export const Contract = c.router({
       }),
       summary: "Disable a user",
       metadata: { role: "admin" } as const,
+    },
+  }),
+  friend: c.router({
+    addFriend: {
+      method: "POST",
+      path: "/api/request/friend",
+      responses: {
+        201: c.type<SingleMessageResponseDTO>(),
+      },
+      body: z.object({
+        sender: z.string(),
+        receiver: z.string(),
+      }),
+      headers: z.object({
+        authorization: z
+          .string()
+          .regex(/^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/),
+      }),
+      summary: "Add friend",
+      metadata: { role: "user" } as const,
+    },
+    addBFF: {
+      method: "POST",
+      path: "/api/request/bff",
+      responses: {
+        201: c.type<SingleMessageResponseDTO>(),
+      },
+      body: z.object({
+        sender: z.string(),
+        receiver: z.string(),
+      }),
+      headers: z.object({
+        Authorization: z
+          .string()
+          .regex(/^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/),
+      }),
+      summary: "Add bestfriend",
+      metadata: { role: "user" } as const,
+    },
+    block: {
+      method: "POST",
+      path: "/api/request/block",
+      responses: {
+        201: c.type<SingleMessageResponseDTO>(),
+      },
+      body: z.object({
+        sender: z.string(),
+        receiver: z.string(),
+      }),
+      headers: z.object({
+        Authorization: z
+          .string()
+          .regex(/^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/),
+      }),
+      summary: "Block a user",
+      metadata: { role: "user" } as const,
+    },
+    acceptFriend: {
+      method: "POST",
+      path: "/api/request/accept-friend",
+      responses: {
+        201: c.type<SingleMessageResponseDTO>(),
+      },
+      body: z.object({
+        sender: z.string(),
+        receiver: z.string(),
+      }),
+      headers: z.object({
+        Authorization: z
+          .string()
+          .regex(/^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/),
+      }),
+      summary: "Accept a friend request",
+      metadata: { role: "user" } as const,
+    },
+    acceptBFF: {
+      method: "POST",
+      path: "/api/request/accept-bff",
+      responses: {
+        201: c.type<SingleMessageResponseDTO>(),
+      },
+      body: z.object({
+        sender: z.string(),
+        receiver: z.string(),
+      }),
+      headers: z.object({
+        Authorization: z
+          .string()
+          .regex(/^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/),
+      }),
+      summary: "Accept a bestfriend request",
+      metadata: { role: "user" } as const,
+    },
+    unFriend: {
+      method: "POST",
+      path: "/api/request/unfriend",
+      responses: {
+        201: c.type<SingleMessageResponseDTO>(),
+      },
+      body: z.object({
+        sender: z.string(),
+        receiver: z.string(),
+      }),
+      headers: z.object({
+        Authorization: z
+          .string()
+          .regex(/^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/),
+      }),
+      summary: "Unfriend",
+      metadata: { role: "user" } as const,
+    },
+    unBFF: {
+      method: "POST",
+      path: "/api/request/unbff",
+      responses: {
+        201: c.type<SingleMessageResponseDTO>(),
+      },
+      body: z.object({
+        sender: z.string(),
+        receiver: z.string(),
+      }),
+      headers: z.object({
+        Authorization: z
+          .string()
+          .regex(/^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/),
+      }),
+      summary: "Unbestfriend",
+      metadata: { role: "user" } as const,
+    },
+    unBlock: {
+      method: "POST",
+      path: "/api/request/unblock",
+      responses: {
+        201: c.type<SingleMessageResponseDTO>(),
+      },
+      body: z.object({
+        sender: z.string(),
+        receiver: z.string(),
+      }),
+      headers: z.object({
+        Authorization: z
+          .string()
+          .regex(/^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/),
+      }),
+      summary: "Unblock",
+      metadata: { role: "user" } as const,
     },
   }),
 });

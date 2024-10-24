@@ -33,7 +33,7 @@ export default async function hanlder(
     throw new Error("Invalid phone number or password!");
   }
 
-  const token = jwt.sign(
+  const token ='Bearer ' + jwt.sign(
     {
       id: existedUser.id,
       username: existedUser.phoneNumber,
