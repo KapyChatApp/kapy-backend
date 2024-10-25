@@ -2,7 +2,7 @@ import { getMyProfile } from "@/lib/actions/user.action";
 import { authenticateToken } from "@/middleware/auth-middleware";
 import { NextApiRequest, NextApiResponse } from "next";
 
-export async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   authenticateToken(req, res, async () => {
     if (req.method === "GET") {
       try {
