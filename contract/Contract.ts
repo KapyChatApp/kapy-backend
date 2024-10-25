@@ -1,6 +1,9 @@
+import { FriendResponseDTO } from "@/dtos/FriendDTO";
 import { OTPResponseDTO } from "@/dtos/OTPDTO";
 import { SingleMessageResponseDTO } from "@/dtos/ShareDTO";
 import { AuthenticationDTO, UserResponseDTO } from "@/dtos/UserDTO";
+import blocks from "@/pages/api/mine/blocks";
+import requested from "@/pages/api/mine/requested";
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
@@ -361,7 +364,7 @@ export const Contract = c.router(
         method: "GET",
         path: "/api/friend/profile",
         responses: {
-          201: c.type<SingleMessageResponseDTO>(),
+          201: c.type<UserResponseDTO>(),
         },
         headers: z.object({
           auth: z
@@ -377,6 +380,87 @@ export const Contract = c.router(
         metadata: { role: "user" } as const,
       },
     }),
+    mine:c.router({
+      profile:{
+        method: "GET",
+        path: "/api/mine/profile",
+        responses: {
+          201: c.type<UserResponseDTO>(),
+        },
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            ),
+        }),
+        summary: "My Profile",
+        metadata: { role: "user" } as const
+      },
+      friends:{ method: "GET",
+        path: "/api/mine/friends",
+        responses: {
+          201: c.type<FriendResponseDTO[]>(),
+        },
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            ),
+        }),
+        summary: "My Friends",
+        metadata: { role: "user" } as const
+      },
+      bffs:{
+        method: "GET",
+        path: "/api/mine/bffs",
+        responses: {
+          201: c.type<FriendResponseDTO[]>(),
+        },
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            ),
+        }),
+        summary: "My estfriends",
+        metadata: { role: "user" } as const
+      },
+      blocks:{
+        method: "GET",
+        path: "/api/mine/blocks",
+        responses: {
+          201: c.type<FriendResponseDTO[]>(),
+        },
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            ),
+        }),
+        summary: "My Blocks",
+        metadata: { role: "user" } as const,
+      },
+      requested:{
+        method: "GET",
+        path: "/api/mine/requested",
+        responses: {
+          201: c.type<FriendResponseDTO[]>(),
+        },
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            ),
+        }),
+        summary: "My Requested",
+        metadata: { role: "user" } as const
+      }
+      },),
   },
   {
     baseHeaders: z.object({
