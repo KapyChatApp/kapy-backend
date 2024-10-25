@@ -81,7 +81,7 @@ export const Contract = c.router(
           birthDay: z.date(),
         }),
         headers: z.object({
-          authorization: z
+          auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
@@ -94,7 +94,11 @@ export const Contract = c.router(
         method: "GET",
         path: "/api/user/all",
         headers: z.object({
-          auth: z.string()
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            ),
         }),
         responses: {
           200: c.type<{ users: UserResponseDTO[]; total: number }>(),
@@ -142,7 +146,7 @@ export const Contract = c.router(
           birthDay: z.date(),
         }),
         headers: z.object({
-          Authorization: z
+          auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
@@ -159,7 +163,7 @@ export const Contract = c.router(
         },
         body: z.object({}),
         headers: z.object({
-          Authorization: z
+          auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
@@ -179,7 +183,7 @@ export const Contract = c.router(
         },
         body: z.object({}),
         headers: z.object({
-          Authorization: z
+          auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
@@ -204,7 +208,7 @@ export const Contract = c.router(
           receiver: z.string(),
         }),
         headers: z.object({
-          authorization: z
+          auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
@@ -224,7 +228,7 @@ export const Contract = c.router(
           receiver: z.string(),
         }),
         headers: z.object({
-          Authorization: z
+          auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
@@ -244,7 +248,7 @@ export const Contract = c.router(
           receiver: z.string(),
         }),
         headers: z.object({
-          Authorization: z
+          auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
@@ -264,7 +268,7 @@ export const Contract = c.router(
           receiver: z.string(),
         }),
         headers: z.object({
-          Authorization: z
+          auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
@@ -284,7 +288,7 @@ export const Contract = c.router(
           receiver: z.string(),
         }),
         headers: z.object({
-          Authorization: z
+          auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
@@ -304,7 +308,7 @@ export const Contract = c.router(
           receiver: z.string(),
         }),
         headers: z.object({
-          Authorization: z
+          auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
@@ -324,7 +328,7 @@ export const Contract = c.router(
           receiver: z.string(),
         }),
         headers: z.object({
-          Authorization: z
+          auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
@@ -344,7 +348,7 @@ export const Contract = c.router(
           receiver: z.string(),
         }),
         headers: z.object({
-          Authorization: z
+          auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
@@ -357,7 +361,7 @@ export const Contract = c.router(
   },
   {
     baseHeaders: z.object({
-      isOpenApi:z.boolean().default(true),
+      isOpenApi: z.boolean().default(true),
     }),
   }
 );
