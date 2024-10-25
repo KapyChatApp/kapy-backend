@@ -9,7 +9,9 @@ export interface IUser extends Document, IAudit {
   password: string;
   roles: string[];
   avatar: string;
+  avatarPublicId:string;
   background: string;
+  backgroundPublicId:string;
   gender: boolean;
   address: string;
   job: string;
@@ -34,7 +36,9 @@ const UserSchema = new Schema<IUser>({
   password: { type: String, required: true },
   roles: { type: [String], required: true },
   avatar: { type: String, required: false },
+  avatarPublicId:{type:String, require:false},
   background: { type: String, required: false },
+  backgroundPublicId:{type:String, required:false},
   gender: { type: Boolean, required: true },
   address: { type: String, required: false },
   job: { type: String, required: false },

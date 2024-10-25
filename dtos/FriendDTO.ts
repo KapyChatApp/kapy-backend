@@ -9,3 +9,11 @@ export interface FriendProfileRequestDTO{
     userId:Schema.Types.ObjectId | undefined,
     friendId:string| undefined
 }
+
+export interface FriendResponseDTO{
+    _id:Schema.Types.ObjectId,
+    avatar:string,
+    firstName:string,
+    lastName:string,
+    nickName:string
+}
