@@ -11,7 +11,7 @@ export default async function hanlder(
     if (req.method === "POST") {
       try {
         const param: FriendRequestDTO = req.body;
-        if (param.sender !== (req.user?.id ?? "")) {
+        if (param.receiver !== (req.user?.id ?? "")) {
           throw new Error("You are unauthorized!");
         }
         const acceptedRelation = await acceptBFFRequest(param);

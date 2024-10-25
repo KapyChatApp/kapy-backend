@@ -357,6 +357,25 @@ export const Contract = c.router(
         summary: "Unblock",
         metadata: { role: "user" } as const,
       },
+      requestFriendProfile: {
+        method: "GET",
+        path: "/api/friend/profile",
+        responses: {
+          201: c.type<SingleMessageResponseDTO>(),
+        },
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            ),
+        }),
+        query: z.object({
+          friendId: z.string(),
+        }),
+        summary: "Friend Profile",
+        metadata: { role: "user" } as const,
+      },
     }),
   },
   {

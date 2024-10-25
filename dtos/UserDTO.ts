@@ -8,7 +8,6 @@ export interface UserRegisterDTO {
   password: string;
   rePassword:string;
   gender: boolean;
-  address: string;
   birthDay: Date;
 }
 
