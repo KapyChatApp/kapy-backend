@@ -1,7 +1,6 @@
 import Relation from "@/database/relation.model";
 import { FriendRequestDTO } from "@/dtos/FriendDTO";
 import { findPairUser } from "./user.action";
-import User from "@/database/user.model";
 
 export async function addFriend(param: FriendRequestDTO) {
   try {
@@ -13,16 +12,17 @@ export async function addFriend(param: FriendRequestDTO) {
     });
     await findPairUser(param.sender, param.receiver);
     if (existedFriendRelation) {
-      return { message: "We have been friends!" };
+      return { message: "Relation is sent!" };
     }
-    const createdFriendRelation = await Relation.create({
+    await Relation.create({
       stUser: stUser,
       ndUser: ndUser,
       relation: "friend",
       sender: param.sender,
       receiver: param.receiver,
+      createBy: param.sender,
     });
-    return createdFriendRelation;
+    return { message: `Request friend to ${param.receiver} successfully!` };
   } catch (error) {
     console.log(error);
     throw error;
@@ -39,7 +39,7 @@ export async function addBFF(param: FriendRequestDTO) {
       relation: "bff",
     });
     if (existedBFFRelation) {
-      return { message: "We have been bestfriend!" };
+      return { message: "Relation is sent!" };
     }
     const existedFriendRelation = await Relation.findOne({
       stUser: stUser,
@@ -49,14 +49,15 @@ export async function addBFF(param: FriendRequestDTO) {
     if (!existedFriendRelation) {
       return { message: "You must be their friend first!" };
     }
-    const createdBFFRelation = await Relation.create({
+    await Relation.create({
       stUser: stUser,
       ndUser: ndUser,
       relation: "bff",
-      sender:param.sender,
-      receiver:param.receiver
+      sender: param.sender,
+      receiver: param.receiver,
+      createBy: param.sender,
     });
-    return createdBFFRelation;
+    return { message: `Request bestfriend to ${param.receiver} successfully!` };
   } catch (error) {
     console.log(error);
     throw error;
@@ -82,6 +83,7 @@ export async function block(param: FriendRequestDTO) {
       sender: param.sender,
       receiver: param.receiver,
       status: true,
+      createBy: param.sender,
     });
     return { message: `Block ${param.receiver} successfully!` };
   } catch (error) {
@@ -90,9 +92,9 @@ export async function block(param: FriendRequestDTO) {
   }
 }
 
-export async function acceptFriendRequest(param:FriendRequestDTO) {
+export async function acceptFriendRequest(param: FriendRequestDTO) {
   try {
-    const {stUser, ndUser}=await findPairUser(param.sender, param.receiver);
+    const { stUser, ndUser } = await findPairUser(param.sender, param.receiver);
     const existedFriendRequest = await Relation.findOne({
       receiver: param.receiver,
       sender: param.sender,
@@ -104,8 +106,8 @@ export async function acceptFriendRequest(param:FriendRequestDTO) {
     }
     existedFriendRequest.set("status", true);
 
-    stUser.friendIds.addToSet(ndUser._id); 
-    ndUser.friendIds.addToSet(stUser._id);
+    await stUser.friendIds.addToSet(ndUser._id);
+    await ndUser.friendIds.addToSet(stUser._id);
 
     await existedFriendRequest.save();
     await stUser.save();
@@ -118,9 +120,9 @@ export async function acceptFriendRequest(param:FriendRequestDTO) {
   }
 }
 
-export async function acceptBFFRequest(param:FriendRequestDTO) {
+export async function acceptBFFRequest(param: FriendRequestDTO) {
   try {
-    const {stUser, ndUser} = await findPairUser(param.sender, param.receiver);
+    const { stUser, ndUser } = await findPairUser(param.sender, param.receiver);
     const existedBFFRequest = await Relation.findOne({
       receiver: param.receiver,
       sender: param.sender,
@@ -145,7 +147,7 @@ export async function acceptBFFRequest(param:FriendRequestDTO) {
   }
 }
 
-export async function unFriend(param:FriendRequestDTO) {
+export async function unFriend(param: FriendRequestDTO) {
   try {
     const { stUser, ndUser } = await findPairUser(param.sender, param.receiver);
     const [stUserId, ndUserId] = [param.sender, param.receiver].sort();
@@ -183,7 +185,7 @@ export async function unFriend(param:FriendRequestDTO) {
   }
 }
 
-export async function unBFF(param:FriendRequestDTO) {
+export async function unBFF(param: FriendRequestDTO) {
   try {
     const { stUser, ndUser } = await findPairUser(param.sender, param.receiver);
     const [stUserId, ndUserId] = [param.sender, param.receiver].sort();
@@ -210,12 +212,17 @@ export async function unBFF(param:FriendRequestDTO) {
   }
 }
 
-export async function unBlock(param:FriendRequestDTO){
-    try{
-        await findPairUser(param.sender, param.receiver);
-        await Relation.findOneAndDelete({sender:param.sender, receiver:param.receiver, relation:"block", flag:true});
-    }catch(error){
-        console.log(error);
-        throw error;
-    }
+export async function unBlock(param: FriendRequestDTO) {
+  try {
+    await findPairUser(param.sender, param.receiver);
+    await Relation.findOneAndDelete({
+      sender: param.sender,
+      receiver: param.receiver,
+      relation: "block",
+      flag: true,
+    });
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
 }

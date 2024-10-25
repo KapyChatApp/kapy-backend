@@ -1,4 +1,4 @@
-import { UserRegisterDTO } from "@/dtos/UserDTO";
+import { UserRegisterDTO, UserResponseDTO } from "@/dtos/UserDTO";
 import { createUser } from "@/lib/actions/user.action";
 import type { NextApiRequest, NextApiResponse } from "next";
 
@@ -10,9 +10,9 @@ export default async function handler(
     try {
       const params: UserRegisterDTO = req.body;
 
-      const newUser = await createUser(params, req.user?.id);
+      const newUser:UserResponseDTO | undefined = await createUser(params, req.user?.id);
 
-      return res.status(201).json(newUser);
+      return res.status(200).json(newUser);
     } catch (error) {
       console.error(error);
 

@@ -16,7 +16,10 @@ export function authenticateToken(
   res: NextApiResponse,
   next: () => void
 ) {
-  const authHeader = req.headers["authorization"];
+  const isOpenApi = req.headers["isopenapi"];
+  const authHeader = isOpenApi
+    ? req.headers["auth"]
+    : req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
 
   if (!token)
@@ -33,14 +36,13 @@ export function authenticateToken(
 
 export function authorizeRole(roles: string[]) {
   return (req: NextApiRequest, res: NextApiResponse, next: () => void) => {
- 
     if (!req.user || !Array.isArray(req.user.roles)) {
       return res
         .status(403)
         .json({ message: "Forbidden: You do not have the required role" });
     }
 
-    const hasRole = req.user.roles.some(role => roles.includes(role));
+    const hasRole = req.user.roles.some((role) => roles.includes(role));
 
     if (!hasRole) {
       return res
