@@ -1,4 +1,4 @@
-import cloudinary from "@/clouduonary";
+import cloudinary from "@/cloudinary";
 import User from "@/database/user.model";
 import { Schema } from "mongoose";
 

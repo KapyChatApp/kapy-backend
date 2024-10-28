@@ -1,4 +1,4 @@
-import cloudinary from "@/clouduonary";
+import cloudinary from "@/cloudinary";
 import { uploadBackground } from "@/lib/actions/media.action";
 import { authenticateToken } from "@/middleware/auth-middleware";
 import { NextApiRequest, NextApiResponse } from "next";

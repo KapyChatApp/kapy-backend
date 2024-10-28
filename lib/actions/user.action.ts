@@ -138,7 +138,7 @@ export async function findUser(phoneNumber: string | undefined) {
   }
 }
 
-export async function updateUser(userId: string, params: UpdateUserDTO) {
+export async function updateUser(userId: Schema.Types.ObjectId |undefined, params: UpdateUserDTO) {
   try {
     connectToDatabase();
 
@@ -148,7 +148,7 @@ export async function updateUser(userId: string, params: UpdateUserDTO) {
       throw new Error("User not found!");
     }
 
-    const updatedUser = await User.findByIdAndUpdate(userId, params, {
+    const updatedUser:UserResponseDTO |null = await User.findByIdAndUpdate(userId, params, {
       new: true,
     });
 

@@ -2,8 +2,6 @@ import { FriendResponseDTO } from "@/dtos/FriendDTO";
 import { OTPResponseDTO } from "@/dtos/OTPDTO";
 import { SingleMessageResponseDTO } from "@/dtos/ShareDTO";
 import { AuthenticationDTO, UserResponseDTO } from "@/dtos/UserDTO";
-import blocks from "@/pages/api/mine/blocks";
-import requested from "@/pages/api/mine/requested";
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 

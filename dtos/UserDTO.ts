@@ -55,7 +55,6 @@ export interface UpdateUserDTO{
   job: string;
   hobbies: string;
   bio: string;
-  point: number;
   relationShip: string;
   birthDay: Date;
 }
