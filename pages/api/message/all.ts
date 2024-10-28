@@ -1,30 +1,25 @@
-import { SegmentGroupDTO, SegmentMessageDTO } from "@/dtos/MessageDTO";
+import { SegmentMessageDTO } from "@/dtos/MessageDTO";
 import { fetchMessage } from "@/lib/actions/message.action";
-import { connectToDatabase } from "@/lib/mongoose";
 import { authenticateToken } from "@/middleware/auth-middleware";
 import { NextApiRequest, NextApiResponse } from "next/types";
 
-type SendMessageData = SegmentMessageDTO | SegmentGroupDTO;
-
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<SendMessageData[] | { message: string; error?: string }>
+  res: NextApiResponse<
+    SegmentMessageDTO[] | { message: string; error?: string }
+  >
 ) {
-  await connectToDatabase();
   authenticateToken(req, res, async () => {
     if (req.method === "GET") {
       try {
-        const { chatId, groupId } = req.query;
-        if (!chatId && !groupId) {
+        const { boxId } = req.query;
+        if (!boxId) {
           return res
             .status(400)
             .json({ message: "chatId or groupId is required" });
         }
 
-        const { success, messages } = await fetchMessage(
-          chatId as string | undefined,
-          groupId as string | undefined
-        );
+        const { success, messages } = await fetchMessage(boxId as string);
 
         if (!success) {
           return res.status(404).json({ message: "Messages not found" });

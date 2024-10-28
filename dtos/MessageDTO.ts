@@ -1,3 +1,5 @@
+import { Schema } from "mongoose";
+
 export interface ImageContent {
   type: "image";
   url: string;
@@ -53,6 +55,7 @@ export interface GPSContent {
 }
 
 export interface SegmentMessageDTO {
+  groupId?: string;
   userId: string;
   userName: string;
   ava: string;
@@ -67,15 +70,47 @@ export interface SegmentMessageDTO {
     | PostContent
     | VoiceContent;
   time: Date;
-  recipientId?: string;
+  recipientId: string[];
 }
 
-export interface SegmentGroupDTO {
-  groupId: string;
-  userId: string;
-  userName: string;
-  ava: string;
-  content: string | ImageContent | LinkContent | FileContent;
-  time: Date;
-  recipientId?: string;
+export interface ResponseMessageBoxDTO {
+  messageBoxId: string;
+  messageBox: {
+    senderId: string;
+    receiverIds: string[];
+    messageIds: string[];
+    flag: boolean;
+    createAt: Date;
+    createBy: Schema.Types.ObjectId;
+  };
+}
+
+export interface Content {
+  _id: string;
+  content:
+    | string
+    | ImageContent
+    | LinkContent
+    | FileContent
+    | VideoContent
+    | GPSContent
+    | IconContent
+    | PostContent
+    | VoiceContent;
+  createAt: Date;
+  createBy: Schema.Types.ObjectId;
+}
+
+export interface MessageDTO {
+  _id: string;
+  flag: boolean;
+  readedId: string[];
+  contentModel: string;
+  createAt: Date;
+  createBy: Schema.Types.ObjectId;
+}
+
+export interface ResponseSendingDTO {
+  populatedMessage: MessageDTO;
+  messageBox: ResponseMessageBoxDTO;
 }

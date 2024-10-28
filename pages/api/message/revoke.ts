@@ -28,7 +28,7 @@ export default async function handle(
         const result = await deleteOrRevokeMessage(
           messageId as string,
           userId.toString(),
-          "delete"
+          "revoke"
         );
 
         return res.status(200).json(result);
@@ -38,7 +38,7 @@ export default async function handle(
         return res.status(500).json({ success: false, message: errorMessage });
       }
     } else {
-      res.setHeader("Allow", ["DELETE"]);
+      res.setHeader("Allow", ["POST"]);
       res.status(405).end(`Method ${req.method} Not Allowed`);
     }
   });
