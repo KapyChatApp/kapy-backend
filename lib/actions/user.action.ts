@@ -109,10 +109,10 @@ export async function findPairUser(id1: string, id2: string) {
     connectToDatabase();
     const stUser = await User.findById(id1);
     const ndUser = await User.findById(id2);
-    if(!stUser || !ndUser){
-      throw new Error('Your require user is not exist!')
+    if (!stUser || !ndUser) {
+      throw new Error("Your require user is not exist!");
     }
-    return {stUser,ndUser};
+    return { stUser, ndUser };
   } catch (error) {
     console.log(error);
     throw error;
@@ -138,7 +138,10 @@ export async function findUser(phoneNumber: string | undefined) {
   }
 }
 
-export async function updateUser(userId: Schema.Types.ObjectId |undefined, params: UpdateUserDTO) {
+export async function updateUser(
+  userId: Schema.Types.ObjectId | undefined,
+  params: UpdateUserDTO
+) {
   try {
     connectToDatabase();
 
@@ -148,11 +151,15 @@ export async function updateUser(userId: Schema.Types.ObjectId |undefined, param
       throw new Error("User not found!");
     }
 
-    const updatedUser:UserResponseDTO |null = await User.findByIdAndUpdate(userId, params, {
-      new: true,
-    });
+    const updatedUser: UserResponseDTO | null = await User.findByIdAndUpdate(
+      userId,
+      params,
+      {
+        new: true,
+      }
+    );
 
-    return updatedUser;
+    return { status: true, newProfile: updatedUser };
   } catch (error) {
     console.log(error);
     throw error;
