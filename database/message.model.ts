@@ -14,15 +14,15 @@ const MessageSchema = new Schema<IMessage>({
   contentModel: {
     type: String,
     required: true,
-    enum: ["Text", "Image", "Video", "Voice", "Location"],
+    enum: ["Text", "Image", "Video", "Voice", "Location"]
   },
   contentId: [
     {
       type: Schema.Types.ObjectId,
       required: true,
-      refPath: "contentModel",
-    },
-  ],
+      refPath: "contentModel"
+    }
+  ]
 });
 
 MessageSchema.add(AuditSchema);
