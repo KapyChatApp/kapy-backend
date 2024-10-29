@@ -4,7 +4,7 @@
 import {
   UpdateUserDTO,
   UserRegisterDTO,
-  UserResponseDTO
+  UserResponseDTO,
 } from "@/dtos/UserDTO";
 import { connectToDatabase } from "../mongoose";
 import User from "@/database/user.model";
@@ -33,8 +33,8 @@ export async function createUser(
     const existedUser = await User.findOne({
       $or: [
         { email: params.email, flag: true },
-        { phoneNumber: params.phoneNumber, flag: true }
-      ]
+        { phoneNumber: params.phoneNumber, flag: true },
+      ],
     });
 
     if (params.password !== params.rePassword) {
@@ -54,7 +54,7 @@ export async function createUser(
       password: hashPassword,
       attendDate: new Date(),
       roles: ["user"],
-      createBy: createBy ? createBy : new mongoose.Types.ObjectId()
+      createBy: createBy ? createBy : new mongoose.Types.ObjectId(),
     });
 
     const newUser: UserResponseDTO = await User.create(createUserData);
@@ -73,7 +73,7 @@ export async function createAdmin(
     connectToDatabase();
 
     const existedUser = await User.findOne({
-      $or: [{ email: params.email }, { phoneNumber: params.phoneNumber }]
+      $or: [{ email: params.email }, { phoneNumber: params.phoneNumber }],
     });
 
     if (params.password !== params.rePassword) {
@@ -93,7 +93,7 @@ export async function createAdmin(
       password: hashPassword,
       attendDate: new Date(),
       roles: ["admin", "user"],
-      createBy: createBy ? createBy : "unknown"
+      createBy: createBy ? createBy : "unknown",
     });
 
     const newUser: UserResponseDTO = await User.create(createUserData);
@@ -124,7 +124,7 @@ export async function findUser(phoneNumber: string | undefined) {
     connectToDatabase();
 
     const result: UserResponseDTO[] = await User.find({
-      phoneNumber: phoneNumber
+      phoneNumber: phoneNumber,
     });
 
     if (!result) {
@@ -148,9 +148,13 @@ export async function updateUser(userId: string, params: UpdateUserDTO) {
       throw new Error("User not found!");
     }
 
-    const updatedUser = await User.findByIdAndUpdate(userId, params, {
-      new: true
-    });
+    const updatedUser: UserResponseDTO | null = await User.findByIdAndUpdate(
+      userId,
+      params,
+      {
+        new: true,
+      }
+    );
 
     return updatedUser;
   } catch (error) {

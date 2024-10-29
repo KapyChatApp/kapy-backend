@@ -17,6 +17,7 @@
     "cookie": "^1.0.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
+    "formidable": "^3.5.2",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.10.0",
     "mongoose": "^8.7.2",
