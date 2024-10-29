@@ -6,7 +6,7 @@ import { IncomingForm } from "formidable";
 
 export const config = {
   api: {
-    bodyParser: false, // Tắt body parser để sử dụng formidable
+    bodyParser: false, 
   },
 };
 
@@ -17,7 +17,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
       form.parse(req, async (err, fields, files) => {
         if (err) {
-          console.error("Form parsing error:", err); // Log lỗi phân tích cú pháp
+          console.error("Form parsing error:", err); 
           return res.status(500).json({ error: err.message });
         }
 
@@ -29,9 +29,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
             });
 
             await uploadAvatar(req.user?.id, result.secure_url, result.public_id);
-            return res.status(200).json({ url: result.secure_url });
+            return res.status(200).json({status:true, message:"Update successfully!"});
           } catch (error) {
-            console.error("Cloudinary upload error:", error); // Log lỗi tải lên Cloudinary
+            console.error("Cloudinary upload error:", error); 
             return res.status(500).json({ error: "Failed to upload image" });
           }
         } else {
