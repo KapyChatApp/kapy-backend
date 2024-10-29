@@ -1,3 +1,4 @@
+
 import { Schema } from "mongoose";
 export interface UserRegisterDTO {
   firstName: string;
@@ -21,6 +22,7 @@ export interface AuthenticationDTO{
 }
 
 export interface UserResponseDTO {
+  _id:string;
   firstName: string;
   lastName: string;
   nickName: string;
@@ -57,4 +59,27 @@ export interface UpdateUserDTO{
   bio: string;
   relationShip: string;
   birthDay: Date;
+}
+
+export interface PublicUserDTO{
+  _id:string;
+  firstName: string;
+  lastName: string;
+  nickName: string;
+  gender: boolean;
+  address: string;
+  job: string;
+  hobbies: string;
+  bio: string;
+  relationShip: string;
+  birthDay: Date;
+  relations:string[];
+}
+export interface FindUserDTO{
+  _id:string;
+  firstName: string;
+  lastName: string;
+  nickName: string;
+  avatar:string;
+  relation:string;
 }

@@ -5,11 +5,6 @@ export interface FriendRequestDTO{
     receiver:string,
 }
 
-export interface FriendProfileRequestDTO{
-    userId:Schema.Types.ObjectId | undefined,
-    friendId:string| undefined
-}
-
 export interface FriendResponseDTO{
     _id:Schema.Types.ObjectId,
     avatar:string,
