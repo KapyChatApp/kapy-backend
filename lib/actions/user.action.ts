@@ -2,6 +2,7 @@
 "use server";
 
 import {
+  FindUserDTO,
   UpdateUserDTO,
   UserRegisterDTO,
   UserResponseDTO,
@@ -10,6 +11,7 @@ import { connectToDatabase } from "../mongoose";
 import User from "@/database/user.model";
 import bcrypt from "bcrypt";
 import mongoose, { Schema } from "mongoose";
+import Relation from "@/database/relation.model";
 const saltRounds = 10;
 
 export async function getAllUsers() {
@@ -119,18 +121,42 @@ export async function findPairUser(id1: string, id2: string) {
   }
 }
 
-export async function findUser(phoneNumber: string | undefined) {
+export async function findUser(
+  phoneNumber: string | undefined,
+  userId: Schema.Types.ObjectId | undefined
+) {
   try {
     connectToDatabase();
 
-    const result: UserResponseDTO[] = await User.find({
+    const user = await User.findOne({
       phoneNumber: phoneNumber,
     });
-
-    if (!result) {
-      throw new Error("User is not exist");
+    if (!user) {
+      throw new Error("Not found");
     }
-
+    const result: FindUserDTO = {
+      _id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      nickName: user.nickName,
+      avatar: user.avatar,
+      relation: "",
+    };
+    const relations = await Relation.find({
+      sender: userId,
+      receiver: result._id,
+    });
+    if (relations.length === 0) {
+      result.relation = "stranger";
+    } else {
+      relations.map((item) => {
+        if (item.status && item.relation != "bff") {
+          result.relation = "friend";
+        } else if (!item.status && item.relation != "bff") {
+          result.relation = "pending";
+        }
+      });
+    }
     return result;
   } catch (error) {
     console.log(error);
