@@ -10,9 +10,9 @@ export interface IMessageBox extends Document, IAudit {
 
 const MessageBoxSchema = new Schema<IMessageBox>({
   senderId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  receiverIds: [{ type: [Schema.Types.ObjectId], ref: "User", required: true }],
-  messageIds: [{ type: [Schema.Types.ObjectId], ref: "Message", required: true }],
-  flag: { type: Boolean, required: true, default: true },
+  receiverIds: [{ type: Schema.Types.ObjectId, ref: "User", required: true }],
+  messageIds: [{ type: Schema.Types.ObjectId, ref: "Message" }],
+  flag: { type: Boolean, required: true, default: true }
 });
 
 MessageBoxSchema.add(AuditSchema);

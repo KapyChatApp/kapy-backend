@@ -6,7 +6,7 @@ export interface IIcon extends Document, IAudit {
 }
 
 const IconSchema = new Schema<IIcon>({
-  content: { type: String, required: true },
+  content: { type: String, required: true }
 });
 
 IconSchema.add(AuditSchema);
