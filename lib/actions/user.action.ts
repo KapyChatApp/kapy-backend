@@ -138,7 +138,10 @@ export async function findUser(phoneNumber: string | undefined) {
   }
 }
 
-export async function updateUser(userId: string, params: UpdateUserDTO) {
+export async function updateUser(
+  userId: Schema.Types.ObjectId | undefined,
+  params: UpdateUserDTO
+) {
   try {
     connectToDatabase();
 
@@ -156,7 +159,7 @@ export async function updateUser(userId: string, params: UpdateUserDTO) {
       }
     );
 
-    return updatedUser;
+    return { status: true, newProfile: updatedUser };
   } catch (error) {
     console.log(error);
     throw error;
