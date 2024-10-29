@@ -1,6 +1,6 @@
 import User from "@/database/user.model";
 import { connectToDatabase } from "../mongoose";
-import { FriendResponseDTO } from "@/dtos/FriendDTO";
+import { FriendResponseDTO, RequestedResponseDTO } from "@/dtos/FriendDTO";
 import Relation from "@/database/relation.model";
 import { Schema } from "mongoose";
 
@@ -64,14 +64,44 @@ export async function getMyBlocks(myId: Schema.Types.ObjectId | undefined) {
 export async function getMyRequested(myId: Schema.Types.ObjectId | undefined) {
   try {
     connectToDatabase();
-    const myRequested: FriendResponseDTO[] = await Relation.find({
+    const myPendingBFFs = await Relation.find({
       receiver: myId,
       status: false,
+      relation: "bff",
     });
-    if (myRequested.length == 0) {
-      return { message: "You dont have any requested" };
-    }
-    return myRequested;
+    const bffSenders = myPendingBFFs.map((item) => item.sender);
+    const myPendingFriends = await Relation.find({
+      receiver: myId,
+      status: false,
+      relation: "friend",
+      sender: { $nin: bffSenders },
+    });
+    const friendSenders = myPendingFriends.map((item) => item.sender);
+    const bffSenderUsers = await User.find({ _id: { $in: bffSenders } });
+    const friendSenderUsers = await User.find({ _id: { $in: friendSenders } });
+    const bffRequesteds: RequestedResponseDTO[] = [];
+    const friendRequesteds: RequestedResponseDTO[] = [];
+    bffSenderUsers.map((item) => {
+      bffRequesteds.push({
+        _id: item.id,
+        firstName: item.firstName,
+        lastName: item.lastName,
+        avatar: item.avatar,
+        relation: "bff",
+        createAt:item.createAt
+      });
+    });
+    friendSenderUsers.map((item) => {
+      friendRequesteds.push({
+        _id: item.id,
+        firstName: item.firstName,
+        lastName: item.lastName,
+        avatar: item.avatar,
+        relation: "friend",
+        createAt:item.createAt
+      });
+    });
+    return bffRequesteds.concat(friendRequesteds);
   } catch (error) {
     console.log(error);
     throw error;

@@ -12,3 +12,12 @@ export interface FriendResponseDTO{
     lastName:string,
     nickName:string
 }
+
+export interface RequestedResponseDTO{
+    _id:Schema.Types.ObjectId,
+    firstName:string,
+    lastName:string;
+    avatar:string;
+    relation:string;
+    createAt:string;
+}
