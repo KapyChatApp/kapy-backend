@@ -45,6 +45,7 @@ export async function addBFF(param: FriendRequestDTO) {
       stUser: stUser,
       ndUser: ndUser,
       relation: "friend",
+      status:true
     });
     if (!existedFriendRelation) {
       return { message: "You must be their friend first!" };
