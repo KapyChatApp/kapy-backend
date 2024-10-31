@@ -59,7 +59,7 @@ export async function getFriendProfile(
           attendDate: bffProfile.attendDate,
           relation: "bff",
         };
-        return bffProfileRes; 
+        return bffProfileRes;
       }
     }
 
@@ -94,9 +94,15 @@ export async function getFriendProfile(
     for (const item of pendingRelations) {
       let relationStatus = "";
       if (item.relation === "bff") {
-        relationStatus = item.sender.toString() === userId?.toString() ? "sent_bff" : "received_bff";
+        relationStatus =
+          item.sender.toString() === userId?.toString()
+            ? "sent_bff"
+            : "received_bff";
       } else if (item.relation === "friend") {
-        relationStatus = item.sender.toString() === userId?.toString() ? "sent_friend" : "received_friend";
+        relationStatus =
+          item.sender.toString() === userId?.toString()
+            ? "sent_friend"
+            : "received_friend";
       }
 
       if (relationStatus) {
