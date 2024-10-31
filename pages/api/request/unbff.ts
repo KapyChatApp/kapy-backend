@@ -11,9 +11,7 @@ export default async function hanlder(
     if (req.method === "POST") {
       try {
         const param: FriendRequestDTO = req.body;
-        if (param.sender !== (req.user?.id ?? "")) {
-          throw new Error("You are unauthorized!");
-        }
+
         await unBFF(param);
         return res.status(201).json({ message: "UnBestfriend successfully!" });
       } catch (error) {
