@@ -1,6 +1,7 @@
 import Relation from "@/database/relation.model";
 import { FriendRequestDTO } from "@/dtos/FriendDTO";
 import { findPairUser } from "./user.action";
+import User from "@/database/user.model";
 
 export async function addFriend(param: FriendRequestDTO) {
   try {
@@ -45,7 +46,7 @@ export async function addBFF(param: FriendRequestDTO) {
       stUser: stUser,
       ndUser: ndUser,
       relation: "friend",
-      status:true
+      status: true,
     });
     if (!existedFriendRelation) {
       return { message: "You must be their friend first!" };
@@ -73,6 +74,7 @@ export async function block(param: FriendRequestDTO) {
       stUser: stUser,
       ndUser: ndUser,
       relation: "block",
+      status: true,
     });
     if (existedBlockRelation) {
       return { message: "you have been blocked them!" };
@@ -86,6 +88,10 @@ export async function block(param: FriendRequestDTO) {
       status: true,
       createBy: param.sender,
     });
+    const user = await User.findById(param.sender);
+    await user.blockedIds.addToSet(param.receiver);
+    await user.save();
+    await unFriend(param);
     return { message: `Block ${param.receiver} successfully!` };
   } catch (error) {
     console.log(error);
@@ -215,13 +221,19 @@ export async function unBFF(param: FriendRequestDTO) {
 
 export async function unBlock(param: FriendRequestDTO) {
   try {
-    await findPairUser(param.sender, param.receiver);
-    await Relation.findOneAndDelete({
+    const { stUser, ndUser } = await findPairUser(param.sender, param.receiver);
+    console.log("sender", param.sender);
+    console.log("receiver", param.receiver);
+    const deletedRelation = await Relation.findOneAndDelete({
       sender: param.sender,
       receiver: param.receiver,
       relation: "block",
-      flag: true,
     });
+    stUser.blockedIds = ndUser.blockedIds.filter(
+      (id: string) => id.toString() !== ndUser._id.toString()
+    );
+    await stUser.save();
+    console.log(deletedRelation);
   } catch (error) {
     console.log(error);
     throw error;

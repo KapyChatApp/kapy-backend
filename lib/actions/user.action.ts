@@ -143,19 +143,40 @@ export async function findUser(
       relation: "",
     };
     const relations = await Relation.find({
-      sender: userId,
-      receiver: result._id,
+      stUser: userId,
+      ndUSer: result._id,
     });
     if (relations.length === 0) {
       result.relation = "stranger";
     } else {
-      relations.map((item) => {
-        if (item.status && item.relation != "bff") {
-          result.relation = "friend";
-        } else if (!item.status && item.relation != "bff") {
-          result.relation = "pending";
+      for(const relation of relations){
+        if(!relation.status){
+          if(relation.relation === "bff"){
+            if(relation.sender.toString()===user._id.toString()){
+              result.relation = "sent_bff";
+              break;
+            }
+            else{
+              result.relation = "received_bff";
+              break;
+            }
+          } else{
+            if(relation.sender.toString()===user._id.toString()){
+              result.relation = "sent_friend";
+            }
+            else{
+              result.relation = "received_friend";
+            }
+          }
+        } else{
+          if(relation.relation==="bff"){
+            result.relation = "bff";
+            break;
+          } else{
+            result.relation = " friend";
+          }
         }
-      });
+      }
     }
     return result;
   } catch (error) {

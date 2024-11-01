@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(200).json(friendProfile);
       } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Internal Server Error" });
+        res.status(404).json({ message: "Internal Server Error" });
       }
     } else {
       res.setHeader("Allow", ["GET"]);
