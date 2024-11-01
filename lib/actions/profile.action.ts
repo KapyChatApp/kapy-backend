@@ -18,6 +18,11 @@ export async function getFriendProfile(
       ndUser: ndUserId,
       status: true,
     });
+    for(const relation of relations){
+      if(relation.relation==="block"){
+        throw new Error('User not found!');
+      }
+    }
     const pendingRelations = await Relation.find({
       stUser: stUserId,
       ndUser: ndUserId,
