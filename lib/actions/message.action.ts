@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "user server";
 
-import Message from "@/database/message.model";
+import Message, { IMessage } from "@/database/message.model";
 import { connectToDatabase } from "../mongoose";
 import { SegmentMessageDTO } from "@/dtos/MessageDTO";
 import mongoose, { Types } from "mongoose";
@@ -15,6 +15,8 @@ import Video from "@/database/video.model";
 import Voice from "@/database/voice.schema";
 import Post from "@/database/post.model";
 import MessageBox from "@/database/message-box.model";
+import Pusher from "pusher-js";
+import cluster from "cluster";
 
 async function createContent(data: SegmentMessageDTO) {
   let contentModel: string;
@@ -118,6 +120,8 @@ async function createContent(data: SegmentMessageDTO) {
 }
 
 export async function createMessage(data: SegmentMessageDTO) {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const Pusher = require("pusher");
   try {
     await connectToDatabase();
 
@@ -216,6 +220,18 @@ export async function createMessage(data: SegmentMessageDTO) {
             createBy: userObjectId
           });
         }
+
+        const pusher = new Pusher({
+          appId: process.env.PUSHER_APP_ID,
+          key: process.env.PUSHER_APP_KEY,
+          secret: process.env.PUSHER_APP_SECRET,
+          cluster: "ap1",
+          useTLS: true
+        });
+
+        pusher.trigger("my-channel", "my-event", {
+          message: `${JSON.stringify(message)}\n\n`
+        });
 
         return { success: true, populatedMessage, messageBox };
       }
@@ -494,9 +510,120 @@ export async function findMessages(boxId: string, query: string) {
   }
 }
 
+export async function fetchBoxChat(userId: string) {
+  try {
+    await connectToDatabase();
+    const messageBoxes = await MessageBox.find({
+      senderId: userId,
+      receiverIds: { $size: 1 }
+    })
+      .populate("senderId", "nickName")
+      .populate("receiverIds", "nickName")
+      .populate("messageIds");
+    if (!messageBoxes.length) {
+      return {
+        success: false,
+        box: "No message boxes found for this userId"
+      };
+    }
+    // Lấy nội dung contentId từ messageId cuối cùng trong mỗi messageBox
+    const messageBoxesWithContent = await Promise.all(
+      messageBoxes.map(async (messageBox) => {
+        // Lấy messageId cuối cùng
+        const lastMessageId =
+          messageBox.messageIds[messageBox.messageIds.length - 1];
+
+        if (!lastMessageId) {
+          return messageBox; // Nếu không có messageId nào, trả về messageBox gốc
+        }
+
+        // Tìm message theo messageId cuối cùng
+        const message = await Message.findById(lastMessageId);
+        const populatedMessage = await Message.findById(lastMessageId)
+          .populate({
+            path: "contentId",
+            model: message.contentModel,
+            select: "",
+            options: { strictPopulate: false }
+          })
+          .populate("readedId");
+
+        if (populatedMessage && populatedMessage.contentId) {
+          return {
+            ...messageBox.toObject(),
+            lastMessage: populatedMessage
+          };
+        }
+
+        return messageBox;
+      })
+    );
+    return { success: true, box: messageBoxesWithContent };
+  } catch (error) {
+    console.error("Error fetching messages: ", error);
+    throw error;
+  }
+}
+
+export async function fetchBoxGroup(userId: string) {
+  try {
+    await connectToDatabase();
+    const messageBoxes = await MessageBox.find({
+      senderId: userId,
+      $expr: { $gt: [{ $size: "$receiverIds" }, 1] }
+    })
+      .populate("senderId", "nickName")
+      .populate("receiverIds", "nickName")
+      .populate("messageIds");
+    if (!messageBoxes.length) {
+      return {
+        success: false,
+        box: "No message boxes found for this userId"
+      };
+    }
+    // Lấy nội dung contentId từ messageId cuối cùng trong mỗi messageBox
+    const messageBoxesWithContent = await Promise.all(
+      messageBoxes.map(async (messageBox) => {
+        // Lấy messageId cuối cùng
+        const lastMessageId =
+          messageBox.messageIds[messageBox.messageIds.length - 1];
+
+        if (!lastMessageId) {
+          return messageBox; // Nếu không có messageId nào, trả về messageBox gốc
+        }
+
+        // Tìm message theo messageId cuối cùng
+        const message = await Message.findById(lastMessageId);
+        const populatedMessage = await Message.findById(lastMessageId)
+          .populate({
+            path: "contentId",
+            model: message.contentModel,
+            select: "",
+            options: { strictPopulate: false }
+          })
+          .populate("readedId");
+
+        if (populatedMessage && populatedMessage.contentId) {
+          return {
+            ...messageBox.toObject(),
+            lastMessage: populatedMessage
+          };
+        }
+
+        return messageBox;
+      })
+    );
+    return { success: true, box: messageBoxesWithContent };
+  } catch (error) {
+    console.error("Error fetching messages: ", error);
+    throw error;
+  }
+}
+
 //MANAGEMENT
 export async function getAllMessage() {
   try {
+    await connectToDatabase();
     const allMessages = await Message.find();
 
     const messagesWithContent = await Promise.all(
@@ -520,6 +647,7 @@ export async function getAllMessage() {
 
 export async function removeMessage(messageId: string) {
   try {
+    await connectToDatabase();
     const message = await Message.findById(messageId);
     if (!message) {
       throw new Error("Message not found");

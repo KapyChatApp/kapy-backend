@@ -1,4 +1,5 @@
 import { Schema } from "mongoose";
+import { UserResponseDTO } from "./UserDTO";
 
 export interface ImageContent {
   type: "image";
@@ -113,4 +114,14 @@ export interface MessageDTO {
 export interface ResponseSendingDTO {
   populatedMessage: MessageDTO;
   messageBox: ResponseMessageBoxDTO;
+}
+
+export interface RespBoxChatArrangeDTO {
+  _id: string;
+  senderId: UserResponseDTO;
+  receiverIds: UserResponseDTO[];
+  messageIds: MessageDTO[];
+  flag: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
