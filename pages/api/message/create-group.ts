@@ -8,7 +8,7 @@ export default async function handle(
 ) {
   await authenticateToken(req, res, async () => {
     if (req.method === "POST") {
-      const { membersIds, leaderId } = req.body;
+      const { membersIds, leaderId, groupName, groupAva } = req.body;
       if (!Array.isArray(membersIds) || membersIds.length === 0) {
         return res.status(400).json({
           success: false,
@@ -22,7 +22,12 @@ export default async function handle(
       }
 
       try {
-        const result = await createGroup(membersIds, leaderId);
+        const result = await createGroup(
+          membersIds,
+          leaderId,
+          groupName,
+          groupAva
+        );
 
         return res.status(200).json({ success: true, data: result });
       } catch (error) {

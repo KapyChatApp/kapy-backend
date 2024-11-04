@@ -1,5 +1,7 @@
 import {
   MessageDTO,
+  RespBoxChatArrangeDTO,
+  RespBoxGroupArrangeDTO,
   ResponseMessageBoxDTO,
   ResponseSendingDTO,
   SegmentMessageDTO
@@ -78,6 +80,7 @@ export const Contract = c.router(
         body: z.object({
           firstName: z.string(),
           lastName: z.string(),
+          avatar: z.string(),
           nickName: z.string().optional(),
           phoneNumber: z.string(),
           email: z.string().email(),
@@ -698,6 +701,52 @@ export const Contract = c.router(
         }),
         summary: "Send a message",
         metadata: { role: "user" } as const
+      },
+      allChat: {
+        method: "GET",
+        path: "/api/message/all-box-chat",
+        responses: {
+          200: c.type<RespBoxChatArrangeDTO[]>(),
+          400: c.type<{ message: string }>(),
+          404: c.type<{ message: string }>(),
+          500: c.type<{ message: string; error?: string }>()
+        },
+        query: z.object({
+          boxId: z.string()
+        }),
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        summary: "Get all message box of a certain user",
+        description:
+          "Fetches all message box for a specific user using its `userId`."
+      },
+      allGroup: {
+        method: "GET",
+        path: "/api/message/all-box-group",
+        responses: {
+          200: c.type<RespBoxGroupArrangeDTO[]>(),
+          400: c.type<{ message: string }>(),
+          404: c.type<{ message: string }>(),
+          500: c.type<{ message: string; error?: string }>()
+        },
+        query: z.object({
+          boxId: z.string()
+        }),
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        summary: "Get all message box group of a certain group",
+        description:
+          "Fetches all message box for a specific group using its `groupId`."
       },
       listMessages: {
         method: "GET",

@@ -80,7 +80,10 @@ export interface ResponseMessageBoxDTO {
     senderId: string;
     receiverIds: string[];
     messageIds: string[];
+    groupName: string;
+    groupAva: string;
     flag: boolean;
+    pin: boolean;
     createAt: Date;
     createBy: Schema.Types.ObjectId;
   };
@@ -116,12 +119,41 @@ export interface ResponseSendingDTO {
   messageBox: ResponseMessageBoxDTO;
 }
 
+interface LastMessageDTO {
+  _id: string;
+  flag: boolean;
+  readedId: UserResponseDTO[];
+  contentModel: string;
+  contentId: Content[];
+  createAt: string;
+  createBy: string;
+  __v: number;
+}
+
 export interface RespBoxChatArrangeDTO {
+  pin: boolean;
   _id: string;
   senderId: UserResponseDTO;
   receiverIds: UserResponseDTO[];
   messageIds: MessageDTO[];
   flag: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createAt: string;
+  createBy: string;
+  __v: number;
+  lastMessage: LastMessageDTO;
+}
+
+export interface RespBoxGroupArrangeDTO {
+  _id: string;
+  senderId: UserResponseDTO;
+  receiverIds: UserResponseDTO[];
+  messageIds: MessageDTO[];
+  flag: boolean;
+  createAt: string;
+  createBy: string;
+  __v: number;
+  groupAva: string;
+  groupName: string;
+  pin: boolean;
+  lastMessage?: LastMessageDTO;
 }

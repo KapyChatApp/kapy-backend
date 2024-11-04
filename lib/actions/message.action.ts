@@ -150,9 +150,12 @@ export async function createMessage(data: SegmentMessageDTO) {
       if (!groupMessageBox) {
         throw new Error("Group MessageBox not found");
       }
-      const membersIds = groupMessageBox.receiverIds.push(
-        groupMessageBox.senderId
-      );
+      const membersIds = [
+        ...groupMessageBox.receiverIds.map((id: { toString: () => any }) =>
+          id.toString()
+        ),
+        groupMessageBox.senderId.toString()
+      ];
       const allRecipientsExist = data.recipientId.every((recipient) =>
         membersIds.includes(recipient)
       );
@@ -216,7 +219,10 @@ export async function createMessage(data: SegmentMessageDTO) {
             senderId: data.userId,
             receiverIds: data.recipientId,
             messageIds: [message._id],
+            groupName: "",
+            groupAva: "",
             flag: true,
+            pin: false,
             createBy: userObjectId
           });
         }
@@ -242,7 +248,12 @@ export async function createMessage(data: SegmentMessageDTO) {
   }
 }
 
-export async function createGroup(membersIds: string[], leaderId: string) {
+export async function createGroup(
+  membersIds: string[],
+  leaderId: string,
+  groupName: string,
+  groupAva: string
+) {
   if (!Array.isArray(membersIds) || membersIds.length === 0) {
     throw new Error("membersIds must be a non-empty array");
   }
@@ -260,7 +271,10 @@ export async function createGroup(membersIds: string[], leaderId: string) {
     senderId: leaderId,
     receiverIds: membersIds,
     messageIds: [],
+    groupName: groupName,
+    groupAva: groupAva,
     flag: true,
+    pin: false,
     createBy: userObjectId
   });
   return { success: true, messageBoxId: messageBox._id, messageBox };
@@ -518,7 +532,7 @@ export async function fetchBoxChat(userId: string) {
       receiverIds: { $size: 1 }
     })
       .populate("senderId", "nickName")
-      .populate("receiverIds", "nickName")
+      .populate("receiverIds", "nickName avatar")
       .populate("messageIds");
     if (!messageBoxes.length) {
       return {
@@ -573,7 +587,7 @@ export async function fetchBoxGroup(userId: string) {
       $expr: { $gt: [{ $size: "$receiverIds" }, 1] }
     })
       .populate("senderId", "nickName")
-      .populate("receiverIds", "nickName")
+      .populate("receiverIds", "nickName avatar")
       .populate("messageIds");
     if (!messageBoxes.length) {
       return {
