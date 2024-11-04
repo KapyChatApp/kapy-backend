@@ -25,6 +25,7 @@ export interface IUser extends Document, IAudit {
   friendIds: Schema.Types.ObjectId[];
   bestFriendIds: Schema.Types.ObjectId[];
   blockedIds: Schema.Types.ObjectId[];
+  posts:Schema.Types.ObjectId[];
 }
 
 const UserSchema = new Schema<IUser>({
@@ -39,19 +40,20 @@ const UserSchema = new Schema<IUser>({
   avatarPublicId:{type:String, require:false},
   background: { type: String, required: false },
   backgroundPublicId:{type:String, required:false},
-  gender: { type: Boolean, required: true },
+  gender: { type: Boolean, required: false },
   address: { type: String, required: false },
   job: { type: String, required: false },
   hobbies: { type: String, required: false },
   bio: { type: String, required: false },
   point: { type: Number, required: false, default: 0 },
   relationShip: { type: String, required: false },
-  birthDay: { type: Date, required: true },
+  birthDay: { type: Date, required: false },
   attendDate: { type: Date, required: true },
   flag: { type: Boolean, required: true, default: true },
   friendIds: [{ type: [Schema.Types.ObjectId], ref: "User" }],
   bestFriendIds: [{ type: [Schema.Types.ObjectId], ref: "User" }],
   blockedIds: [{ type: [Schema.Types.ObjectId], ref: "User" }],
+  posts: {type:[Schema.Types.ObjectId], ref:"Post"},
 });
 
 UserSchema.add(AuditSchema);

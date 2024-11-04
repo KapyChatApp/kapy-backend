@@ -2,14 +2,16 @@
 "use server";
 
 import {
+  FindUserDTO,
   UpdateUserDTO,
   UserRegisterDTO,
-  UserResponseDTO
+  UserResponseDTO,
 } from "@/dtos/UserDTO";
 import { connectToDatabase } from "../mongoose";
 import User from "@/database/user.model";
 import bcrypt from "bcrypt";
 import mongoose, { Schema } from "mongoose";
+import Relation from "@/database/relation.model";
 const saltRounds = 10;
 
 export async function getAllUsers() {
@@ -33,8 +35,8 @@ export async function createUser(
     const existedUser = await User.findOne({
       $or: [
         { email: params.email, flag: true },
-        { phoneNumber: params.phoneNumber, flag: true }
-      ]
+        { phoneNumber: params.phoneNumber, flag: true },
+      ],
     });
 
     if (params.password !== params.rePassword) {
@@ -54,7 +56,7 @@ export async function createUser(
       password: hashPassword,
       attendDate: new Date(),
       roles: ["user"],
-      createBy: createBy ? createBy : new mongoose.Types.ObjectId()
+      createBy: createBy ? createBy : new mongoose.Types.ObjectId(),
     });
 
     const newUser: UserResponseDTO = await User.create(createUserData);
@@ -73,7 +75,7 @@ export async function createAdmin(
     connectToDatabase();
 
     const existedUser = await User.findOne({
-      $or: [{ email: params.email }, { phoneNumber: params.phoneNumber }]
+      $or: [{ email: params.email }, { phoneNumber: params.phoneNumber }],
     });
 
     if (params.password !== params.rePassword) {
@@ -93,7 +95,7 @@ export async function createAdmin(
       password: hashPassword,
       attendDate: new Date(),
       roles: ["admin", "user"],
-      createBy: createBy ? createBy : "unknown"
+      createBy: createBy ? createBy : "unknown",
     });
 
     const newUser: UserResponseDTO = await User.create(createUserData);
@@ -119,18 +121,63 @@ export async function findPairUser(id1: string, id2: string) {
   }
 }
 
-export async function findUser(phoneNumber: string | undefined) {
+export async function findUser(
+  phoneNumber: string | undefined,
+  userId: Schema.Types.ObjectId | undefined
+) {
   try {
     connectToDatabase();
 
-    const result: UserResponseDTO[] = await User.find({
-      phoneNumber: phoneNumber
+    const user = await User.findOne({
+      phoneNumber: phoneNumber,
     });
-
-    if (!result) {
-      throw new Error("User is not exist");
+    if (!user) {
+      throw new Error("Not found");
     }
-
+    const result: FindUserDTO = {
+      _id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      nickName: user.nickName,
+      avatar: user.avatar,
+      relation: "",
+    };
+    const relations = await Relation.find({
+      stUser: userId,
+      ndUSer: result._id,
+    });
+    if (relations.length === 0) {
+      result.relation = "stranger";
+    } else {
+      for(const relation of relations){
+        if(!relation.status){
+          if(relation.relation === "bff"){
+            if(relation.sender.toString()===user._id.toString()){
+              result.relation = "sent_bff";
+              break;
+            }
+            else{
+              result.relation = "received_bff";
+              break;
+            }
+          } else{
+            if(relation.sender.toString()===user._id.toString()){
+              result.relation = "sent_friend";
+            }
+            else{
+              result.relation = "received_friend";
+            }
+          }
+        } else{
+          if(relation.relation==="bff"){
+            result.relation = "bff";
+            break;
+          } else{
+            result.relation = " friend";
+          }
+        }
+      }
+    }
     return result;
   } catch (error) {
     console.log(error);
@@ -138,7 +185,10 @@ export async function findUser(phoneNumber: string | undefined) {
   }
 }
 
-export async function updateUser(userId: string, params: UpdateUserDTO) {
+export async function updateUser(
+  userId: Schema.Types.ObjectId | undefined,
+  params: UpdateUserDTO
+) {
   try {
     connectToDatabase();
 
@@ -148,11 +198,15 @@ export async function updateUser(userId: string, params: UpdateUserDTO) {
       throw new Error("User not found!");
     }
 
-    const updatedUser = await User.findByIdAndUpdate(userId, params, {
-      new: true
-    });
+    const updatedUser: UserResponseDTO | null = await User.findByIdAndUpdate(
+      userId,
+      params,
+      {
+        new: true,
+      }
+    );
 
-    return updatedUser;
+    return { status: true, newProfile: updatedUser };
   } catch (error) {
     console.log(error);
     throw error;

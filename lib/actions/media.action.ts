@@ -1,6 +1,7 @@
-import cloudinary from "@/clouduonary";
+import cloudinary from "@/cloudinary";
 import User from "@/database/user.model";
 import { Schema } from "mongoose";
+import { connectToDatabase } from "../mongoose";
 
 export async function uploadAvatar(
   userId: Schema.Types.ObjectId | undefined,
@@ -8,6 +9,7 @@ export async function uploadAvatar(
   publicId: string
 ) {
   try {
+    connectToDatabase();
     const user = await User.findById(userId);
     if (!user) {
       throw new Error("User not exist");
