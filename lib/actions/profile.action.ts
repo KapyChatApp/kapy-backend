@@ -32,7 +32,7 @@ export async function getFriendProfile(
     if (relations.length === 0 && pendingRelations.length === 0) {
       const stranger: PublicUserDTO | null = await User.findById(friendId);
       if (!stranger) {
-        throw new Error("User not exist");
+        return false;
       }
       Object.assign(stranger, { relation: "stranger" });
       return stranger;
