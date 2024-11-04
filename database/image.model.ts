@@ -3,13 +3,13 @@ import { IAudit, AuditSchema } from "./audit.model";
 
 export interface IImage extends Document, IAudit {
   fileName: string;
-  path: string;
+  url: string;
   size: number;
 }
 
 const ImageSchema = new Schema<IImage>({
   fileName: { type: String, required: true },
-  path: { type: String, required: true },
+  url: { type: String, required: true },
   size: { type: Number, required: true }
 });
 

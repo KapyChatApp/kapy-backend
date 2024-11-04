@@ -4,13 +4,13 @@ import { IAudit, AuditSchema } from "./audit.model";
 
 export interface IVideo extends Document, IAudit {
     fileName: string;
-    path: string;
+    url: string;
     size: number;
   }
   
   const VideoSchema = new Schema<IVideo>({
     fileName: { type: String, required: true },
-    path: { type: String, required: true },
+    url: { type: String, required: true },
     size: { type: Number, required: true },
   });
   

@@ -3,7 +3,7 @@ const nextConfig = {
     async headers() {
         return [
           {
-            source: '/(.*)', // Áp dụng cho tất cả các đường dẫn
+            source: '/api/:path*', // Áp dụng cho tất cả các đường dẫn
             headers: [
               {
                 key: 'Access-Control-Allow-Origin',
