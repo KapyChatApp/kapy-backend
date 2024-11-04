@@ -12,6 +12,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       try {
         const userId = req.user?.id;
         const friendProfile = await getFriendProfile(friendId, userId);
+        if(!friendProfile){
+          return res.status(400).json({message:"User not found!"});
+        }
         return res.status(200).json(friendProfile);
       } catch (error) {
         console.error(error);
