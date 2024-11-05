@@ -1,10 +1,63 @@
-import { CreatePostDTO } from "@/dtos/PostFTO";
+import { CreatePostDTO, PostResponseDTO } from "@/dtos/PostFTO";
 import { connectToDatabase } from "../mongoose";
 import mongoose, { Schema } from "mongoose";
 import Post from "@/database/post.model";
 import formidable from "formidable";
 import { createFile } from "./file.action";
 import User from "@/database/user.model";
+import File from "@/database/file.model";
+import { FileResponseDTO } from "@/dtos/FileDTO";
+
+export const getMyPosts = async (userId:Schema.Types.ObjectId | undefined)=>{
+    try{
+        connectToDatabase();
+        if(!userId){
+            throw new Error('You ara unauthenticated!');
+        }
+        const user = await User.findById(userId); 
+        const posts = await Post.find({userId:userId});
+        if(posts.length == 0){
+            throw new Error('Not found!');
+        }
+        const postsResponse:PostResponseDTO[] = [];
+        for(const post of posts){
+            const fileOfPost = await File.find({_id:{$in:post.contentIds}}).exec();
+            const filesResponse : FileResponseDTO[] = [];
+            for(const file of fileOfPost){
+            const fileResponse: FileResponseDTO ={
+                _id:file._id,
+                url:file.url,
+                fileName:file.fileName,
+                width:file.width,
+                height:file.height,
+                format:file.format,
+                bytes:file.bytes,
+                type:file.type
+            }
+            filesResponse.push(fileResponse);
+            }
+            const postResponse: PostResponseDTO = {
+                _id:post._id,
+                firstName:user.firstName,
+                lastName:user.lastName,
+                nickName:user.nickName,
+                avatar:user.avatar,
+                userId:post.userId,
+                likedIds:post.likedIds,
+                comments:post.comments,
+                shares:post.shares,
+                caption:post.caption,
+                createAt:post.createAt,
+                contents:filesResponse,
+            }
+            postsResponse.push(postResponse);
+        }
+        return postsResponse;
+    }catch(error){
+        console.log(error);
+        throw error;
+    }
+}
 
 export const createPost = async (param: CreatePostDTO) => {
   try {
