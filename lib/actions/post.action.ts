@@ -10,7 +10,65 @@ import { FileResponseDTO } from "@/dtos/FileDTO";
 import { findPairUser } from "./user.action";
 import Relation from "@/database/relation.model";
 
-export const getSingleIdPosts = async (userId:string) => {
+export const getAPost = async (
+  postId: string,
+  userId: Schema.Types.ObjectId
+) => {
+  try {
+    connectToDatabase();
+    const post = await Post.findById(postId);
+    const [stUserId, ndUserId] = [post.userId.toString(), userId.toString()].sort();
+    if (userId.toString() != post.userId.toString()) {
+      const relation = await Relation.findOne({
+        stUser: stUserId,
+        ndUser: ndUserId,
+        relation: "bff",
+        status: true,
+      });
+      if (!relation) {
+        return false;
+      }
+    }
+    const user = await User.findById(post.userId);
+    const fileOfPost = await File.find({
+      _id: { $in: post.contentIds },
+    }).exec();
+    const filesResponse: FileResponseDTO[] = [];
+    for (const file of fileOfPost) {
+      const fileResponse: FileResponseDTO = {
+        _id: file._id,
+        url: file.url,
+        fileName: file.fileName,
+        width: file.width,
+        height: file.height,
+        format: file.format,
+        bytes: file.bytes,
+        type: file.type,
+      };
+      filesResponse.push(fileResponse);
+    }
+    const postResponse: PostResponseDTO = {
+      _id: post._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      nickName: user.nickName,
+      avatar: user.avatar,
+      userId: post.userId,
+      likedIds: post.likedIds,
+      comments: post.comments,
+      shares: post.shares,
+      caption: post.caption,
+      createAt: post.createAt,
+      contents: filesResponse,
+    };
+    return postResponse;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+export const getSingleIdPosts = async (userId: string) => {
   try {
     connectToDatabase();
     if (!userId) {
@@ -74,10 +132,10 @@ export const getFriendPosts = async (
     const relation = await Relation.findOne({
       stUser: stUserId,
       ndUser: ndUserId,
-      relation:"bff",
-      status:true
+      relation: "bff",
+      status: true,
     });
-    if(!relation){
+    if (!relation) {
       return false;
     }
 
