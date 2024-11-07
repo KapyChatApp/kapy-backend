@@ -17,7 +17,10 @@ export const getAPost = async (
   try {
     connectToDatabase();
     const post = await Post.findById(postId);
-    const [stUserId, ndUserId] = [post.userId.toString(), userId.toString()].sort();
+    const [stUserId, ndUserId] = [
+      post.userId.toString(),
+      userId.toString(),
+    ].sort();
     if (userId.toString() != post.userId.toString()) {
       const relation = await Relation.findOne({
         stUser: stUserId,
@@ -170,16 +173,16 @@ export const addPost = async (
 ) => {
   try {
     const contendIds: Schema.Types.ObjectId[] = [];
+    if (filesToUpload.length != 0) {
+      for (const file of filesToUpload) {
+        const createdFile = await createFile(file, userId);
+        contendIds.push(createdFile._id);
+      }
 
-    for (const file of filesToUpload) {
-      const createdFile = await createFile(file, userId);
-      contendIds.push(createdFile._id);
+      if (contendIds.length == 0) {
+        throw new Error("Creating file failed!");
+      }
     }
-
-    if (contendIds.length == 0) {
-      throw new Error("Creating file failed!");
-    }
-
     const postData: CreatePostDTO = {
       userId: userId,
       caption: caption ? caption.toString() : "",
@@ -203,23 +206,25 @@ export const addPost = async (
   }
 };
 
-export const deletePost = async (postId:string, userId:Schema.Types.ObjectId)=>{
-  try{
+export const deletePost = async (
+  postId: string,
+  userId: Schema.Types.ObjectId
+) => {
+  try {
     connectToDatabase();
     const post = await Post.findById(postId);
-    if(post.userId != userId.toString()){
+    if (post.userId != userId.toString()) {
       console.log("You are unauthenticated!");
     }
 
     await Post.findByIdAndDelete(postId);
 
-    return {message:`Delete post ${postId} successfully!`}
-    
-  }catch(error){
+    return { message: `Delete post ${postId} successfully!` };
+  } catch (error) {
     console.log(error);
     throw error;
   }
-}
+};
 
 export const like = async (
   postId: string | undefined,

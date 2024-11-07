@@ -1,16 +1,19 @@
 import { authenticateToken } from "@/middleware/auth-middleware";
-import{ IncomingForm } from "formidable";
+import { IncomingForm } from "formidable";
 import { NextApiRequest, NextApiResponse } from "next/types";
 import cors from "@/middleware/cors-middleware";
 import { addPost } from "@/lib/actions/post.action";
 
 export const config = {
   api: {
-    bodyParser: false, 
+    bodyParser: false,
   },
 };
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   cors(req, res, () => {
     authenticateToken(req, res, async () => {
       if (req.method === "POST") {
@@ -28,9 +31,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
           if (files.file) {
             try {
-              const filesToUpload = Array.isArray(files.file) ? files.file : [files.file];
+              const filesToUpload = Array.isArray(files.file)
+                ? files.file
+                : [files.file];
 
-              const createdPost = await addPost(filesToUpload, fields.caption, req.user?.id);
+              const createdPost = await addPost(
+                filesToUpload,
+                fields.caption,
+                req.user?.id
+              );
 
               return res.status(200).json(createdPost);
             } catch (error) {
@@ -38,7 +47,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               return res.status(500).json({ error: "Failed to upload" });
             }
           } else {
-            return res.status(400).json({ error: "No files uploaded" });
+            const createdPost = await addPost([], fields.caption, req.user?.id);
+
+            return res.status(200).json(createdPost);
           }
         });
       } else {
