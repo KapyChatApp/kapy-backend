@@ -203,6 +203,24 @@ export const addPost = async (
   }
 };
 
+export const deletePost = async (postId:string, userId:Schema.Types.ObjectId)=>{
+  try{
+    connectToDatabase();
+    const post = await Post.findById(postId);
+    if(post.userId != userId.toString()){
+      console.log("You are unauthenticated!");
+    }
+
+    await Post.findByIdAndDelete(postId);
+
+    return {message:`Delete post ${postId} successfully!`}
+    
+  }catch(error){
+    console.log(error);
+    throw error;
+  }
+}
+
 export const like = async (
   postId: string | undefined,
   userId: Schema.Types.ObjectId | undefined
