@@ -5,7 +5,7 @@ import {
   FindUserDTO,
   UpdateUserDTO,
   UserRegisterDTO,
-  UserResponseDTO,
+  UserResponseDTO
 } from "@/dtos/UserDTO";
 import { connectToDatabase } from "../mongoose";
 import User from "@/database/user.model";
@@ -35,8 +35,8 @@ export async function createUser(
     const existedUser = await User.findOne({
       $or: [
         { email: params.email, flag: true },
-        { phoneNumber: params.phoneNumber, flag: true },
-      ],
+        { phoneNumber: params.phoneNumber, flag: true }
+      ]
     });
 
     if (params.password !== params.rePassword) {
@@ -56,7 +56,7 @@ export async function createUser(
       password: hashPassword,
       attendDate: new Date(),
       roles: ["user"],
-      createBy: createBy ? createBy : new mongoose.Types.ObjectId(),
+      createBy: createBy ? createBy : new mongoose.Types.ObjectId()
     });
 
     const newUser: UserResponseDTO = await User.create(createUserData);
@@ -75,7 +75,7 @@ export async function createAdmin(
     connectToDatabase();
 
     const existedUser = await User.findOne({
-      $or: [{ email: params.email }, { phoneNumber: params.phoneNumber }],
+      $or: [{ email: params.email }, { phoneNumber: params.phoneNumber }]
     });
 
     if (params.password !== params.rePassword) {
@@ -95,7 +95,7 @@ export async function createAdmin(
       password: hashPassword,
       attendDate: new Date(),
       roles: ["admin", "user"],
-      createBy: createBy ? createBy : "unknown",
+      createBy: createBy ? createBy : "unknown"
     });
 
     const newUser: UserResponseDTO = await User.create(createUserData);
@@ -129,7 +129,7 @@ export async function findUser(
     connectToDatabase();
 
     const user = await User.findOne({
-      phoneNumber: phoneNumber,
+      phoneNumber: phoneNumber
     });
     if (!user) {
       throw new Error("Not found");
@@ -140,44 +140,84 @@ export async function findUser(
       lastName: user.lastName,
       nickName: user.nickName,
       avatar: user.avatar,
-      relation: "",
+      relation: ""
     };
     const relations = await Relation.find({
       stUser: userId,
-      ndUSer: result._id,
+      ndUSer: result._id
     });
     if (relations.length === 0) {
       result.relation = "stranger";
     } else {
-      for(const relation of relations){
-        if(!relation.status){
-          if(relation.relation === "bff"){
-            if(relation.sender.toString()===user._id.toString()){
+      for (const relation of relations) {
+        if (!relation.status) {
+          if (relation.relation === "bff") {
+            if (relation.sender.toString() === user._id.toString()) {
               result.relation = "sent_bff";
               break;
-            }
-            else{
+            } else {
               result.relation = "received_bff";
               break;
             }
-          } else{
-            if(relation.sender.toString()===user._id.toString()){
+          } else {
+            if (relation.sender.toString() === user._id.toString()) {
               result.relation = "sent_friend";
-            }
-            else{
+            } else {
               result.relation = "received_friend";
             }
           }
-        } else{
-          if(relation.relation==="bff"){
+        } else {
+          if (relation.relation === "bff") {
             result.relation = "bff";
             break;
-          } else{
+          } else {
             result.relation = " friend";
           }
         }
       }
     }
+    return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function findUserById(userId: string) {
+  try {
+    await connectToDatabase();
+
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("Not found");
+    }
+    const result = {
+      _id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      nickName: user.nickName,
+      phoneNumber: user.phoneNumber,
+      email: user.email,
+      roles: user.roles,
+      avatar: user.avatar,
+      avatarPublicId: user.avatarPublicId,
+      background: user.background,
+      backgroundPublicId: user.backgroundPublicId,
+      gender: user.gender,
+      address: user.address,
+      job: user.job,
+      hobbies: user.hobbies,
+      bio: user.bio,
+      point: user.point,
+      relationShip: user.relationShip,
+      birthDay: user.birthDay,
+      attendDate: user.attendDate,
+      flag: user.flag,
+      friendIds: user.friendIds,
+      bestFriendIds: user.bestFriendIds,
+      blockedIds: user.blockedIds,
+      posts: user.posts
+    };
     return result;
   } catch (error) {
     console.log(error);
@@ -202,7 +242,7 @@ export async function updateUser(
       userId,
       params,
       {
-        new: true,
+        new: true
       }
     );
 

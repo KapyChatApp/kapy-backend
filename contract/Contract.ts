@@ -3,8 +3,8 @@ import {
   RespBoxChatArrangeDTO,
   RespBoxGroupArrangeDTO,
   ResponseMessageBoxDTO,
-  ResponseSendingDTO,
-  SegmentMessageDTO
+  ResponseMessageDTO,
+  ResponseSendingDTO
 } from "@/dtos/MessageDTO";
 import { FriendResponseDTO } from "@/dtos/FriendDTO";
 import { OTPResponseDTO } from "@/dtos/OTPDTO";
@@ -186,12 +186,11 @@ export const Contract = c.router(
         metadata: { role: "admin" } as const
       },
       findUser: {
-        method: "POST",
+        method: "GET",
         path: "/api/user/find",
         responses: {
           201: c.type<UserResponseDTO>()
         },
-        body: z.object({}),
         headers: z.object({
           auth: z
             .string()
@@ -200,7 +199,8 @@ export const Contract = c.router(
             )
         }),
         query: z.object({
-          phonenumber: z.string()
+          phonenumber: z.string().optional(),
+          userId: z.string().optional()
         }),
         summary: "Disable a user",
         metadata: { role: "admin" } as const
@@ -474,7 +474,7 @@ export const Contract = c.router(
         method: "GET",
         path: "/api/message/all",
         responses: {
-          200: c.type<SegmentMessageDTO[]>(),
+          200: c.type<ResponseMessageDTO[]>(),
           400: c.type<{ message: string }>(),
           404: c.type<{ message: string }>(),
           500: c.type<{ message: string; error?: string }>()
