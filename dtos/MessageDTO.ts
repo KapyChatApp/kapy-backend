@@ -110,6 +110,17 @@ export interface MessageDTO {
   flag: boolean;
   readedId: string[];
   contentModel: string;
+  contentId: Content[];
+  createAt: Date;
+  createBy: Schema.Types.ObjectId;
+}
+
+export interface ResponseMessageDTO {
+  _id: string;
+  flag: boolean;
+  readedId: string[];
+  contentModel: string;
+  contentId: Content[];
   createAt: Date;
   createBy: Schema.Types.ObjectId;
 }
@@ -119,7 +130,7 @@ export interface ResponseSendingDTO {
   messageBox: ResponseMessageBoxDTO;
 }
 
-interface LastMessageDTO {
+export interface LastMessageDTO {
   _id: string;
   flag: boolean;
   readedId: UserResponseDTO[];

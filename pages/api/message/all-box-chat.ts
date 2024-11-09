@@ -11,12 +11,20 @@ export default async function handler(
     authenticateToken(req, res, async () => {
       if (req.method === "GET") {
         try {
-          const { userId } = req.query;
-          if (!userId) {
-            return res.status(400).json({ message: "userId is required" });
+          if (req.user && req.user.id) {
+            const userId = req.user.id.toString();
+            if (!userId) {
+              return res.status(400).json({ message: "userId is required" });
+            }
+            const result = await fetchBoxChat(userId as string);
+            res
+              .status(200)
+              .json({ success: true, box: result, userId: userId });
+          } else {
+            return res.status(403).json({
+              message: "Forbidden: You do not have the required role"
+            });
           }
-          const result = await fetchBoxChat(userId as string);
-          res.status(200).json({ success: true, box: result });
         } catch (error) {
           console.error("Error fetching messageBox: ", error);
           const errorMessage =

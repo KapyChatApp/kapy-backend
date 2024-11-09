@@ -1,4 +1,3 @@
-
 import { findUser } from "@/lib/actions/user.action";
 import { authenticateToken } from "@/middleware/auth-middleware";
 import type { NextApiRequest, NextApiResponse } from "next";
@@ -12,9 +11,9 @@ export default async function handler(
       const { phonenumber } = req.query;
       try {
         if (typeof phonenumber !== "string") {
-          return res.status(400).json({ error: "Invalid user ID" });
+          return res.status(400).json({ error: "Invalid phone number" });
         }
-        const result= await findUser(phonenumber, req.user?.id);
+        const result = await findUser(phonenumber, req.user?.id);
         res.status(200).json(result);
       } catch (error) {
         console.error(error);
