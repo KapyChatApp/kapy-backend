@@ -5,6 +5,7 @@ import Comment from "@/database/comment.model";
 import User from "@/database/user.model";
 import { FileResponseDTO } from "@/dtos/FileDTO";
 import { connectToDatabase } from "../mongoose";
+import { Schema } from "mongoose";
 
 export const getAComment = async (commentId: string) => {
   try {
@@ -144,3 +145,30 @@ export const createComment = async (param: CreateCommentDTO) => {
     throw error;
   }
 };
+
+export const likeComment = async (commentId:string, userId:Schema.Types.ObjectId | undefined)=>{
+ try{
+    connectToDatabase();
+    const comment = await Comment.findById(commentId);
+    await comment.likedIds.addToSet(userId);
+    await comment.save();
+    return {message:`Liked ${commentId}`}
+ }catch(error){
+  console.log(error);
+  throw error;
+ }
+}
+
+export const disLikeComment = async (commentId:string, userId:Schema.Types.ObjectId | undefined)=>{
+  try{
+     connectToDatabase();
+     const comment = await Comment.findById(commentId);
+     await comment.likedIds.pull(userId);
+     await comment.save();
+     return { message: `Disliked comment ${commentId}` };
+  }catch(error){
+   console.log(error);
+   throw error;
+  }
+ }
+ 
