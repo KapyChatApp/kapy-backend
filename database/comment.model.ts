@@ -6,6 +6,8 @@ export interface IComment extends Document, IAudit{
     replyId:Schema.Types.ObjectId;
     caption:string;
     contentId:Schema.Types.ObjectId;
+    repliedIds:Schema.Types.ObjectId[];
+    likedIds:Schema.Types.ObjectId[];
     flag:boolean;
 }
 
@@ -14,6 +16,8 @@ const CommentSchema = new Schema<IComment>({
     replyId:{type:Schema.Types.ObjectId, required:true},
     caption:{type:String},
     contentId:{type:Schema.Types.ObjectId},
+    repliedIds:{type:[Schema.Types.ObjectId]},
+    likedIds:{type:[Schema.Types.ObjectId]},
     flag: { type: Boolean, required: true, default: true },
   });
   

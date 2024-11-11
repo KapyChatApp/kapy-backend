@@ -1,4 +1,5 @@
-import { like } from "@/lib/actions/post.action";
+
+import { like } from "@/lib/actions/like.action";
 import { authenticateToken } from "@/middleware/auth-middleware";
 import cors from "@/middleware/cors-middleware";
 import { NextApiRequest, NextApiResponse } from "next";

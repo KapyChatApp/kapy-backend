@@ -9,6 +9,9 @@ import File from "@/database/file.model";
 import { FileResponseDTO } from "@/dtos/FileDTO";
 import { findPairUser } from "./user.action";
 import Relation from "@/database/relation.model";
+import { CommentResponseDTO } from "@/dtos/CommentDTO";
+import Comment from "@/database/comment.model";
+import { getAComment } from "./comment.action";
 
 export const getAPost = async (
   postId: string,
@@ -50,6 +53,15 @@ export const getAPost = async (
       };
       filesResponse.push(fileResponse);
     }
+
+    const commentResponses:CommentResponseDTO[] = []; 
+      
+    const comments = await Comment.find({_id:{$in:post.comments}});
+    for(const comment of comments){
+      const commentResponse:CommentResponseDTO = await getAComment(comment._id);
+      commentResponses.push(commentResponse);
+    }
+
     const postResponse: PostResponseDTO = {
       _id: post._id,
       firstName: user.firstName,
@@ -58,12 +70,16 @@ export const getAPost = async (
       avatar: user.avatar,
       userId: post.userId,
       likedIds: post.likedIds,
-      comments: post.comments,
+      comments: commentResponses,
       shares: post.shares,
       caption: post.caption,
       createAt: post.createAt,
       contents: filesResponse,
     };
+
+    for (const c of postResponse.comments){
+      console.log("replys: "+ c.replieds);
+    }
     return postResponse;
   } catch (error) {
     console.log(error);
@@ -101,6 +117,15 @@ export const getSingleIdPosts = async (userId: string) => {
         };
         filesResponse.push(fileResponse);
       }
+      
+      const commentResponses:CommentResponseDTO[] = []; 
+      
+      const comments = await Comment.find({_id:{$in:post.comments}});
+      for(const comment of comments){
+        const commentResponse:CommentResponseDTO = await getAComment(comment._id);
+        commentResponses.push(commentResponse);
+      }
+
       const postResponse: PostResponseDTO = {
         _id: post._id,
         firstName: user.firstName,
@@ -109,7 +134,7 @@ export const getSingleIdPosts = async (userId: string) => {
         avatar: user.avatar,
         userId: post.userId,
         likedIds: post.likedIds,
-        comments: post.comments,
+        comments: commentResponses,
         shares: post.shares,
         caption: post.caption,
         createAt: post.createAt,
@@ -206,6 +231,7 @@ export const addPost = async (
   }
 };
 
+
 export const deletePost = async (
   postId: string,
   userId: Schema.Types.ObjectId
@@ -220,49 +246,6 @@ export const deletePost = async (
     await Post.findByIdAndDelete(postId);
 
     return { message: `Delete post ${postId} successfully!` };
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
-};
-
-export const like = async (
-  postId: string | undefined,
-  userId: Schema.Types.ObjectId | undefined
-) => {
-  try {
-    const post = await Post.findById(postId);
-    const user = await User.findById(userId);
-    if (!post || !user) {
-      throw new Error("Your require content is not exist!");
-    }
-    await post.likedIds.addToSet(userId);
-
-    await post.save();
-
-    return { message: `Liked post ${postId}` };
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
-};
-
-export const disLike = async (
-  postId: string | undefined,
-  userId: Schema.Types.ObjectId | undefined
-) => {
-  try {
-    const post = await Post.findById(postId);
-    const user = await User.findById(userId);
-    if (!post || !user) {
-      throw new Error("Your required content does not exist!");
-    }
-
-    await post.likedIds.pull(userId);
-
-    await post.save();
-
-    return { message: `Disliked post ${postId}` };
   } catch (error) {
     console.log(error);
     throw error;

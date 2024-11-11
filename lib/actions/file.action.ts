@@ -3,6 +3,7 @@ import File from "@/database/file.model";
 import formidable from "formidable";
 import mongoose, { Schema } from "mongoose";
 import { connectToDatabase } from "../mongoose";
+import { FileResponseDTO } from "@/dtos/FileDTO";
 
 const generateRandomString = (length = 20) => {
     const characters =
@@ -16,6 +17,28 @@ const generateRandomString = (length = 20) => {
   
     return result;
   };
+
+  export const getAFile = async (fileId:string)=>{
+    try{
+      connectToDatabase();
+      const file =await File.findById(fileId);
+      const fileResponse: FileResponseDTO = {
+        _id: file._id,
+        url: file.url,
+        fileName: file.fileName,
+        width: file.width,
+        height: file.height,
+        format: file.format,
+        bytes: file.bytes,
+        type: file.type,
+      };
+
+      return fileResponse;
+    }catch(error){
+      console.log(error);
+      throw error;
+    }
+  }
 
 export const createFile = async (file: formidable.File, userId:Schema.Types.ObjectId | undefined) => {
   try {
