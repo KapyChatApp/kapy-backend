@@ -1,51 +1,15 @@
 import { Schema } from "mongoose";
 import { UserResponseDTO } from "./UserDTO";
 
-export interface ImageContent {
-  type: "image";
-  url: string;
-  altText?: string;
-}
-export interface LinkContent {
-  type: "link";
-  url: string;
-  title?: string;
-}
 export interface FileContent {
-  type: "file";
   fileName: string;
-  fileUrl: string;
-  fileType: string;
-}
-
-export interface VideoContent {
-  type: "video";
-  fileName: string;
-  fileUrl: string;
-  fileType: string;
-  duration: number;
-}
-
-export interface VoiceContent {
-  type: "voice";
-  fileName: string;
-  fileUrl: string;
-  fileType: string;
-  duration: number;
-}
-
-export interface PostContent {
-  type: "post";
-  userId: string;
-  likedIds?: string[];
-  shares?: string[];
-  comments?: string[];
-  content: string;
-}
-
-export interface IconContent {
-  type: "icon";
-  name: string;
+  url: string;
+  publicId: string;
+  bytes: string;
+  width: string;
+  height: string;
+  format: string;
+  type: string;
 }
 
 export interface GPSContent {
@@ -60,16 +24,7 @@ export interface SegmentMessageDTO {
   userId: string;
   userName: string;
   ava: string;
-  content:
-    | string
-    | ImageContent
-    | LinkContent
-    | FileContent
-    | VideoContent
-    | GPSContent
-    | IconContent
-    | PostContent
-    | VoiceContent;
+  content: string | GPSContent | FileContent;
   time: Date;
   recipientId: string[];
 }
@@ -91,16 +46,7 @@ export interface ResponseMessageBoxDTO {
 
 export interface Content {
   _id: string;
-  content:
-    | string
-    | ImageContent
-    | LinkContent
-    | FileContent
-    | VideoContent
-    | GPSContent
-    | IconContent
-    | PostContent
-    | VoiceContent;
+  content: string | FileContent | GPSContent;
   createAt: Date;
   createBy: Schema.Types.ObjectId;
 }
@@ -109,8 +55,8 @@ export interface MessageDTO {
   _id: string;
   flag: boolean;
   readedId: string[];
-  contentModel: string;
   contentId: Content[];
+  text: string[];
   createAt: Date;
   createBy: Schema.Types.ObjectId;
 }
@@ -119,8 +65,8 @@ export interface ResponseMessageDTO {
   _id: string;
   flag: boolean;
   readedId: string[];
-  contentModel: string;
   contentId: Content[];
+  text: string[];
   createAt: Date;
   createBy: Schema.Types.ObjectId;
 }
@@ -134,8 +80,8 @@ export interface LastMessageDTO {
   _id: string;
   flag: boolean;
   readedId: UserResponseDTO[];
-  contentModel: string;
   contentId: Content[];
+  text: string[];
   createAt: string;
   createBy: string;
   __v: number;

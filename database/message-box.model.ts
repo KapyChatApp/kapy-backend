@@ -15,8 +15,8 @@ const MessageBoxSchema = new Schema<IMessageBox>({
   senderId: { type: Schema.Types.ObjectId, ref: "User", required: true },
   receiverIds: [{ type: Schema.Types.ObjectId, ref: "User", required: true }],
   messageIds: [{ type: Schema.Types.ObjectId, ref: "Message" }],
-  groupName: { type: String, required: true },
-  groupAva: { type: String, required: true },
+  groupName: { type: String, required: false, default: "" },
+  groupAva: { type: String, required: false, default: "" },
   flag: { type: Boolean, required: true, default: true },
   pin: { type: Boolean, required: true, default: false }
 });
