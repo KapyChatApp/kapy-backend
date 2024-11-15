@@ -1,4 +1,3 @@
-import { SegmentMessageDTO } from "@/dtos/MessageDTO";
 import { editMessage } from "@/lib/actions/message.action";
 import { authenticateToken } from "@/middleware/auth-middleware";
 import cors from "@/middleware/cors-middleware";
@@ -11,10 +10,9 @@ export default async function handle(
     authenticateToken(req, res, async () => {
       if (req.method === "PUT") {
         try {
-          const { messageId, contentId, newContent, userId } = req.body as {
+          const { messageId, newContent, userId } = req.body as {
             messageId: string;
-            contentId: string;
-            newContent: SegmentMessageDTO["content"];
+            newContent: string;
             userId: string;
           };
           if (!messageId) {
@@ -25,7 +23,6 @@ export default async function handle(
 
           const result = await editMessage(
             messageId as string,
-            contentId as string,
             newContent,
             userId
           );

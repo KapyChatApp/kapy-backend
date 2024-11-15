@@ -6,8 +6,8 @@ import { addPost } from "@/lib/actions/post.action";
 
 export const config = {
   api: {
-    bodyParser: false,
-  },
+    bodyParser: false
+  }
 };
 
 export default async function handler(

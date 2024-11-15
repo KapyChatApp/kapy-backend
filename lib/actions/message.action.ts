@@ -2,115 +2,107 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "user server";
 
-import Message, { IMessage } from "@/database/message.model";
+import Message from "@/database/message.model";
 import { connectToDatabase } from "../mongoose";
 import { SegmentMessageDTO } from "@/dtos/MessageDTO";
-import mongoose, { Types } from "mongoose";
+import mongoose, { Schema, Types } from "mongoose";
 import User from "@/database/user.model";
-import Text from "@/database/text.model";
-import Image from "@/database/image.model";
-import Location from "@/database/gps.model";
-import Icon from "@/database/icon.model";
-import Video from "@/database/video.model";
-import Voice from "@/database/voice.schema";
-import Post from "@/database/post.model";
 import MessageBox from "@/database/message-box.model";
-import Pusher from "pusher-js";
-import cluster from "cluster";
+import formidable from "formidable";
+import cloudinary from "@/cloudinary";
+import File from "@/database/file.model";
 
-async function createContent(data: SegmentMessageDTO) {
-  let contentModel: string;
-  let contentId: mongoose.Types.ObjectId;
+const generateRandomString = (length = 20) => {
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    result += characters[randomIndex];
+  }
+
+  return result;
+};
+
+async function createFile(file: formidable.File, userId: string) {
+  try {
+    connectToDatabase();
+    const mimetype = file.mimetype;
+    let result = null;
+    let type = "";
+    if (mimetype?.startsWith("image/")) {
+      // Upload hình ảnh
+      result = await cloudinary.uploader.upload(file.filepath, {
+        folder: "Avatar"
+      });
+      type = "Image";
+    } else if (mimetype?.startsWith("video/")) {
+      // Upload video
+      result = await cloudinary.uploader.upload(file.filepath, {
+        resource_type: "video",
+        folder: "Videos"
+      });
+      type = "Video";
+    } else if (mimetype?.startsWith("audio/")) {
+      // Upload âm thanh
+      result = await cloudinary.uploader.upload(file.filepath, {
+        resource_type: "raw",
+        folder: "Audios"
+      });
+      type = "Audio";
+    } else {
+      result = await cloudinary.uploader.upload(file.filepath, {
+        resource_type: "raw",
+        folder: "Documents"
+      });
+      type = "Other";
+    }
+
+    const createdFile = await File.create({
+      fileName: generateRandomString(),
+      url: result.url,
+      publicId: result.public_id,
+      bytes: result.bytes,
+      width: result.width,
+      height: result.height,
+      format: result.format,
+      type: type,
+      createBy: new Types.ObjectId(userId)
+    });
+    return createdFile;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+async function createContent(data: SegmentMessageDTO, files: formidable.Files) {
+  let contentIds: mongoose.Types.ObjectId[] = [];
   const userObjectId = new Types.ObjectId(data.userId);
+  let text: string[] = [];
 
   if (typeof data.content === "string") {
-    contentModel = "Text";
-    const textContent = await Text.create({
-      content: data.content,
-      createBy: userObjectId
-    });
-    contentId = textContent._id;
-  } else if (data.content.type === "image") {
-    contentModel = "Image";
-    const imageContent = await Image.create({
-      fileName: data.content.altText,
-      path: data.content.url,
-      size: 0,
-      createBy: userObjectId
-    });
-    contentId = imageContent._id;
-  } else if (data.content.type === "link") {
-    contentModel = "Text";
-    const textContent = await Text.create({
-      content: data.content.url,
-      createBy: userObjectId
-    });
-    contentId = textContent._id;
-  } else if (data.content.type === "file") {
-    contentModel = "Text";
-    const textContent = await Text.create({
-      content: data.content.fileName + "-" + data.content.fileUrl,
-      createBy: userObjectId
-    });
-    contentId = textContent._id;
-  } else if (data.content.type === "gps") {
-    contentModel = "Location";
-    const gps =
-      data.content.latitude.toString() +
-      "-" +
-      data.content.longitude.toString();
-    const locationContent = await Location.create({
-      gps: gps,
-      createBy: userObjectId
-    });
-    contentId = locationContent._id;
-  } else if (data.content.type === "icon") {
-    contentModel = "Icon";
-    const iconContent = await Icon.create({
-      content: data.content.name,
-      createBy: userObjectId
-    });
-    contentId = iconContent._id;
-  } else if (data.content.type === "video") {
-    contentModel = "Video";
-    const videoContent = await Video.create({
-      fileName: data.content.fileName,
-      path: data.content.fileUrl,
-      size: data.content.duration,
-      createBy: userObjectId
-    });
-    contentId = videoContent._id;
-  } else if (data.content.type === "voice") {
-    contentModel = "Voice";
-    const voiceContent = await Voice.create({
-      fileName: data.content.fileName,
-      path: data.content.fileUrl,
-      size: data.content.duration,
-      createBy: userObjectId
-    });
-    contentId = voiceContent._id;
-  } else if (data.content.type === "post") {
-    contentModel = "Post";
-    const postContent = await Post.create({
-      userId: data.userId, // Lưu ID người dùng
-      likedIds: [],
-      shares: [],
-      comments: [],
-      content: data.content.content, // Nội dung bài viết
-      createdAt: new Date(),
-      flag: true,
-      createBy: userObjectId
-    });
-    contentId = postContent._id;
+    text = [data.content];
+  } else if (["image", "audio", "video", "other"].includes(data.content.type)) {
+    if (files.file) {
+      const file = Array.isArray(files.file) ? files.file[0] : files.file;
+      const createdFile = await createFile(file, data.userId);
+      contentIds = [createdFile._id];
+      text = [];
+    } else {
+      throw new Error("No file provided");
+    }
   } else {
     throw new Error("Invalid content type");
   }
 
+  // Tạo tin nhắn
   const message = await Message.create({
     flag: true,
     readedId: [data.userId],
-    contentModel: contentModel,
-    contentId: [contentId],
+    contentId: contentIds,
+    text: text,
     createdAt: new Date(),
     updatedAt: new Date(),
     createBy: userObjectId
@@ -119,7 +111,10 @@ async function createContent(data: SegmentMessageDTO) {
   return message;
 }
 
-export async function createMessage(data: SegmentMessageDTO) {
+export async function createMessage(
+  data: SegmentMessageDTO,
+  files: formidable.Files
+) {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const Pusher = require("pusher");
   try {
@@ -167,10 +162,10 @@ export async function createMessage(data: SegmentMessageDTO) {
         );
       }
 
-      const message = await createContent(data);
+      const message = await createContent(data, files);
       const populatedMessage = await Message.findById(message._id).populate({
         path: "contentId",
-        model: message.contentModel,
+        model: "File",
         select: "",
         options: { strictPopulate: false }
       });
@@ -192,19 +187,12 @@ export async function createMessage(data: SegmentMessageDTO) {
       if (data.recipientId.length > 1) {
         throw new Error("Should create group before sending");
       } else {
-        const message = await createContent(data);
-        const populatedMessage = await Message.findById(message._id).populate({
-          path: "contentId",
-          model: message.contentModel,
-          select: "",
-          options: { strictPopulate: false }
-        });
         let messageBox = await MessageBox.findOneAndUpdate(
           {
             senderId: data.userId,
             $addToSet: { receiverIds: { $each: data.recipientId } }
           },
-          { $push: { messageIds: message._id } },
+          { $set: { senderId: data.userId } },
           { new: true }
         );
 
@@ -215,10 +203,11 @@ export async function createMessage(data: SegmentMessageDTO) {
           if (!recipientExists) {
             throw new Error("Recipient does not exist");
           }
+
           messageBox = await MessageBox.create({
             senderId: data.userId,
             receiverIds: data.recipientId,
-            messageIds: [message._id],
+            messageIds: [],
             groupName: "",
             groupAva: "",
             flag: true,
@@ -226,18 +215,30 @@ export async function createMessage(data: SegmentMessageDTO) {
             createBy: userObjectId
           });
         }
-
-        const pusher = new Pusher({
-          appId: process.env.PUSHER_APP_ID,
-          key: process.env.PUSHER_APP_KEY,
-          secret: process.env.PUSHER_APP_SECRET,
-          cluster: "ap1",
-          useTLS: true
+        const message = await createContent(data, files);
+        messageBox = await MessageBox.findByIdAndUpdate(
+          messageBox._id,
+          { $push: { messageIds: message._id } },
+          { new: true }
+        );
+        const populatedMessage = await Message.findById(message._id).populate({
+          path: "contentId",
+          model: "File",
+          select: "",
+          options: { strictPopulate: false }
         });
 
-        pusher.trigger("my-channel", "my-event", {
-          message: `${JSON.stringify(message)}\n\n`
-        });
+        // const pusher = new Pusher({
+        //   appId: process.env.PUSHER_APP_ID,
+        //   key: process.env.PUSHER_APP_KEY,
+        //   secret: process.env.PUSHER_APP_SECRET,
+        //   cluster: "ap1",
+        //   useTLS: true
+        // });
+
+        // pusher.trigger("my-channel", "my-event", {
+        //   message: `${JSON.stringify(message)}\n\n`
+        // });
 
         return { success: true, populatedMessage, messageBox };
       }
@@ -296,8 +297,7 @@ export async function recieveMessage(messageId: string) {
 
 export async function editMessage(
   messageId: string,
-  contentId: string,
-  newContent: SegmentMessageDTO["content"],
+  newContent: string,
   userId: string
 ) {
   try {
@@ -310,19 +310,8 @@ export async function editMessage(
     }
 
     if (message.readedId.includes(userId)) {
-      const contentIndex = message.contentId.findIndex(
-        (id: { toString: () => string }) => id.toString() === contentId
-      );
-      if (contentIndex === -1) {
-        throw new Error("Content not found");
-      }
-      if (message.contentModel === "Text") {
-        const userObjectId = new Types.ObjectId(userId);
-        const newText = await Text.create({
-          content: newContent,
-          createBy: userObjectId
-        });
-        message.contentId.push(newText._id);
+      if (message.text !== "" && message.contentId.length === 0) {
+        message.text.push(newContent);
         message.updatedAt = new Date();
         await message.save();
         const updatedMessage = await Message.findById(messageId).populate(
@@ -357,12 +346,13 @@ export async function deleteOrRevokeMessage(
     }
 
     if (action === "revoke") {
-      const recoverContent = "Message is revoked";
-      const message = await Message.findById(messageId);
-      const contentIdToRevoke =
-        message.contentId[message.contentId.length - 1].toString();
-      console.log(contentIdToRevoke);
-      await editMessage(messageId, contentIdToRevoke, recoverContent, userId);
+      if (message.text && message.text.length > 0) {
+        message.text.push("Message revoked");
+      } else if (message.contentId && message.contentId.length > 0) {
+        message.text = message.text || [];
+        message.text.push("Message revoked");
+      }
+      await message.save();
       return { success: true, message: "Message revoked" };
     } else if (action == "delete") {
       message.flag = false;
@@ -484,38 +474,22 @@ export async function findMessages(boxId: string, query: string) {
       _id: { $in: messageBox.messageIds }
     }).populate("contentId");
 
-    let filteredMessages = messages;
+    const resultMessages = messages.filter((message) => {
+      // Tìm kiếm trong text
+      if (message.text.length > 0) {
+        return message.text.some((text: string) =>
+          text.toLowerCase().includes(query.toLowerCase())
+        );
+      }
 
-    filteredMessages = messages.filter((message) => {
-      return message.contentModel === "Text";
-    });
+      // Tìm kiếm trong fileName (nếu có contentId)
+      if (message.contentId.length > 0) {
+        const file = message.contentId[0];
+        return file.fileName.toLowerCase().includes(query.toLowerCase());
+      }
 
-    const populatedMessages = await Promise.all(
-      filteredMessages.map(async (message) => {
-        const populatedMessage = await Message.findById(message._id).populate({
-          path: "contentId",
-          model: message.contentModel,
-          select: ""
-        });
-        return populatedMessage;
-      })
-    );
-
-    const resultMessages = populatedMessages.filter((populatedMessage) => {
-      const content =
-        populatedMessage?.contentId[populatedMessage?.contentId.length - 1];
-      return (
-        content.content &&
-        content.content
-          .toLowerCase()
-          .trim()
-          .includes(query.toLowerCase().trim())
-      );
-    });
-
-    if (resultMessages.length === 0) {
       return { success: false, messages: [] };
-    }
+    });
 
     return { success: true, messages: resultMessages };
   } catch (error) {
@@ -666,31 +640,6 @@ export async function removeMessage(messageId: string) {
     if (!message) {
       throw new Error("Message not found");
     }
-
-    const { contentModel, contentId: contentIds } = message;
-
-    let ContentModel;
-    switch (contentModel) {
-      case "Text":
-        ContentModel = Text;
-        break;
-      case "Image":
-        ContentModel = Image;
-        break;
-      case "Video":
-        ContentModel = Video;
-        break;
-      case "Voice":
-        ContentModel = Voice;
-        break;
-      case "Location":
-        ContentModel = Location;
-        break;
-      default:
-        throw new Error("Invalid content model");
-    }
-
-    await ContentModel.deleteMany({ _id: { $in: contentIds } });
 
     await Message.findByIdAndDelete(messageId);
 
