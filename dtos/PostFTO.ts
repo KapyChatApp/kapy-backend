@@ -1,5 +1,6 @@
 import { Schema } from "mongoose";
 import { FileResponseDTO } from "./FileDTO";
+import { CommentResponseDTO } from "./CommentDTO";
 
 export interface CreatePostDTO {
   userId: Schema.Types.ObjectId|undefined;
@@ -16,7 +17,7 @@ export interface PostResponseDTO{
   userId:Schema.Types.ObjectId;
   likedIds:Schema.Types.ObjectId[];
   shares:PostResponseDTO[];
-  comments:Comment[];
+  comments:CommentResponseDTO[];
   caption:string;
   createAt:string;
   contents:FileResponseDTO[];
