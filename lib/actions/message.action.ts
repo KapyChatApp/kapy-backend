@@ -11,6 +11,7 @@ import MessageBox from "@/database/message-box.model";
 import formidable from "formidable";
 import cloudinary from "@/cloudinary";
 import File from "@/database/file.model";
+import { pusherServer } from "../pusher";
 
 const generateRandomString = (length = 20) => {
   const characters =
@@ -115,8 +116,6 @@ export async function createMessage(
   data: SegmentMessageDTO,
   files: formidable.Files
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const Pusher = require("pusher");
   try {
     await connectToDatabase();
 
@@ -228,17 +227,11 @@ export async function createMessage(
           options: { strictPopulate: false }
         });
 
-        // const pusher = new Pusher({
-        //   appId: process.env.PUSHER_APP_ID,
-        //   key: process.env.PUSHER_APP_KEY,
-        //   secret: process.env.PUSHER_APP_SECRET,
-        //   cluster: "ap1",
-        //   useTLS: true
-        // });
-
-        // pusher.trigger("my-channel", "my-event", {
-        //   message: `${JSON.stringify(message)}\n\n`
-        // });
+        await pusherServer.trigger(
+          `private-${messageBox._id}`,
+          "new-message",
+          message
+        );
 
         return { success: true, populatedMessage, messageBox };
       }
