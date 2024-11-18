@@ -35,7 +35,7 @@ export default async function handler(
         console.log("Files:", files);
 
         try {
-          // Chuyển đổi `fields` thành `SegmentMessageDTO`
+          // Chuyển đổi fields thành SegmentMessageDTO
           const receiverId = Array.isArray(fields.recipientId)
             ? fields.recipientId[0]
             : "";
