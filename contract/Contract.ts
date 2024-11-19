@@ -1,8 +1,10 @@
 import {
   MessageDTO,
+  RespBoxChatArrangeDTO,
+  RespBoxGroupArrangeDTO,
   ResponseMessageBoxDTO,
-  ResponseSendingDTO,
-  SegmentMessageDTO
+  ResponseMessageDTO,
+  ResponseSendingDTO
 } from "@/dtos/MessageDTO";
 import { FriendResponseDTO } from "@/dtos/FriendDTO";
 import { OTPResponseDTO } from "@/dtos/OTPDTO";
@@ -10,6 +12,7 @@ import { SingleMessageResponseDTO } from "@/dtos/ShareDTO";
 import { AuthenticationDTO, UserResponseDTO } from "@/dtos/UserDTO";
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
+import { MediaResponseDTO } from "@/dtos/MediaDTO";
 
 const c = initContract();
 
@@ -183,12 +186,11 @@ export const Contract = c.router(
         metadata: { role: "admin" } as const
       },
       findUser: {
-        method: "POST",
+        method: "GET",
         path: "/api/user/find",
         responses: {
           201: c.type<UserResponseDTO>()
         },
-        body: z.object({}),
         headers: z.object({
           auth: z
             .string()
@@ -197,7 +199,8 @@ export const Contract = c.router(
             )
         }),
         query: z.object({
-          phonenumber: z.string()
+          phonenumber: z.string().optional(),
+          userId: z.string().optional()
         }),
         summary: "Disable a user",
         metadata: { role: "admin" } as const
@@ -471,7 +474,7 @@ export const Contract = c.router(
         method: "GET",
         path: "/api/message/all",
         responses: {
-          200: c.type<SegmentMessageDTO[]>(),
+          200: c.type<ResponseMessageDTO[]>(),
           400: c.type<{ message: string }>(),
           404: c.type<{ message: string }>(),
           500: c.type<{ message: string; error?: string }>()
@@ -699,6 +702,52 @@ export const Contract = c.router(
         summary: "Send a message",
         metadata: { role: "user" } as const
       },
+      allChat: {
+        method: "GET",
+        path: "/api/message/all-box-chat",
+        responses: {
+          200: c.type<RespBoxChatArrangeDTO[]>(),
+          400: c.type<{ message: string }>(),
+          404: c.type<{ message: string }>(),
+          500: c.type<{ message: string; error?: string }>()
+        },
+        query: z.object({
+          boxId: z.string()
+        }),
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        summary: "Get all message box of a certain user",
+        description:
+          "Fetches all message box for a specific user using its `userId`."
+      },
+      allGroup: {
+        method: "GET",
+        path: "/api/message/all-box-group",
+        responses: {
+          200: c.type<RespBoxGroupArrangeDTO[]>(),
+          400: c.type<{ message: string }>(),
+          404: c.type<{ message: string }>(),
+          500: c.type<{ message: string; error?: string }>()
+        },
+        query: z.object({
+          boxId: z.string()
+        }),
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        summary: "Get all message box group of a certain group",
+        description:
+          "Fetches all message box for a specific group using its `groupId`."
+      },
       listMessages: {
         method: "GET",
         path: "/api/message/management/list",
@@ -790,7 +839,50 @@ export const Contract = c.router(
         }),
         summary: "Search messages by ID and query",
         metadata: { role: "admin" } as const
-      }
+      }, media: c.router({
+        uploadAvatar: {
+          method: "POST",
+          path: "/api/upload-avatar",
+          contentType: 'multipart/form-data',
+          description: "Upload an avatar image for the authenticated user",
+          responses: {
+            200: c.type<MediaResponseDTO>(), 
+            400: c.type<MediaResponseDTO>(),
+            405: c.type<MediaResponseDTO>(),
+            500: c.type<MediaResponseDTO>(),
+          },
+          headers: z.object({
+            auth: z
+              .string()
+              .regex(
+                /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+              )
+          }),
+          body: c.type<{ file: File }>(),
+          summary: "Upload user avatar image",
+        },
+        uploadBackground: {
+          method: "POST",
+          path: "/api/upload-background",
+          description: "Upload a background image for the authenticated user",
+          contentType: 'multipart/form-data',
+          responses: {
+            200: c.type<MediaResponseDTO>(),  
+            400: c.type<MediaResponseDTO>(),
+            405: c.type<MediaResponseDTO>(),
+            500: c.type<MediaResponseDTO>(),
+          },
+          headers: z.object({
+            auth: z
+              .string()
+              .regex(
+                /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+              )
+          }),
+          body: c.type<{ file: File }>(),
+          summary: "Upload user background image",
+        },
+      })
     })
   },
   {

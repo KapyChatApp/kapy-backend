@@ -1,26 +1,26 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    async headers() {
-        return [
+  async headers() {
+    return [
+      {
+        // matching all API routes
+        source: "/api/:path*",
+        headers: [
+          { key: "Access-Control-Allow-Credentials", value: "true" },
+          { key: "Access-Control-Allow-Origin", value: "*" }, // replace this your actual origin
           {
-            source: '/(.*)', // Áp dụng cho tất cả các đường dẫn
-            headers: [
-              {
-                key: 'Access-Control-Allow-Origin',
-                value: '*', // Hoặc chỉ định miền cụ thể
-              },
-              {
-                key: 'Access-Control-Allow-Methods',
-                value: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-              },
-              {
-                key: 'Access-Control-Allow-Headers',
-                value: 'Authorization, Content-Type',
-              },
-            ],
+            key: "Access-Control-Allow-Methods",
+            value: "GET,DELETE,PATCH,POST,PUT"
           },
-        ];
-      },
+          {
+            key: "Access-Control-Allow-Headers",
+            value:
+              "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Authorization, Date, X-Api-Version"
+          }
+        ]
+      }
+    ];
+  }
 };
 
 export default nextConfig;

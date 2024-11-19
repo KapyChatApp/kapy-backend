@@ -16,6 +16,7 @@ export function authenticateToken(
   res: NextApiResponse,
   next: () => void
 ) {
+  if (req.method === "OPTIONS") return next();
   const isOpenApi = req.headers["isopenapi"];
   const authHeader = isOpenApi
     ? req.headers["auth"]
@@ -52,30 +53,4 @@ export function authorizeRole(roles: string[]) {
 
     next();
   };
-}
-const cors = Cors({
-  methods: ["GET", "POST", "HEAD"],
-  origin: "*", // Cho phép tất cả domain hoặc giới hạn bằng cách thay bằng domain cụ thể
-});
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function runMiddleware(req: NextApiRequest, res: NextApiResponse, fn: any) {
-  return new Promise((resolve, reject) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    fn(req, res, (result: any) => {
-      if (result instanceof Error) {
-        return reject(result);
-      }
-      return resolve(result);
-    });
-  });
-}
-
-export default async function corsMiddleware(
-  req: NextApiRequest,
-  res: NextApiResponse,
-  next: () => void
-) {
-  await runMiddleware(req, res, cors);
-  next();
 }
