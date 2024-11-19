@@ -14,6 +14,7 @@ export default async function handler(
             throw new Error('You are unauthenticated!');
           }
           const myPosts = await getSingleIdPosts(req.user.id.toString());
+        
           res.status(200).json(myPosts);
         } catch (error) {
           console.error(error);

@@ -114,3 +114,11 @@ export interface RespBoxGroupArrangeDTO {
   pin: boolean;
   lastMessage?: LastMessageDTO;
 }
+
+export interface MessageBoxResponseDTO{
+  _id:string;
+  name:string;
+  avatar:string;
+  receiverId:string;
+  messages:SegmentMessageDTO[];
+}

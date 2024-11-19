@@ -96,7 +96,7 @@ export const getSingleIdPosts = async (userId: string) => {
     const user = await User.findById(userId);
     const posts = await Post.find({ userId: userId });
     if (posts.length == 0) {
-      throw new Error("Not found!");
+      return false;
     }
     const postsResponse: PostResponseDTO[] = [];
     for (const post of posts) {
