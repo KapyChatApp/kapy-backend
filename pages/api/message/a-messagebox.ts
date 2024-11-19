@@ -1,4 +1,4 @@
-import { fetchBoxChat } from "@/lib/actions/message.action";
+import { getAMessageBox } from "@/lib/actions/message.action";
 import { NextApiRequest, NextApiResponse } from "next/types";
 import { authenticateToken } from "@/middleware/auth-middleware";
 import cors from "@/middleware/cors-middleware";
@@ -9,6 +9,7 @@ export default async function handler(
 ) {
   cors(req, res, async () => {
     authenticateToken(req, res, async () => {
+        const {boxId} = req.query;
       if (req.method === "GET") {
         try {
           if (req.user && req.user.id) {
@@ -16,7 +17,10 @@ export default async function handler(
             if (!userId) {
               return res.status(400).json({ message: "userId is required" });
             }
-            const result = await fetchBoxChat(userId as string);
+            if (typeof boxId !== "string") {
+                return res.status(400).json({ error: "Invalid user ID" });
+              }
+            const result = await getAMessageBox(boxId,req.user.id.toString());
             res
               .status(200)
               .json(result);

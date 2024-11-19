@@ -4,7 +4,7 @@
 
 import Message from "@/database/message.model";
 import { connectToDatabase } from "../mongoose";
-import { SegmentMessageDTO } from "@/dtos/MessageDTO";
+import { MessageBoxResponseDTO, SegmentMessageDTO } from "@/dtos/MessageDTO";
 import mongoose, { Schema, Types } from "mongoose";
 import User from "@/database/user.model";
 import MessageBox from "@/database/message-box.model";
@@ -491,15 +491,34 @@ export async function findMessages(boxId: string, query: string) {
   }
 }
 
+export async function getAMessageBox(boxId:string | undefined, userId:string){
+  try{
+    connectToDatabase();
+
+    const messageBox = await MessageBox.findById(boxId).populate("receiverIds", "firstName lastName avatar _id")
+    .populate("messageIds");;
+
+    const messageBoxResponse:MessageBoxResponseDTO ={
+      _id:messageBox._id,
+      name: messageBox.receiverIds.length > 2? messageBox.groupName : messageBox.senderId.toString()===userId? (messageBox.receiverIds[1].firstName + ' ' + messageBox.receiverIds[1].lastName):(messageBox.receiverIds[0].firstName + ' ' + messageBox.receiverIds[0].lastName),
+      avatar:  messageBox.receiverIds.length > 2? messageBox.groupAva : messageBox.senderId.toString()===userId? messageBox.receiverIds[1].avatar  : messageBox.receiverIds[0].avatar ,
+      messages:messageBox.messageIds,
+      receiverId: messageBox.senderId.toString()===userId? messageBox.receiverIds[1]._id : messageBox.receiverIds[0]._id,
+    }
+    return messageBoxResponse;
+  }catch(error){
+    console.log(error);
+    throw error;
+  }
+}
+
 export async function fetchBoxChat(userId: string) {
   try {
     await connectToDatabase();
     const messageBoxes = await MessageBox.find({
-      senderId: userId,
-      receiverIds: { $size: 1 }
+      receiverIds:{$in:[userId]}
     })
-      .populate("senderId", "nickName")
-      .populate("receiverIds", "nickName avatar")
+      .populate("receiverIds", "firstName lastName avatar _id")
       .populate("messageIds");
     if (!messageBoxes.length) {
       return {
@@ -507,39 +526,22 @@ export async function fetchBoxChat(userId: string) {
         box: "No message boxes found for this userId"
       };
     }
-    // Lấy nội dung contentId từ messageId cuối cùng trong mỗi messageBox
-    const messageBoxesWithContent = await Promise.all(
-      messageBoxes.map(async (messageBox) => {
-        // Lấy messageId cuối cùng
-        const lastMessageId =
-          messageBox.messageIds[messageBox.messageIds.length - 1];
+    
+    const messageBoxResponses:MessageBoxResponseDTO[] = [];
 
-        if (!lastMessageId) {
-          return messageBox; // Nếu không có messageId nào, trả về messageBox gốc
-        }
-
-        // Tìm message theo messageId cuối cùng
-        const message = await Message.findById(lastMessageId);
-        const populatedMessage = await Message.findById(lastMessageId)
-          .populate({
-            path: "contentId",
-            model: message.contentModel,
-            select: "",
-            options: { strictPopulate: false }
-          })
-          .populate("readedId");
-
-        if (populatedMessage && populatedMessage.contentId) {
-          return {
-            ...messageBox.toObject(),
-            lastMessage: populatedMessage
-          };
-        }
-
-        return messageBox;
-      })
-    );
-    return { success: true, box: messageBoxesWithContent };
+    for(const messageBox of messageBoxes) {
+      const messageBoxResponse:MessageBoxResponseDTO ={
+        _id:messageBox._id,
+        name: messageBox.receiverIds.length > 2? messageBox.groupName : messageBox.senderId.toString()===userId? (messageBox.receiverIds[1].firstName + ' ' + messageBox.receiverIds[1].lastName):(messageBox.receiverIds[0].firstName + ' ' + messageBox.receiverIds[0].lastName),
+        avatar:  messageBox.receiverIds.length > 2? messageBox.groupAva : messageBox.senderId.toString()===userId? messageBox.receiverIds[1].avatar  : messageBox.receiverIds[0].avatar ,
+        messages:messageBox.messageIds,
+        receiverId: messageBox.senderId.toString()===userId? messageBox.receiverIds[1]._id : messageBox.receiverIds[0]._id,
+      }
+      messageBoxResponses.push(messageBoxResponse);
+    }
+    
+    return messageBoxResponses;
+   
   } catch (error) {
     console.error("Error fetching messages: ", error);
     throw error;
