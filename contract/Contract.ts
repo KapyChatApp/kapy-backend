@@ -12,6 +12,7 @@ import { SingleMessageResponseDTO } from "@/dtos/ShareDTO";
 import { AuthenticationDTO, UserResponseDTO } from "@/dtos/UserDTO";
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
+import { MediaResponseDTO } from "@/dtos/MediaDTO";
 
 const c = initContract();
 
@@ -80,7 +81,6 @@ export const Contract = c.router(
         body: z.object({
           firstName: z.string(),
           lastName: z.string(),
-          avatar: z.string(),
           nickName: z.string().optional(),
           phoneNumber: z.string(),
           email: z.string().email(),
@@ -839,7 +839,50 @@ export const Contract = c.router(
         }),
         summary: "Search messages by ID and query",
         metadata: { role: "admin" } as const
-      }
+      }, media: c.router({
+        uploadAvatar: {
+          method: "POST",
+          path: "/api/upload-avatar",
+          contentType: 'multipart/form-data',
+          description: "Upload an avatar image for the authenticated user",
+          responses: {
+            200: c.type<MediaResponseDTO>(), 
+            400: c.type<MediaResponseDTO>(),
+            405: c.type<MediaResponseDTO>(),
+            500: c.type<MediaResponseDTO>(),
+          },
+          headers: z.object({
+            auth: z
+              .string()
+              .regex(
+                /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+              )
+          }),
+          body: c.type<{ file: File }>(),
+          summary: "Upload user avatar image",
+        },
+        uploadBackground: {
+          method: "POST",
+          path: "/api/upload-background",
+          description: "Upload a background image for the authenticated user",
+          contentType: 'multipart/form-data',
+          responses: {
+            200: c.type<MediaResponseDTO>(),  
+            400: c.type<MediaResponseDTO>(),
+            405: c.type<MediaResponseDTO>(),
+            500: c.type<MediaResponseDTO>(),
+          },
+          headers: z.object({
+            auth: z
+              .string()
+              .regex(
+                /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+              )
+          }),
+          body: c.type<{ file: File }>(),
+          summary: "Upload user background image",
+        },
+      })
     })
   },
   {
