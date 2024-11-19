@@ -1,8 +1,8 @@
 import Relation from "@/database/relation.model";
-import { FriendRequestDTO } from "@/dtos/FriendDTO";
+import { FriendRequestDTO, FriendResponseDTO } from "@/dtos/FriendDTO";
 import { findPairUser } from "./user.action";
 import User from "@/database/user.model";
-
+import { Schema } from "mongoose";
 export async function addFriend(param: FriendRequestDTO) {
   try {
     const [stUser, ndUser] = [param.sender, param.receiver].sort();
@@ -235,6 +235,40 @@ export async function unBlock(param: FriendRequestDTO) {
     await stUser.save();
     console.log(deletedRelation);
   } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function find(q:string, userId:Schema.Types.ObjectId | undefined){
+  try{
+    const friends = await User.find({
+      $or: [
+        { firstName: { $regex: q, $options: 'i' } },  
+        { lastName: { $regex: q, $options: 'i' } }   
+      ]
+    });
+
+    console.log("friends: ",friends)
+    
+    const friendResponses:FriendResponseDTO[] = [];
+
+    for(const friend of friends){
+      const friendResponse:FriendResponseDTO={
+        _id:friend._id,
+        firstName:friend.firstName,
+        lastName:friend.lastName,
+        avatar:friend.avatar,
+        nickName:friend.nickName
+      } 
+
+      if(friend.friendIds.includes(userId)){
+        friendResponses.push(friendResponse);
+      }
+    }
+
+    return friendResponses;
+  }catch(error){
     console.log(error);
     throw error;
   }

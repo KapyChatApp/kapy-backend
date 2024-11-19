@@ -385,6 +385,25 @@ export const Contract = c.router(
         }),
         summary: "Friend Profile",
         metadata: { role: "user" } as const
+      },
+      find:{
+        method: "GET",
+        path: "/api/friend/find",
+        responses: {
+          201: c.type<FriendResponseDTO[]>()
+        },
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        query: z.object({
+          q: z.string()
+        }),
+        summary: "Find friend regex",
+        metadata: { role: "user" } as const
       }
     }),
     mine: c.router({
@@ -842,7 +861,7 @@ export const Contract = c.router(
       }, media: c.router({
         uploadAvatar: {
           method: "POST",
-          path: "/api/upload-avatar",
+          path: "/api/media/upload-avatar",
           contentType: 'multipart/form-data',
           description: "Upload an avatar image for the authenticated user",
           responses: {
@@ -863,7 +882,7 @@ export const Contract = c.router(
         },
         uploadBackground: {
           method: "POST",
-          path: "/api/upload-background",
+          path: "/api/media/upload-background",
           description: "Upload a background image for the authenticated user",
           contentType: 'multipart/form-data',
           responses: {
