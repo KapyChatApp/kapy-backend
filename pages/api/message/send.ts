@@ -1,4 +1,4 @@
-import { SegmentMessageDTO } from "@/dtos/MessageDTO";
+import { RequestSendMessageDTO } from "@/dtos/MessageDTO";
 import { createMessage } from "@/lib/actions/message.action";
 import { authenticateToken } from "@/middleware/auth-middleware";
 import cors from "@/middleware/cors-middleware";
@@ -35,31 +35,36 @@ export default async function handler(
         console.log("Files:", files);
 
         try {
-          // Chuyển đổi fields thành SegmentMessageDTO
-          const receiverId = Array.isArray(fields.recipientId)
-            ? fields.recipientId[0]
-            : "";
-          const receiverIdsArray = receiverId
-            ? receiverId.split(",").map((id) => id.trim())
-            : [];
-          const data: SegmentMessageDTO = {
-            groupId: Array.isArray(fields.groupId) ? fields.groupId[0] : "",
-            userId: Array.isArray(fields.userId) ? fields.userId[0] : "",
-            content: JSON.parse(fields.content as unknown as string),
-            userName: "",
-            ava: "",
-            time: new Date(),
-            recipientId: receiverIdsArray
-          };
-          console.log("Parsed data:", data);
+          // Chuyển đổi `fields` thành `RequestSendMessage`
+          if (req.user && req.user.id) {
+            const userId = req.user.id.toString();
+            if (userId) {
+              // const receiverId = Array.isArray(fields.recipientId)
+              //   ? fields.recipientId[0]
+              //   : "";
+              // const receiverIdsArray = receiverId
+              //   ? receiverId.split(",").map((id) => id.trim())
+              //   : [];
+              const data: RequestSendMessageDTO = {
+                boxId: Array.isArray(fields.boxId) ? fields.boxId[0] : "",
+                content: JSON.parse(fields.content as unknown as string),
+                time: new Date()
+                //recipientId: receiverIdsArray
+              };
+              console.log("Parsed data:", data);
 
-          const result = await createMessage(data, files);
-          console.log("Message sent successfully:", result);
+              // Gọi hàm createMessage và truyền các trường đã xử lý
+              const result = await createMessage(data, files, userId);
+              console.log("Message sent successfully:", result);
 
-          return res.status(200).json({
-            message: "Send message successfully.",
-            result
-          });
+              return res.status(200).json({
+                message: "Send message successfully.",
+                result
+              });
+            }
+          } else {
+            return res.status(400).json({ message: "userId is required" });
+          }
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : "unknown error";
