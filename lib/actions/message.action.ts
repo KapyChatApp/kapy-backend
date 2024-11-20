@@ -188,10 +188,14 @@ export async function createMessage(
       } else {
         let messageBox = await MessageBox.findOneAndUpdate(
           {
-            senderId: data.userId,
-            $addToSet: { receiverIds: { $each: data.recipientId } },
+            $or: [
+              { senderId: data.userId, receiverIds: { $in: data.recipientId } }, // senderId là userId, và recipientId phải có trong receiverIds
+              {
+                senderId: { $in: data.recipientId },
+                receiverIds: { $in: data.userId },
+              }, // senderId là người cuối trong recipientId và userId phải có trong receiverIds
+            ],
           },
-          { $set: { senderId: data.userId } },
           { new: true }
         );
 
@@ -228,7 +232,7 @@ export async function createMessage(
         });
 
         await pusherServer.trigger(
-          `private-${messageBox._id}`,
+          'private-${messageBox._id}',
           "new-message",
           message
         );

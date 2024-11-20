@@ -53,7 +53,6 @@ export default async function handler(
           };
           console.log("Parsed data:", data);
 
-          // Gọi hàm createMessage và truyền các trường đã xử lý
           const result = await createMessage(data, files);
           console.log("Message sent successfully:", result);
 
