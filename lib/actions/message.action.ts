@@ -4,7 +4,10 @@
 
 import Message from "@/database/message.model";
 import { connectToDatabase } from "../mongoose";
-import { MessageBoxResponseDTO, SegmentMessageDTO } from "@/dtos/MessageDTO";
+import {
+  MessageBoxResponseDTO,
+  RequestSendMessageDTO
+} from "@/dtos/MessageDTO";
 import mongoose, { Schema, Types } from "mongoose";
 import User from "@/database/user.model";
 import MessageBox from "@/database/message-box.model";
@@ -12,6 +15,7 @@ import formidable from "formidable";
 import cloudinary from "@/cloudinary";
 import File from "@/database/file.model";
 import { pusherServer } from "../pusher";
+import Relation from "@/database/relation.model";
 
 const generateRandomString = (length = 20) => {
   const characters =
@@ -78,9 +82,13 @@ async function createFile(file: formidable.File, userId: string) {
   }
 }
 
-async function createContent(data: SegmentMessageDTO, files: formidable.Files) {
+async function createContent(
+  data: RequestSendMessageDTO,
+  files: formidable.Files,
+  userId: string
+) {
   let contentIds: mongoose.Types.ObjectId[] = [];
-  const userObjectId = new Types.ObjectId(data.userId);
+  const userObjectId = new Types.ObjectId(userId);
   let text: string[] = [];
 
   if (typeof data.content === "string") {
@@ -88,7 +96,7 @@ async function createContent(data: SegmentMessageDTO, files: formidable.Files) {
   } else if (["image", "audio", "video", "other"].includes(data.content.type)) {
     if (files.file) {
       const file = Array.isArray(files.file) ? files.file[0] : files.file;
-      const createdFile = await createFile(file, data.userId);
+      const createdFile = await createFile(file, userId);
       contentIds = [createdFile._id];
       text = [];
     } else {
@@ -101,11 +109,11 @@ async function createContent(data: SegmentMessageDTO, files: formidable.Files) {
   // Tạo tin nhắn
   const message = await Message.create({
     flag: true,
-    readedId: [data.userId],
+    readedId: [userId],
     contentId: contentIds,
     text: text,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createAt: Date.now(),
+    updatedAt: Date.now(),
     createBy: userObjectId
   });
 
@@ -113,111 +121,68 @@ async function createContent(data: SegmentMessageDTO, files: formidable.Files) {
 }
 
 export async function createMessage(
-  data: SegmentMessageDTO,
-  files: formidable.Files
+  data: RequestSendMessageDTO,
+  files: formidable.Files,
+  userId: string
 ) {
   try {
     await connectToDatabase();
+    const userObjectId = new Types.ObjectId(userId);
 
-    if ((!data.userId && !data.recipientId) || data.recipientId.length === 0) {
-      throw new Error("User ID and Recipient ID is required");
-    }
+    // eslint-disable-next-line prefer-const
+    let detailBox = await MessageBox.findById(data.boxId);
+    if (detailBox) {
+      const receiverIdsArray = detailBox.receiverIds;
 
-    const userExists = await User.exists({ _id: data.userId });
-    if (!userExists) {
-      throw new Error("User does not exist");
-    }
-    if (!Array.isArray(data.recipientId) || data.recipientId.length === 0) {
-      throw new Error("recipientId must be a non-empty array");
-    }
-    const recipientsExist = await User.find({
-      _id: { $in: data.recipientId }
-    }).limit(1);
-    if (recipientsExist.length === 0) {
-      throw new Error("Recipients do not exist");
-    }
+      if (receiverIdsArray.length > 2) {
+        const membersIds = [
+          ...receiverIdsArray.map((id: { toString: () => any }) =>
+            id.toString()
+          ),
+          detailBox.senderId.toString()
+        ];
+        const leaderExists = membersIds.includes(userId);
+        if (!leaderExists) {
+          throw new Error("UserId must be in MembersId list");
+        }
 
-    const userObjectId = new Types.ObjectId(data.userId);
-
-    if ("groupId" in data && data.groupId) {
-      let groupMessageBox = await MessageBox.findById(data.groupId);
-      if (!groupMessageBox) {
-        throw new Error("Group MessageBox not found");
-      }
-      const membersIds = [
-        ...groupMessageBox.receiverIds.map((id: { toString: () => any }) =>
-          id.toString()
-        ),
-        groupMessageBox.senderId.toString()
-      ];
-      const allRecipientsExist = data.recipientId.every((recipient) =>
-        membersIds.includes(recipient)
-      );
-      const leaderExists = membersIds.includes(data.userId);
-
-      if (!allRecipientsExist || !leaderExists) {
-        throw new Error(
-          "All recipientIds and userId must be in MembersId list"
-        );
-      }
-
-      const message = await createContent(data, files);
-      const populatedMessage = await Message.findById(message._id).populate({
-        path: "contentId",
-        model: "File",
-        select: "",
-        options: { strictPopulate: false }
-      });
-      groupMessageBox = await MessageBox.findByIdAndUpdate(
-        data.groupId,
-        {
-          $push: { messageIds: message._id },
-          $addToSet: { receiverIds: { $each: data.recipientId } },
-          $set: { senderId: data.userId }
-        },
-        { new: true }
-      );
-      if (!groupMessageBox) {
-        throw new Error("Group MessageBox cannot update");
-      }
-
-      return { success: true, populatedMessage, groupMessageBox };
-    } else {
-      if (data.recipientId.length > 1) {
-        throw new Error("Should create group before sending");
-      } else {
-        let messageBox = await MessageBox.findOneAndUpdate(
+        const message = await createContent(data, files, userId);
+        const populatedMessage = await Message.findById(message._id).populate({
+          path: "contentId",
+          model: "File",
+          select: "",
+          options: { strictPopulate: false }
+        });
+        detailBox = await MessageBox.findByIdAndUpdate(
+          data.boxId,
           {
-            senderId: data.userId,
-            $addToSet: { receiverIds: { $each: data.recipientId } }
+            $push: { messageIds: message._id },
+            $set: { senderId: userId }
           },
-          { $set: { senderId: data.userId } },
           { new: true }
         );
-
-        if (!messageBox) {
-          const recipientExists = await User.exists({
-            _id: { $in: data.recipientId }
-          });
-          if (!recipientExists) {
-            throw new Error("Recipient does not exist");
-          }
-
-          messageBox = await MessageBox.create({
-            senderId: data.userId,
-            receiverIds: data.recipientId,
-            messageIds: [],
-            groupName: "",
-            groupAva: "",
-            flag: true,
-            pin: false,
-            createBy: userObjectId
-          });
+        if (!detailBox) {
+          throw new Error("Group MessageBox cannot update");
         }
-        const message = await createContent(data, files);
-        messageBox = await MessageBox.findByIdAndUpdate(
-          messageBox._id,
-          { $push: { messageIds: message._id } },
+
+        return { success: true, populatedMessage, detailBox };
+      } else {
+        // const [stUserId, ndUserId] = [receiverIdsArray[0], userId].sort();
+        // const relationBlock = await Relation.findOne({
+        //   stUser: stUserId,
+        //   ndUser: ndUserId,
+        //   relation: "block"
+        // });
+        // if (relationBlock) {
+        //   throw new Error("Sender is blocked by Receiver");
+        // }
+        const message = await createContent(data, files, userId);
+        detailBox = await MessageBox.findByIdAndUpdate(
+          detailBox._id,
+          {
+            $push: { messageIds: message._id },
+            $addToSet: { receiverIds: userId }
+          },
           { new: true }
         );
         const populatedMessage = await Message.findById(message._id).populate({
@@ -228,13 +193,23 @@ export async function createMessage(
         });
 
         await pusherServer.trigger(
-          `private-${messageBox._id}`,
+          `private-${detailBox._id}`,
           "new-message",
           message
         );
-
-        return { success: true, populatedMessage, messageBox };
+        return { success: true, populatedMessage, detailBox };
       }
+    } else {
+      detailBox = await MessageBox.create({
+        senderId: userId,
+        receiverIds: [userId],
+        messageIds: [],
+        groupName: "",
+        groupAva: "",
+        flag: true,
+        pin: false,
+        createBy: userObjectId
+      });
     }
   } catch (error) {
     console.error("Error sending message: ", error);
@@ -380,7 +355,7 @@ export async function fetchMessage(boxId: string) {
 
         const populatedMessage = await Message.findById(messageId).populate({
           path: "contentId",
-          model: message.contentModel,
+          model: "File",
           select: "",
           options: { strictPopulate: false }
         });
@@ -491,22 +466,43 @@ export async function findMessages(boxId: string, query: string) {
   }
 }
 
-export async function getAMessageBox(boxId:string | undefined, userId:string){
-  try{
+export async function getAMessageBox(
+  boxId: string | undefined,
+  userId: string
+) {
+  try {
     connectToDatabase();
 
-    const messageBox = await MessageBox.findById(boxId).populate("receiverIds", "firstName lastName avatar _id")
-    .populate("messageIds");;
+    const messageBox = await MessageBox.findById(boxId)
+      .populate("receiverIds", "firstName lastName avatar _id")
+      .populate("messageIds");
 
-    const messageBoxResponse:MessageBoxResponseDTO ={
-      _id:messageBox._id,
-      name: messageBox.receiverIds.length > 2? messageBox.groupName : messageBox.senderId.toString()===userId? (messageBox.receiverIds[1].firstName + ' ' + messageBox.receiverIds[1].lastName):(messageBox.receiverIds[0].firstName + ' ' + messageBox.receiverIds[0].lastName),
-      avatar:  messageBox.receiverIds.length > 2? messageBox.groupAva : messageBox.senderId.toString()===userId? messageBox.receiverIds[1].avatar  : messageBox.receiverIds[0].avatar ,
-      messages:messageBox.messageIds,
-      receiverId: messageBox.senderId.toString()===userId? messageBox.receiverIds[1]._id : messageBox.receiverIds[0]._id,
-    }
+    const messageBoxResponse: MessageBoxResponseDTO = {
+      _id: messageBox._id,
+      name:
+        messageBox.receiverIds.length > 2
+          ? messageBox.groupName
+          : messageBox.senderId.toString() === userId
+          ? messageBox.receiverIds[1].firstName +
+            " " +
+            messageBox.receiverIds[1].lastName
+          : messageBox.receiverIds[0].firstName +
+            " " +
+            messageBox.receiverIds[0].lastName,
+      avatar:
+        messageBox.receiverIds.length > 2
+          ? messageBox.groupAva
+          : messageBox.senderId.toString() === userId
+          ? messageBox.receiverIds[1].avatar
+          : messageBox.receiverIds[0].avatar,
+      messages: messageBox.messageIds,
+      receiverId:
+        messageBox.senderId.toString() === userId
+          ? messageBox.receiverIds[1]._id
+          : messageBox.receiverIds[0]._id
+    };
     return messageBoxResponse;
-  }catch(error){
+  } catch (error) {
     console.log(error);
     throw error;
   }
@@ -516,44 +512,8 @@ export async function fetchBoxChat(userId: string) {
   try {
     await connectToDatabase();
     const messageBoxes = await MessageBox.find({
-      receiverIds:{$in:[userId]}
-    })
-      .populate("receiverIds", "firstName lastName avatar _id")
-      .populate("messageIds");
-    if (!messageBoxes.length) {
-      return {
-        success: false,
-        box: "No message boxes found for this userId"
-      };
-    }
-    
-    const messageBoxResponses:MessageBoxResponseDTO[] = [];
-
-    for(const messageBox of messageBoxes) {
-      const messageBoxResponse:MessageBoxResponseDTO ={
-        _id:messageBox._id,
-        name: messageBox.receiverIds.length > 2? messageBox.groupName : messageBox.senderId.toString()===userId? (messageBox.receiverIds[1].firstName + ' ' + messageBox.receiverIds[1].lastName):(messageBox.receiverIds[0].firstName + ' ' + messageBox.receiverIds[0].lastName),
-        avatar:  messageBox.receiverIds.length > 2? messageBox.groupAva : messageBox.senderId.toString()===userId? messageBox.receiverIds[1].avatar  : messageBox.receiverIds[0].avatar ,
-        messages:messageBox.messageIds,
-        receiverId: messageBox.senderId.toString()===userId? messageBox.receiverIds[1]._id : messageBox.receiverIds[0]._id,
-      }
-      messageBoxResponses.push(messageBoxResponse);
-    }
-    
-    return messageBoxResponses;
-   
-  } catch (error) {
-    console.error("Error fetching messages: ", error);
-    throw error;
-  }
-}
-
-export async function fetchBoxGroup(userId: string) {
-  try {
-    await connectToDatabase();
-    const messageBoxes = await MessageBox.find({
       senderId: userId,
-      $expr: { $gt: [{ $size: "$receiverIds" }, 1] }
+      receiverIds: { $size: 1 }
     })
       .populate("senderId", "nickName")
       .populate("receiverIds", "nickName avatar")
@@ -603,6 +563,98 @@ export async function fetchBoxGroup(userId: string) {
   }
 }
 
+export async function fetchOneBoxChat(boxId: string) {
+  try {
+    await connectToDatabase();
+    const messageBox = await MessageBox.findById(boxId)
+      .populate("senderId")
+      .populate("receiverIds")
+      .populate({
+        path: "messageIds", // Populate tất cả các tin nhắn trong messageIds
+        populate: {
+          path: "contentId", // Populate contentId cho từng tin nhắn
+          model: "File", // Model File sẽ được tham chiếu
+          select: "", // Chọn các trường cần thiết từ model File
+          options: { strictPopulate: false }
+        }
+      });
+    if (!messageBox) {
+      return {
+        success: false,
+        message: "No message boxes found for this userId"
+      };
+    }
+
+    return { success: true, box: messageBox };
+  } catch (error) {
+    console.error("Error fetching messages: ", error);
+    throw error;
+  }
+}
+
+export async function fetchBoxGroup(userId: string) {
+  try {
+    await connectToDatabase();
+    const messageBoxes = await MessageBox.find({
+      senderId: userId,
+      $expr: { $gt: [{ $size: "$receiverIds" }, 2] }
+    })
+      .populate("senderId", "nickName")
+      .populate("receiverIds", "nickName avatar")
+      .populate({
+        path: "messageIds", // Populate tất cả các tin nhắn trong messageIds
+        populate: {
+          path: "contentId", // Populate contentId cho từng tin nhắn
+          model: "File", // Model File sẽ được tham chiếu
+          select: "", // Chọn các trường cần thiết từ model File
+          options: { strictPopulate: false }
+        }
+      });
+    if (!messageBoxes.length) {
+      return {
+        success: false,
+        box: "No message boxes found for this userId"
+      };
+    }
+    // Lấy nội dung contentId từ messageId cuối cùng trong mỗi messageBox
+    const messageBoxesWithContent = await Promise.all(
+      messageBoxes.map(async (messageBox) => {
+        // Lấy messageId cuối cùng
+        const lastMessageId =
+          messageBox.messageIds[messageBox.messageIds.length - 1];
+
+        if (!lastMessageId) {
+          return messageBox; // Nếu không có messageId nào, trả về messageBox gốc
+        }
+
+        // Tìm message theo messageId cuối cùng
+        const message = await Message.findById(lastMessageId);
+        const populatedMessage = await Message.findById(lastMessageId)
+          .populate({
+            path: "contentId",
+            model: "File",
+            select: "",
+            options: { strictPopulate: false }
+          })
+          .populate("readedId");
+
+        if (populatedMessage && populatedMessage.contentId) {
+          return {
+            ...messageBox.toObject(),
+            lastMessage: populatedMessage
+          };
+        }
+
+        return messageBox;
+      })
+    );
+    return { success: true, box: messageBoxesWithContent };
+  } catch (error) {
+    console.error("Error fetching messages: ", error);
+    throw error;
+  }
+}
+
 //MANAGEMENT
 export async function getAllMessage() {
   try {
@@ -612,7 +664,7 @@ export async function getAllMessage() {
     const messagesWithContent = await Promise.all(
       allMessages.map(async (message) => {
         const populatedContent = await mongoose
-          .model(message.contentModel)
+          .model("File")
           .find({ _id: { $in: message.contentId } });
         return {
           ...message.toObject(),
@@ -657,19 +709,13 @@ export async function searchMessages(id?: string, query?: string) {
 
     const messages = await Message.find(conditions);
 
-    let filteredMessages = messages;
-
     if (query) {
-      filteredMessages = messages.filter((message) => {
-        return message.contentModel === "Text";
-      });
-
       const populatedMessages = await Promise.all(
-        filteredMessages.map(async (message) => {
+        messages.map(async (message) => {
           const populatedMessage = await Message.findById(message._id).populate(
             {
               path: "contentId",
-              model: message.contentModel,
+              model: "File",
               select: ""
             }
           );
@@ -698,10 +744,10 @@ export async function searchMessages(id?: string, query?: string) {
 
     //if(ID)
     const populatedMessages = await Promise.all(
-      filteredMessages.map(async (message) => {
+      messages.map(async (message) => {
         const populatedMessage = await Message.findById(message._id).populate({
           path: "contentId",
-          model: message.contentModel,
+          model: "File",
           select: "",
           options: { strictPopulate: false }
         });

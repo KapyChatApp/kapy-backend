@@ -19,14 +19,10 @@ export interface GPSContent {
   description?: string; // Mô tả địa điểm (tuỳ chọn)
 }
 
-export interface SegmentMessageDTO {
-  groupId?: string;
-  userId: string;
-  userName: string;
-  ava: string;
+export interface RequestSendMessageDTO {
+  boxId: string;
   content: string | GPSContent | FileContent;
   time: Date;
-  recipientId: string[];
 }
 
 export interface ResponseMessageBoxDTO {
@@ -115,10 +111,20 @@ export interface RespBoxGroupArrangeDTO {
   lastMessage?: LastMessageDTO;
 }
 
-export interface MessageBoxResponseDTO{
-  _id:string;
-  name:string;
-  avatar:string;
-  receiverId:string;
-  messages:SegmentMessageDTO[];
+export interface SegmentMessageDTO {
+  groupId?: string;
+  userId: string;
+  userName: string;
+  ava: string;
+  content: string | GPSContent | FileContent;
+  time: Date;
+  recipientId: string[];
+}
+
+export interface MessageBoxResponseDTO {
+  _id: string;
+  name: string;
+  avatar: string;
+  receiverId: string;
+  messages: SegmentMessageDTO[];
 }
