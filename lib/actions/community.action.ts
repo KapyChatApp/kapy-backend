@@ -2,12 +2,14 @@ import Point from "@/database/point.model";
 import User from "@/database/user.model";
 import { CreatePointDTO, EditPointDTO } from "@/dtos/PointDTO";
 import { Schema } from "mongoose";
-
 export async function addPoint(userId: string|undefined, point: number) {
   try {
-    const user = await User.findById(userId);
+    console.log(userId);
+    const user = await User.findOne({
+        _id:userId
+    });
 
-    if (user!) {
+    if (user===null) {
       return { message: "User not exist!" };
     }
 
@@ -26,7 +28,7 @@ export async function minusPoint(userId: string|undefined, point: number) {
   try {
     const user = await User.findById(userId);
 
-    if (user!) {
+    if (user===null) {
       return { message: "User not exist!" };
     }
 
@@ -34,18 +36,28 @@ export async function minusPoint(userId: string|undefined, point: number) {
 
     user.save();
 
-    return { message: "Add point successfully!" };
+    return { message: "Minus point successfully!" };
   } catch (error) {
     console.log(error);
     throw error;
   }
 }
 
+export async function getAllRates(){
+    try{
+        const points = await Point.find();
+        return points;
+    }catch(error){
+        console.log(error);
+        throw error;
+    }
+}
+
 export async function rateUser(param: CreatePointDTO, userId:Schema.Types.ObjectId) {
   try {
     const user = await User.findById(param.userId);
 
-    const existPoint = await Point.find({
+    const existPoint = await Point.findOne({
       userId: param.userId,
       createBy: userId,
     });
@@ -58,7 +70,9 @@ export async function rateUser(param: CreatePointDTO, userId:Schema.Types.Object
       return { message: "You must be their friend to rate!" };
     }
 
-    const point = await Point.create(param);
+    const createData = Object.assign(param,{createBy:userId});
+
+    const point = await Point.create(createData);
 
     user.rateIds.addToSet(point._id);
     await user.save();
@@ -76,11 +90,11 @@ export async function editRateUser(
   userId: Schema.Types.ObjectId
 ) {
   try {
-    const point = await Point.findOneAndUpdate(
+    await Point.findOneAndUpdate(
       { _id: pointId, createBy: userId },
       { point: param.point, message: param.message }
     );
-    return point;
+    return {message:"Update successfully!"};
   } catch (error) {
     console.log(error);
     throw error;

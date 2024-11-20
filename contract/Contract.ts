@@ -950,6 +950,22 @@ export const Contract = c.router(
         summary: "Minus user point",
         metadata: { role: "admin" } as const,
       },
+      all:{
+        method:"GET",
+        path:"/api/point/all",
+        responses:{
+          200:c.type<PointResponseDTO[]>()
+        },
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            ),
+        }),
+        summary: "Delete a rate for admin",
+        metadata: { role: "admin" } as const,
+      },
       delete: {
         method: "DELETE",
         path: "/api/point/delete",
@@ -958,8 +974,7 @@ export const Contract = c.router(
           200: c.type(),
         },
         query: z.object({
-          userId: z.string(),
-          point: z.number(),
+          pointId: z.string(),
         }),
         body: z.object({}),
         headers: z.object({
