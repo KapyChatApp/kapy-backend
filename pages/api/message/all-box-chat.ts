@@ -17,9 +17,7 @@ export default async function handler(
               return res.status(400).json({ message: "userId is required" });
             }
             const result = await fetchBoxChat(userId as string);
-            res
-              .status(200)
-              .json(result);
+            res.status(200).json(result);
           } else {
             return res.status(403).json({
               message: "Forbidden: You do not have the required role"

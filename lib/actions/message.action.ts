@@ -147,12 +147,9 @@ export async function createMessage(
         }
 
         const message = await createContent(data, files, userId);
-        const populatedMessage = await Message.findById(message._id).populate({
-          path: "contentId",
-          model: "File",
-          select: "",
-          options: { strictPopulate: false }
-        });
+        const populatedMessage = await Message.findById(message._id).populate(
+          "contentId"
+        );
         detailBox = await MessageBox.findByIdAndUpdate(
           data.boxId,
           {
@@ -181,16 +178,14 @@ export async function createMessage(
           detailBox._id,
           {
             $push: { messageIds: message._id },
+            $set: { senderId: userId },
             $addToSet: { receiverIds: userId }
           },
           { new: true }
         );
-        const populatedMessage = await Message.findById(message._id).populate({
-          path: "contentId",
-          model: "File",
-          select: "",
-          options: { strictPopulate: false }
-        });
+        const populatedMessage = await Message.findById(message._id).populate(
+          "contentId"
+        );
 
         await pusherServer.trigger(
           `private-${detailBox._id}`,
@@ -511,13 +506,13 @@ export async function getAMessageBox(
 export async function fetchBoxChat(userId: string) {
   try {
     await connectToDatabase();
+    let populatedMessage;
     const messageBoxes = await MessageBox.find({
-      senderId: userId,
-      receiverIds: { $size: 1 }
-    })
-      .populate("senderId", "nickName")
-      .populate("receiverIds", "nickName avatar")
-      .populate("messageIds");
+      $and: [{ receiverIds: { $in: [userId] } }, { receiverIds: { $size: 2 } }]
+    }).populate("receiverIds", "firstName lastName avatar phoneNumber");
+    // .populate("senderId", "nickName")
+    // .populate("receiverIds", "fullName avatar")
+    // .populate("messageIds");
     if (!messageBoxes.length) {
       return {
         success: false,
@@ -537,14 +532,10 @@ export async function fetchBoxChat(userId: string) {
 
         // Tìm message theo messageId cuối cùng
         const message = await Message.findById(lastMessageId);
-        const populatedMessage = await Message.findById(lastMessageId)
-          .populate({
-            path: "contentId",
-            model: message.contentModel,
-            select: "",
-            options: { strictPopulate: false }
-          })
-          .populate("readedId");
+        populatedMessage = await Message.findById(lastMessageId).populate(
+          "contentId"
+        );
+        // .populate("readedId");
 
         if (populatedMessage && populatedMessage.contentId) {
           return {
@@ -556,7 +547,11 @@ export async function fetchBoxChat(userId: string) {
         return messageBox;
       })
     );
-    return { success: true, box: messageBoxesWithContent };
+    return {
+      success: true,
+      box: messageBoxesWithContent,
+      adminId: userId
+    };
   } catch (error) {
     console.error("Error fetching messages: ", error);
     throw error;
@@ -594,22 +589,18 @@ export async function fetchOneBoxChat(boxId: string) {
 
 export async function fetchBoxGroup(userId: string) {
   try {
+    let populatedMessage;
     await connectToDatabase();
     const messageBoxes = await MessageBox.find({
-      senderId: userId,
-      $expr: { $gt: [{ $size: "$receiverIds" }, 2] }
-    })
-      .populate("senderId", "nickName")
-      .populate("receiverIds", "nickName avatar")
-      .populate({
-        path: "messageIds", // Populate tất cả các tin nhắn trong messageIds
-        populate: {
-          path: "contentId", // Populate contentId cho từng tin nhắn
-          model: "File", // Model File sẽ được tham chiếu
-          select: "", // Chọn các trường cần thiết từ model File
-          options: { strictPopulate: false }
+      $and: [
+        { receiverIds: { $in: [userId] } },
+        {
+          $expr: { $gt: [{ $size: "$receiverIds" }, 2] }
         }
-      });
+      ]
+    })
+      .populate("receiverIds", "firstName lastName")
+      .populate("senderId", "firstName lastName");
     if (!messageBoxes.length) {
       return {
         success: false,
@@ -629,14 +620,9 @@ export async function fetchBoxGroup(userId: string) {
 
         // Tìm message theo messageId cuối cùng
         const message = await Message.findById(lastMessageId);
-        const populatedMessage = await Message.findById(lastMessageId)
-          .populate({
-            path: "contentId",
-            model: "File",
-            select: "",
-            options: { strictPopulate: false }
-          })
-          .populate("readedId");
+        populatedMessage = await Message.findById(lastMessageId).populate(
+          "contentId"
+        );
 
         if (populatedMessage && populatedMessage.contentId) {
           return {
@@ -648,7 +634,7 @@ export async function fetchBoxGroup(userId: string) {
         return messageBox;
       })
     );
-    return { success: true, box: messageBoxesWithContent };
+    return { success: true, box: messageBoxesWithContent, adminId: userId };
   } catch (error) {
     console.error("Error fetching messages: ", error);
     throw error;
