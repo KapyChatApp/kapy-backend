@@ -23,7 +23,7 @@ export async function allReport() {
         flag: report.flag,
         status: report.status,
         userId: report.userId,
-        target: report.targetId,
+        target: report.target,
       };
       reportResponses.push(reportResponse);
     }
@@ -61,7 +61,7 @@ export async function createReport(
       flag: report.flag,
       status: report.status,
       userId: report.userId,
-      target: report.targetId,
+      target: report.target,
     };
 
     return reportResponse;
@@ -73,7 +73,7 @@ export async function createReport(
 
 export async function updateReport(
   param: UpdateReportDTO,
-  reportId: string|undefined,
+  reportId: string | undefined,
   userId: Schema.Types.ObjectId | undefined
 ) {
   try {
@@ -153,7 +153,9 @@ export async function deleteReport(
   }
 }
 
-export async function verifyReport(param: VerifyReportDTO, reportId: string|undefined
+export async function verifyReport(
+  param: VerifyReportDTO,
+  reportId: string | undefined
 ) {
   try {
     await Report.findOneAndUpdate({ _id: reportId }, param);

@@ -14,9 +14,6 @@ export interface ReportResponseDTO {
 
 export interface CreateReportDTO {
   content: string;
-  flag: boolean;
-  status: string;
-  userId: Schema.Types.ObjectId;
   targetId: Schema.Types.ObjectId;
   targetType: string;
 }
