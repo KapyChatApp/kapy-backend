@@ -2,8 +2,10 @@ import Point from "@/database/point.model";
 import User from "@/database/user.model";
 import { CreatePointDTO, EditPointDTO } from "@/dtos/PointDTO";
 import { Schema } from "mongoose";
+import { connectToDatabase } from "../mongoose";
 export async function addPoint(userId: string|undefined, point: number) {
   try {
+    connectToDatabase();
     console.log(userId);
     const user = await User.findOne({
         _id:userId
@@ -26,6 +28,7 @@ export async function addPoint(userId: string|undefined, point: number) {
 
 export async function minusPoint(userId: string|undefined, point: number) {
   try {
+    connectToDatabase();
     const user = await User.findById(userId);
 
     if (user===null) {
@@ -45,6 +48,7 @@ export async function minusPoint(userId: string|undefined, point: number) {
 
 export async function getAllRates(){
     try{
+      connectToDatabase();
         const points = await Point.find();
         return points;
     }catch(error){
@@ -55,6 +59,7 @@ export async function getAllRates(){
 
 export async function rateUser(param: CreatePointDTO, userId:Schema.Types.ObjectId) {
   try {
+    connectToDatabase();
     const user = await User.findById(param.userId);
 
     const existPoint = await Point.findOne({
@@ -90,6 +95,7 @@ export async function editRateUser(
   userId: Schema.Types.ObjectId
 ) {
   try {
+    connectToDatabase();
     await Point.findOneAndUpdate(
       { _id: pointId, createBy: userId },
       { point: param.point, message: param.message }
@@ -106,6 +112,7 @@ export async function deleteMyRate(
   userId: Schema.Types.ObjectId
 ) {
   try {
+    connectToDatabase();
     await Point.findOneAndDelete({ _id: pointId, createBy: userId });
 
     await User.findByIdAndUpdate(userId, {
@@ -121,6 +128,7 @@ export async function deleteMyRate(
 
 export async function deleteRate(pointId: string) {
   try {
+    connectToDatabase();
     await Point.findOneAndDelete({ _id: pointId });
     return { message: "Deleted!" };
   } catch (error) {
