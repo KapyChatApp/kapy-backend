@@ -57,15 +57,15 @@ export interface MessageDTO {
   createBy: Schema.Types.ObjectId;
 }
 
-export interface ResponseMessageDTO {
-  _id: string;
-  flag: boolean;
-  readedId: string[];
-  contentId: Content[];
-  text: string[];
-  createAt: Date;
-  createBy: Schema.Types.ObjectId;
-}
+// export interface ResponseMessageDTO {
+//   _id: string;
+//   flag: boolean;
+//   readedId: string[];
+//   contentId: Content[];
+//   text: string[];
+//   createAt: Date;
+//   createBy: Schema.Types.ObjectId;
+// }
 
 export interface ResponseSendingDTO {
   populatedMessage: MessageDTO;
@@ -127,4 +127,15 @@ export interface MessageBoxResponseDTO {
   avatar: string;
   receiverId: string;
   messages: SegmentMessageDTO[];
+}
+
+export interface ResponseMessageDTO {
+  id: string;
+  flag: boolean;
+  readedId: string[];
+  contentId: FileContent[] | GPSContent[];
+  text: string[];
+  createAt: string;
+  createBy: string;
+  isReact: boolean;
 }
