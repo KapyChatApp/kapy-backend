@@ -6,7 +6,8 @@ import Message from "@/database/message.model";
 import { connectToDatabase } from "../mongoose";
 import {
   MessageBoxResponseDTO,
-  RequestSendMessageDTO
+  RequestSendMessageDTO,
+  ResponseMessageDTO
 } from "@/dtos/MessageDTO";
 import mongoose, { Schema, Types } from "mongoose";
 import User from "@/database/user.model";
@@ -187,11 +188,25 @@ export async function createMessage(
           "contentId"
         );
 
-        await pusherServer.trigger(
-          `private-${detailBox._id}`,
-          "new-message",
-          message
-        );
+        const pusherMessage: ResponseMessageDTO = {
+          id: populatedMessage._id.toString(),
+          flag: true,
+          isReact: false,
+          readedId: populatedMessage.readedId.map((id: any) => id.toString()),
+          contentId: populatedMessage.contentId,
+          text: populatedMessage.text,
+          // Chuyển ObjectId sang chuỗi
+          createAt: populatedMessage.createAt, // ISO string đã hợp lệ
+          createBy: populatedMessage.createBy.toString()
+        };
+
+        console.log("Message data before trigger:", pusherMessage);
+
+        await pusherServer
+          .trigger(`private-${data.boxId}`, "new-message", pusherMessage)
+          .then(() => console.log("Message sent successfully"))
+          .catch((error) => console.error("Failed to send message:", error));
+
         return { success: true, populatedMessage, detailBox };
       }
     } else {
