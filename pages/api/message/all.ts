@@ -1,4 +1,3 @@
-import { SegmentMessageDTO } from "@/dtos/MessageDTO";
 import { fetchMessage } from "@/lib/actions/message.action";
 import { authenticateToken } from "@/middleware/auth-middleware";
 import cors from "@/middleware/cors-middleware";
@@ -6,9 +5,7 @@ import { NextApiRequest, NextApiResponse } from "next/types";
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<
-    SegmentMessageDTO[] | { message: string; error?: string }
-  >
+  res: NextApiResponse
 ) {
   cors(req, res, async () => {
     authenticateToken(req, res, async () => {
@@ -21,13 +18,8 @@ export default async function handler(
               .json({ message: "chatId or groupId is required" });
           }
 
-          const { success, messages } = await fetchMessage(boxId as string);
-
-          if (!success) {
-            return res.status(404).json({ message: "Messages not found" });
-          }
-
-          res.status(200).json(messages);
+          const result = await fetchMessage(boxId as string);
+          res.status(200).json(result);
         } catch (error) {
           console.error("Error fetching messages: ", error);
           const errorMessage =

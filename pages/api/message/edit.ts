@@ -10,10 +10,9 @@ export default async function handle(
     authenticateToken(req, res, async () => {
       if (req.method === "PUT") {
         try {
-          const { messageId, newContent, userId } = req.body as {
+          const { messageId, newContent } = req.body as {
             messageId: string;
             newContent: string;
-            userId: string;
           };
           if (!messageId) {
             return res
@@ -21,12 +20,19 @@ export default async function handle(
               .json({ success: false, message: "Message ID is required" });
           }
 
-          const result = await editMessage(
-            messageId as string,
-            newContent,
-            userId
-          );
-          return res.status(200).json(result);
+          if (req.user && req.user.id) {
+            const userId = req.user.id.toString();
+            if (userId) {
+              const result = await editMessage(
+                messageId as string,
+                newContent,
+                userId
+              );
+              return res.status(200).json(result);
+            } else {
+              return res.status(400).json({ message: "userId is required" });
+            }
+          }
         } catch (error) {
           const errorMessage =
             error instanceof Error ? error.message : "Unknown error occurred";
