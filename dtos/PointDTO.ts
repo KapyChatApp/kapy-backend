@@ -1,3 +1,5 @@
+import { ShortUserResponseDTO } from "./UserDTO";
+
 export interface CreatePointDTO {
   userId: string;
   point: number;
@@ -10,7 +12,9 @@ export interface EditPointDTO{
 }
 
 export interface PointResponseDTO{
-    userId:string;
+    _id:string;
     point:number;
     message:string;
+    createAt:string;
+    user:ShortUserResponseDTO
 }
