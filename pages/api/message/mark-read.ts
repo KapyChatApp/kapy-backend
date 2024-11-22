@@ -10,23 +10,31 @@ export default async function handle(
   cors(req, res, async () => {
     authenticateToken(req, res, async () => {
       if (req.method === "POST") {
-        const { boxId, recipientIds } = req.body;
+        const { boxId } = req.body;
 
-        if (!boxId && !recipientIds) {
+        if (!boxId) {
           return res
             .status(400)
-            .json({ success: false, message: "Chat & User ID is required" });
+            .json({ success: false, message: "Chat ID is required" });
         }
 
-        try {
-          const result = await markMessageAsRead(boxId, recipientIds);
-          return res.status(200).json(result);
-        } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : "unknown error";
-          return res
-            .status(500)
-            .json({ success: false, message: errorMessage });
+        if (req.user && req.user.id) {
+          const userId = req.user.id.toString();
+          if (!userId) {
+            return res
+              .status(400)
+              .json({ success: false, message: "LeaderId is required" });
+          }
+          try {
+            const result = await markMessageAsRead(boxId, userId);
+            return res.status(200).json(result);
+          } catch (error) {
+            const errorMessage =
+              error instanceof Error ? error.message : "unknown error";
+            return res
+              .status(500)
+              .json({ success: false, message: errorMessage });
+          }
         }
       } else {
         res.setHeader("Allow", ["POST"]);

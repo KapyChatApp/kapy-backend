@@ -16,7 +16,7 @@ export default async function handler(
             return res.status(400).json({ message: "boxId is required" });
           }
           const result = await fetchOneBoxChat(boxId as string);
-          res.status(200).json({ success: true, box: result, boxId: boxId });
+          res.status(200).json(result);
         } catch (error) {
           console.error("Error fetching messageBox: ", error);
           const errorMessage =

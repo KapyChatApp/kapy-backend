@@ -12,15 +12,9 @@ export default async function handler(
       authorizeRole(["admin"])(req, res, async () => {
         if (req.method === "GET") {
           try {
-            const { success, messages } = await getAllMessage();
+            const result = await getAllMessage();
 
-            if (!success) {
-              return res
-                .status(404)
-                .json({ message: "Message list not found" });
-            }
-
-            res.status(200).json(messages);
+            res.status(200).json(result);
           } catch (error) {
             console.error("Error fetching messages: ", error);
             const errorMessage =
