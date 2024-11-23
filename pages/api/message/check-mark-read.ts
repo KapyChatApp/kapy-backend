@@ -1,4 +1,4 @@
-import { markMessageAsRead } from "@/lib/actions/message.action";
+import { checkMarkMessageAsRead } from "@/lib/actions/message.action";
 import { authenticateToken } from "@/middleware/auth-middleware";
 import cors from "@/middleware/cors-middleware";
 import { NextApiRequest, NextApiResponse } from "next/types";
@@ -10,12 +10,12 @@ export default async function handle(
   cors(req, res, async () => {
     authenticateToken(req, res, async () => {
       if (req.method === "POST") {
-        const { boxId } = req.body;
+        const { boxIds } = req.body;
 
-        if (!boxId) {
+        if (!boxIds || !Array.isArray(boxIds)) {
           return res.status(400).json({
             success: false,
-            message: "Chat ID is required "
+            message: "Chat ID is required and Chat must be an array"
           });
         }
 
@@ -27,7 +27,7 @@ export default async function handle(
               .json({ success: false, message: "UserId is required" });
           }
           try {
-            const result = await markMessageAsRead(boxId, userId);
+            const result = await checkMarkMessageAsRead(boxIds, userId);
             return res.status(200).json(result);
           } catch (error) {
             const errorMessage =
