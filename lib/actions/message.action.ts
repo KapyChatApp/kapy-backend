@@ -398,6 +398,58 @@ export async function fetchMessage(boxId: string) {
   }
 }
 
+export async function checkMarkMessageAsRead(boxIds: string[], userId: string) {
+  try {
+    // Kết nối cơ sở dữ liệu
+    await connectToDatabase();
+
+    // Kiểm tra nếu user tồn tại
+    const userExists = await User.findById(userId);
+    if (!userExists) {
+      throw new Error("User does not exist");
+    }
+
+    // Kiểm tra trạng thái từng `boxId`
+    const results = await Promise.all(
+      boxIds.map(async (boxId) => {
+        try {
+          // Tìm MessageBox theo `boxId`
+          const messageBox = await MessageBox.findById(boxId).populate(
+            "messageIds"
+          );
+
+          if (!messageBox) {
+            return { boxId, success: false, message: "Box not found" };
+          }
+
+          if (messageBox.messageIds.length === 0) {
+            return { boxId, success: false, message: "No messages in the box" };
+          }
+
+          // Lấy tin nhắn cuối cùng trong box
+          const lastMessage =
+            messageBox.messageIds[messageBox.messageIds.length - 1];
+
+          // Kiểm tra xem người dùng đã đọc tin nhắn cuối cùng chưa
+          if (lastMessage.readedId.includes(userId)) {
+            return { boxId, success: true, message: "Message already read" };
+          } else {
+            return { boxId, success: false, message: "Message not read yet" };
+          }
+        } catch (error) {
+          console.error(`Error processing box ${boxId}:`, error);
+          return { boxId, success: false, message: "Error processing box" };
+        }
+      })
+    );
+    console.log(results);
+    return results;
+  } catch (error) {
+    console.error("Error checking message read status: ", error);
+    throw error;
+  }
+}
+
 export async function markMessageAsRead(boxId: string, userId: string) {
   try {
     await connectToDatabase();
@@ -433,13 +485,13 @@ export async function markMessageAsRead(boxId: string, userId: string) {
 
       return {
         success: true,
-        messages: "This message is read"
+        messages: "Messages marked as read"
       };
     } else {
       return {
         success: true,
         lastMessage,
-        messages: "This message has read before"
+        messages: "Messages already read"
       };
     }
   } catch (error) {
