@@ -1,10 +1,7 @@
 import {
-  MessageDTO,
-  RespBoxChatArrangeDTO,
-  RespBoxGroupArrangeDTO,
-  ResponseMessageBoxDTO,
-  ResponseMessageDTO,
-  ResponseSendingDTO
+  MessageBoxGroupDTO,
+  MessageBoxDTO,
+  ResponseMessageDTO
 } from "@/dtos/MessageDTO";
 import { FriendResponseDTO } from "@/dtos/FriendDTO";
 import { OTPResponseDTO } from "@/dtos/OTPDTO";
@@ -505,16 +502,17 @@ export const Contract = c.router(
         }),
         body: z.object({
           membersIds: z.array(z.string()).nonempty(),
-          leaderId: z.string()
+          groupName: z.string(),
+          groupAva: z.string()
         }),
         responses: {
-          200: c.type<{ success: true; data: ResponseMessageBoxDTO }>(),
+          200: c.type<{ success: true; message: string }>(),
           400: c.type<{ success: false; message: string }>(),
           500: c.type<{ success: false; message: string }>()
         },
         summary: "Create a new group",
         description:
-          "Creates a new group with specified member IDs and a leader ID.",
+          "Creates a new group with specified member IDs and the name and ava of group.",
         metadata: { role: "user" } as const
       },
       deleteMessage: {
@@ -558,7 +556,7 @@ export const Contract = c.router(
         responses: {
           200: c.type<{
             success: boolean;
-            message: MessageDTO;
+            message: ResponseMessageDTO;
           }>(),
           400: c.type<{
             success: boolean;
@@ -575,9 +573,7 @@ export const Contract = c.router(
         },
         body: z.object({
           messageId: z.string(),
-          contentId: z.string(),
-          newContent: z.any(),
-          userId: z.string()
+          newContent: z.any()
         }),
         headers: z.object({
           auth: z
@@ -586,7 +582,7 @@ export const Contract = c.router(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
             )
         }),
-        summary: "Edit a message",
+        summary: "Edit a text message",
         metadata: { role: "user" } as const
       },
       markAsRead: {
@@ -595,13 +591,11 @@ export const Contract = c.router(
         responses: {
           200: c.type<{
             success: boolean;
-            lastMessage: MessageDTO;
             messages: string;
           }>()
         },
         body: z.object({
-          boxId: z.string(),
-          recipientIds: z.array(z.string())
+          boxId: z.string()
         }),
         headers: z.object({
           auth: z
@@ -612,7 +606,30 @@ export const Contract = c.router(
         }),
         query: z.object({}),
         summary: "Mark messages as read",
-        metadata: { role: "admin" } as const
+        metadata: { role: "user" } as const
+      },
+      checkMarkAsRead: {
+        method: "POST",
+        path: "/api/message/mark-read",
+        responses: {
+          200: c.type<{
+            success: boolean;
+            messages: string;
+          }>()
+        },
+        body: z.object({
+          boxIds: z.array(z.string()).nonempty()
+        }),
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        query: z.object({}),
+        summary: "Check mark messages as read at all boxId",
+        metadata: { role: "user" } as const
       },
       revokeMessage: {
         method: "DELETE",
@@ -620,8 +637,7 @@ export const Contract = c.router(
         responses: {
           200: c.type<{
             success: boolean;
-            messageId?: string;
-            message?: string;
+            message: string;
           }>(),
           400: c.type<{
             success: boolean;
@@ -654,7 +670,7 @@ export const Contract = c.router(
         responses: {
           200: c.type<{
             success: boolean;
-            data: MessageDTO[];
+            messages: ResponseMessageDTO[];
           }>(),
           500: c.type<{
             success: boolean;
@@ -662,7 +678,6 @@ export const Contract = c.router(
           }>()
         },
         query: z.object({
-          id: z.string().optional(),
           query: z.string().optional()
         }),
         headers: z.object({
@@ -672,7 +687,7 @@ export const Contract = c.router(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
             )
         }),
-        summary: "Search messages by ID and query",
+        summary: "Search messages by query",
         metadata: { role: "user" } as const
       },
       sendMessage: {
@@ -682,16 +697,33 @@ export const Contract = c.router(
           200: c.type<{
             success: boolean;
             message: string;
-            result: ResponseSendingDTO;
           }>(),
           500: c.type<{
             success: boolean;
             message: string;
           }>()
         },
-        body: z.object({
-          content: z.string()
-        }),
+        body: z.union([
+          // Trường hợp `content` là string[]
+          z.object({
+            boxId: z.string(),
+            content: z.string()
+          }),
+          // Trường hợp `content` là file JSON
+          z.object({
+            boxId: z.string(),
+            content: z.object({
+              fileName: z.string(),
+              url: z.string(),
+              publicId: z.string(),
+              bytes: z.string(),
+              width: z.string(),
+              height: z.string(),
+              format: z.string(),
+              type: z.string()
+            })
+          })
+        ]),
         headers: z.object({
           auth: z
             .string()
@@ -706,14 +738,24 @@ export const Contract = c.router(
         method: "GET",
         path: "/api/message/all-box-chat",
         responses: {
-          200: c.type<RespBoxChatArrangeDTO[]>(),
-          400: c.type<{ message: string }>(),
-          404: c.type<{ message: string }>(),
-          500: c.type<{ message: string; error?: string }>()
+          200: c.type<{
+            success: true;
+            box: MessageBoxDTO[];
+            adminId: string;
+          }>(),
+          400: c.type<{
+            success: false;
+            box: string;
+          }>(),
+          404: c.type<{
+            success: false;
+            box: string;
+          }>(),
+          500: c.type<{
+            success: false;
+            error?: string;
+          }>()
         },
-        query: z.object({
-          boxId: z.string()
-        }),
         headers: z.object({
           auth: z
             .string()
@@ -729,14 +771,24 @@ export const Contract = c.router(
         method: "GET",
         path: "/api/message/all-box-group",
         responses: {
-          200: c.type<RespBoxGroupArrangeDTO[]>(),
-          400: c.type<{ message: string }>(),
-          404: c.type<{ message: string }>(),
-          500: c.type<{ message: string; error?: string }>()
+          200: c.type<{
+            success: true;
+            box: MessageBoxGroupDTO[];
+            adminId: string;
+          }>(),
+          400: c.type<{
+            success: false;
+            box: string;
+          }>(),
+          404: c.type<{
+            success: false;
+            box: string;
+          }>(),
+          500: c.type<{
+            success: false;
+            error?: string;
+          }>()
         },
-        query: z.object({
-          boxId: z.string()
-        }),
         headers: z.object({
           auth: z
             .string()
@@ -754,9 +806,10 @@ export const Contract = c.router(
         responses: {
           200: c.type<{
             success: boolean;
-            messages: Array<MessageDTO>;
+            messages: ResponseMessageDTO[];
           }>(),
           404: c.type<{
+            success: boolean;
             message: string;
           }>(),
           500: c.type<{
@@ -814,7 +867,7 @@ export const Contract = c.router(
         responses: {
           200: c.type<{
             success: boolean;
-            messages: Array<MessageDTO>;
+            messages: ResponseMessageDTO[];
           }>(),
           404: c.type<{
             success: boolean;
