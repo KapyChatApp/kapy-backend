@@ -250,6 +250,17 @@ export async function createGroup(
   if (!allMembersExist) {
     throw new Error("One or more member IDs do not exist");
   }
+  const existMessageBox = await MessageBox.findOne({
+    receiverIds: { $all: membersIds }
+  });
+
+  if (existMessageBox) {
+    return {
+      success: true,
+      messageBoxId: existMessageBox._id,
+      existMessageBox
+    };
+  }
 
   const userObjectId = new Types.ObjectId(leaderId);
   const messageBox = await MessageBox.create({
