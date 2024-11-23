@@ -964,8 +964,27 @@ export const Contract = c.router(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
             ),
         }),
-        summary: "Delete a rate for admin",
+        summary: "Get all rate",
         metadata: { role: "admin" } as const,
+      },
+      user:{
+        method:"GET",
+        path:"/api/point/user",
+        responses: {
+          200: c.type<PointResponseDTO[]>(),
+        },
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            ),
+        }),
+        query:z.object({
+          userId:z.string()
+        }),
+        summary: "Get all rate of a user",
+        metadata: { role: "user" } as const,
       },
       delete: {
         method: "DELETE",

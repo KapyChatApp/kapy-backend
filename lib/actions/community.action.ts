@@ -1,17 +1,22 @@
 import Point from "@/database/point.model";
 import User from "@/database/user.model";
-import { CreatePointDTO, EditPointDTO } from "@/dtos/PointDTO";
+import {
+  CreatePointDTO,
+  EditPointDTO,
+  PointResponseDTO,
+} from "@/dtos/PointDTO";
 import { Schema } from "mongoose";
 import { connectToDatabase } from "../mongoose";
-export async function addPoint(userId: string|undefined, point: number) {
+import { ShortUserResponseDTO } from "@/dtos/UserDTO";
+export async function addPoint(userId: string | undefined, point: number) {
   try {
     connectToDatabase();
     console.log(userId);
     const user = await User.findOne({
-        _id:userId
+      _id: userId,
     });
 
-    if (user===null) {
+    if (user === null) {
       return { message: "User not exist!" };
     }
 
@@ -26,12 +31,12 @@ export async function addPoint(userId: string|undefined, point: number) {
   }
 }
 
-export async function minusPoint(userId: string|undefined, point: number) {
+export async function minusPoint(userId: string | undefined, point: number) {
   try {
     connectToDatabase();
     const user = await User.findById(userId);
 
-    if (user===null) {
+    if (user === null) {
       return { message: "User not exist!" };
     }
 
@@ -46,18 +51,69 @@ export async function minusPoint(userId: string|undefined, point: number) {
   }
 }
 
-export async function getAllRates(){
-    try{
-      connectToDatabase();
-        const points = await Point.find();
-        return points;
-    }catch(error){
-        console.log(error);
-        throw error;
+export async function getAllRates() {
+  try {
+    connectToDatabase();
+    const points = await Point.find();
+    const pointResponses: PointResponseDTO[] = [];
+    for (const point of points) {
+      const user = await User.findById(point.createBy);
+      const userResponse: ShortUserResponseDTO = {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        nickName: user.nickName,
+        avatar: user.avatar,
+      };
+      const pointResponse: PointResponseDTO = {
+        _id: point._id,
+        point: point.point,
+        message: point.message,
+        createAt: point.createAt,
+        user: userResponse,
+      };
+      pointResponses.push(pointResponse);
     }
+    return pointResponses;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
 }
 
-export async function rateUser(param: CreatePointDTO, userId:Schema.Types.ObjectId) {
+export async function getRatesOfUser(id: string) {
+  try {
+    connectToDatabase();
+    const points = await Point.find({ userId: id });
+    const pointResponses: PointResponseDTO[] = [];
+    for (const point of points) {
+      const user = await User.findById(point.createBy);
+      const userResponse: ShortUserResponseDTO = {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        nickName: user.nickName,
+        avatar: user.avatar,
+      };
+      const pointResponse: PointResponseDTO = {
+        _id: point._id,
+        point: point.point,
+        message: point.message,
+        createAt: point.createAt,
+        user: userResponse,
+      };
+      pointResponses.push(pointResponse);
+    }
+    return pointResponses;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+export async function rateUser(
+  param: CreatePointDTO,
+  userId: Schema.Types.ObjectId
+) {
   try {
     connectToDatabase();
     const user = await User.findById(param.userId);
@@ -75,7 +131,7 @@ export async function rateUser(param: CreatePointDTO, userId:Schema.Types.Object
       return { message: "You must be their friend to rate!" };
     }
 
-    const createData = Object.assign(param,{createBy:userId});
+    const createData = Object.assign(param, { createBy: userId });
 
     const point = await Point.create(createData);
 
@@ -100,7 +156,7 @@ export async function editRateUser(
       { _id: pointId, createBy: userId },
       { point: param.point, message: param.message }
     );
-    return {message:"Update successfully!"};
+    return { message: "Update successfully!" };
   } catch (error) {
     console.log(error);
     throw error;
