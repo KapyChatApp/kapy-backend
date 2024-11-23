@@ -1,7 +1,9 @@
 import {
   MessageBoxGroupDTO,
   MessageBoxDTO,
-  ResponseMessageDTO
+  ResponseMessageDTO,
+  DetailMessageBoxDTO,
+  ResponseAMessageBoxDTO
 } from "@/dtos/MessageDTO";
 import { FriendResponseDTO } from "@/dtos/FriendDTO";
 import { OTPResponseDTO } from "@/dtos/OTPDTO";
@@ -753,6 +755,76 @@ export const Contract = c.router(
         }),
         summary: "Send a message",
         metadata: { role: "user" } as const
+      },
+      aBoxChat: {
+        method: "GET",
+        path: "/api/message/get-info-box-chat",
+        responses: {
+          200: c.type<{
+            success: true;
+            box: DetailMessageBoxDTO;
+          }>(),
+          400: c.type<{
+            success: false;
+            box: string;
+          }>(),
+          404: c.type<{
+            success: false;
+            box: string;
+          }>(),
+          500: c.type<{
+            success: false;
+            error?: string;
+          }>()
+        },
+        query: z.object({
+          boxId: z.string()
+        }),
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        summary: "Get all message box of a certain user",
+        description:
+          "Fetches all message box for a specific user using its `userId`."
+      },
+      aBoxChatMobile: {
+        method: "GET",
+        path: "/api/message/a-messagebox",
+        responses: {
+          200: c.type<{
+            success: true;
+            box: ResponseAMessageBoxDTO;
+          }>(),
+          400: c.type<{
+            success: false;
+            box: string;
+          }>(),
+          404: c.type<{
+            success: false;
+            box: string;
+          }>(),
+          500: c.type<{
+            success: false;
+            error?: string;
+          }>()
+        },
+        query: z.object({
+          boxId: z.string()
+        }),
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        summary: "Get all message box of a certain user",
+        description:
+          "Fetches all message box for a specific user using its `userId`."
       },
       allChat: {
         method: "GET",
