@@ -9,6 +9,9 @@ import { SingleMessageResponseDTO } from "@/dtos/ShareDTO";
 import { AuthenticationDTO, UserResponseDTO } from "@/dtos/UserDTO";
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
+import { MediaResponseDTO } from "@/dtos/MediaDTO";
+import { PointResponseDTO } from "@/dtos/PointDTO";
+import { ReportResponseDTO } from "@/dtos/ReportDTO";
 
 const c = initContract();
 
@@ -77,7 +80,6 @@ export const Contract = c.router(
         body: z.object({
           firstName: z.string(),
           lastName: z.string(),
-          avatar: z.string(),
           nickName: z.string().optional(),
           phoneNumber: z.string(),
           email: z.string().email(),
@@ -382,6 +384,25 @@ export const Contract = c.router(
         }),
         summary: "Friend Profile",
         metadata: { role: "user" } as const
+      },
+      find: {
+        method: "GET",
+        path: "/api/friend/find",
+        responses: {
+          201: c.type<FriendResponseDTO[]>()
+        },
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        query: z.object({
+          q: z.string()
+        }),
+        summary: "Find friend regex",
+        metadata: { role: "user" } as const
       }
     }),
     mine: c.router({
@@ -502,8 +523,7 @@ export const Contract = c.router(
         }),
         body: z.object({
           membersIds: z.array(z.string()).nonempty(),
-          groupName: z.string(),
-          groupAva: z.string()
+          leaderId: z.string()
         }),
         responses: {
           200: c.type<{ success: true; message: string }>(),
@@ -891,6 +911,321 @@ export const Contract = c.router(
             )
         }),
         summary: "Search messages by ID and query",
+        metadata: { role: "admin" } as const
+      },
+      media: c.router({
+        uploadAvatar: {
+          method: "POST",
+          path: "/api/media/upload-avatar",
+          contentType: "multipart/form-data",
+          description: "Upload an avatar image for the authenticated user",
+          responses: {
+            200: c.type<MediaResponseDTO>(),
+            400: c.type<MediaResponseDTO>(),
+            405: c.type<MediaResponseDTO>(),
+            500: c.type<MediaResponseDTO>()
+          },
+          headers: z.object({
+            auth: z
+              .string()
+              .regex(
+                /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+              )
+          }),
+          body: c.type<{ file: File }>(),
+          summary: "Upload user avatar image"
+        },
+        uploadBackground: {
+          method: "POST",
+          path: "/api/media/upload-background",
+          description: "Upload a background image for the authenticated user",
+          contentType: "multipart/form-data",
+          responses: {
+            200: c.type<MediaResponseDTO>(),
+            400: c.type<MediaResponseDTO>(),
+            405: c.type<MediaResponseDTO>(),
+            500: c.type<MediaResponseDTO>()
+          },
+          headers: z.object({
+            auth: z
+              .string()
+              .regex(
+                /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+              )
+          }),
+          body: c.type<{ file: File }>(),
+          summary: "Upload user background image"
+        }
+      })
+    }),
+    point: c.router({
+      plus: {
+        method: "PATCH",
+        path: "/api/point/plus",
+        description: "add point for user",
+        responses: {
+          200: c.type()
+        },
+        query: z.object({
+          userId: z.string(),
+          point: z.number()
+        }),
+        body: z.object({}),
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        summary: "Plus user point",
+        metadata: { role: "admin" } as const
+      },
+      minus: {
+        method: "PATCH",
+        path: "/api/point/minus",
+        description: "minus point for user",
+        responses: {
+          200: c.type()
+        },
+        query: z.object({
+          userId: z.string(),
+          point: z.number()
+        }),
+        body: z.object({}),
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        summary: "Minus user point",
+        metadata: { role: "admin" } as const
+      },
+      all: {
+        method: "GET",
+        path: "/api/point/all",
+        responses: {
+          200: c.type<PointResponseDTO[]>()
+        },
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        summary: "Get all rate",
+        metadata: { role: "admin" } as const
+      },
+      user: {
+        method: "GET",
+        path: "/api/point/user",
+        responses: {
+          200: c.type<PointResponseDTO[]>()
+        },
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        query: z.object({
+          userId: z.string()
+        }),
+        summary: "Get all rate of a user",
+        metadata: { role: "user" } as const
+      },
+      delete: {
+        method: "DELETE",
+        path: "/api/point/delete",
+        description: "Delete a rate for admin",
+        responses: {
+          200: c.type()
+        },
+        query: z.object({
+          pointId: z.string()
+        }),
+        body: z.object({}),
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        summary: "Delete a rate for admin",
+        metadata: { role: "admin" } as const
+      },
+      create: {
+        method: "POST",
+        path: "/api/point/create",
+        description: "Create a rate",
+        responses: {
+          200: c.type<PointResponseDTO>()
+        },
+        body: z.object({
+          userId: z.string(),
+          point: z.number(),
+          message: z.string()
+        }),
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        summary: "Create a rate",
+        metadata: { role: "user" } as const
+      },
+      edit: {
+        method: "PATCH",
+        path: "/api/point/edit",
+        description: "Edit a rate",
+        responses: {
+          200: c.type<PointResponseDTO>()
+        },
+
+        body: z.object({
+          point: z.number(),
+          message: z.string()
+        }),
+        query: z.object({
+          pointId: z.string()
+        }),
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        summary: "Edit a rate",
+        metadata: { role: "user" } as const
+      },
+      deleteMy: {
+        method: "DELETE",
+        path: "/api/point/delete-my",
+        description: "Delete my rate",
+        responses: {
+          200: c.type<PointResponseDTO>()
+        },
+        query: z.object({
+          pointId: z.string()
+        }),
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        summary: "Delete my rate",
+        metadata: { role: "user" } as const
+      }
+    }),
+    report: c.router({
+      all: {
+        method: "GET",
+        path: "/api/report/all",
+        responses: {
+          200: c.type<ReportResponseDTO[]>()
+        },
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        summary: "Get all reports",
+        metadata: { role: "admin" } as const
+      },
+      mine: {
+        method: "GET",
+        path: "/api/report/mine",
+        responses: {
+          200: c.type<ReportResponseDTO[]>()
+        },
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        summary: "Get my reports",
+        metadata: { role: "user" } as const
+      },
+      create: {
+        method: "POST",
+        path: "/api/report/create",
+        description: "Create a report",
+        responses: {
+          200: c.type<ReportResponseDTO>()
+        },
+        body: z.object({
+          content: z.string(),
+          targetId: z.string(),
+          targetType: z.string()
+        }),
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        summary: "Create a report",
+        metadata: { role: "user" } as const
+      },
+      update: {
+        method: "PATCH",
+        path: "/api/report/update",
+        description: "Update a report",
+        responses: {
+          200: c.type<PointResponseDTO>()
+        },
+
+        body: z.object({
+          content: z.string()
+        }),
+        query: z.object({
+          reportId: z.string()
+        }),
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        summary: "Update a report",
+        metadata: { role: "user" } as const
+      },
+      verify: {
+        method: "PATCH",
+        path: "/api/report/verify",
+        responses: {
+          200: c.type<PointResponseDTO>()
+        },
+        body: z.object({
+          status: z.string()
+        }),
+        query: z.object({
+          reportId: z.string()
+        }),
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        summary: "Verify a report",
         metadata: { role: "admin" } as const
       }
     })

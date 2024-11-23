@@ -83,3 +83,11 @@ export interface FindUserDTO{
   avatar:string;
   relation:string;
 }
+
+export interface ShortUserResponseDTO{
+  _id:string;
+  firstName:string;
+  lastName:string;
+  nickName:string;
+  avatar:string;
+}
