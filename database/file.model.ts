@@ -17,10 +17,10 @@ const FileSchema = new Schema<IFile>({
   url: { type: String, required: true },
   publicId: { type: String, required: true },
   bytes: { type: String, required: true },
-  width: { type: String, required: true },
-  height: { type: String, required: true },
-  format: { type: String, required: true },
-  type: { type: String, required: true },
+  width: { type: String, required: false },
+  height: { type: String, required: false },
+  format: { type: String, required: false },
+  type: { type: String, required: true }
 });
 
 FileSchema.add(AuditSchema);
