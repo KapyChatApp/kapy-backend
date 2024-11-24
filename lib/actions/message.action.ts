@@ -74,9 +74,9 @@ async function createFile(file: formidable.File, userId: string) {
       url: result.url,
       publicId: result.public_id,
       bytes: result.bytes,
-      width: result.width,
-      height: result.height,
-      format: result.format,
+      width: result.width || "0",
+      height: result.height || "0",
+      format: result.format || "unknown",
       type: type,
       createBy: new Types.ObjectId(userId)
     });
@@ -732,6 +732,110 @@ export async function fetchBoxGroup(userId: string) {
     return { success: true, box: messageBoxesWithContent, adminId: userId };
   } catch (error) {
     console.error("Error fetching messages: ", error);
+    throw error;
+  }
+}
+
+export async function getImageList(boxId: string) {
+  try {
+    await connectToDatabase();
+    const messageBox = await MessageBox.findById(boxId);
+    if (!messageBox || !messageBox.messageIds) {
+      throw new Error("MessageBox not found or has no messages");
+    }
+
+    const messages = await Message.find({ _id: { $in: messageBox.messageIds } })
+      .select("contentId")
+      .exec();
+
+    const fileIds = messages.flatMap((msg: any) => msg.contentId);
+
+    const imageFiles = await File.find({
+      _id: { $in: fileIds },
+      type: "Image"
+    }).exec();
+
+    return imageFiles;
+  } catch (error) {
+    console.error("Error get image list: ", error);
+    throw error;
+  }
+}
+
+export async function getVideoList(boxId: string) {
+  try {
+    await connectToDatabase();
+    const messageBox = await MessageBox.findById(boxId);
+    if (!messageBox || !messageBox.messageIds) {
+      throw new Error("MessageBox not found or has no messages");
+    }
+
+    const messages = await Message.find({ _id: { $in: messageBox.messageIds } })
+      .select("contentId")
+      .exec();
+
+    const fileIds = messages.flatMap((msg: any) => msg.contentId);
+
+    const imageFiles = await File.find({
+      _id: { $in: fileIds },
+      type: "Video"
+    }).exec();
+
+    return imageFiles;
+  } catch (error) {
+    console.error("Error get video list: ", error);
+    throw error;
+  }
+}
+
+export async function getAudioList(boxId: string) {
+  try {
+    await connectToDatabase();
+    const messageBox = await MessageBox.findById(boxId);
+    if (!messageBox || !messageBox.messageIds) {
+      throw new Error("MessageBox not found or has no messages");
+    }
+
+    const messages = await Message.find({ _id: { $in: messageBox.messageIds } })
+      .select("contentId")
+      .exec();
+
+    const fileIds = messages.flatMap((msg: any) => msg.contentId);
+
+    const imageFiles = await File.find({
+      _id: { $in: fileIds },
+      type: "Audio"
+    }).exec();
+
+    return imageFiles;
+  } catch (error) {
+    console.error("Error get audio list: ", error);
+    throw error;
+  }
+}
+
+export async function getOtherList(boxId: string) {
+  try {
+    await connectToDatabase();
+    const messageBox = await MessageBox.findById(boxId);
+    if (!messageBox || !messageBox.messageIds) {
+      throw new Error("MessageBox not found or has no messages");
+    }
+
+    const messages = await Message.find({ _id: { $in: messageBox.messageIds } })
+      .select("contentId")
+      .exec();
+
+    const fileIds = messages.flatMap((msg: any) => msg.contentId);
+
+    const imageFiles = await File.find({
+      _id: { $in: fileIds },
+      type: "Other"
+    }).exec();
+
+    return imageFiles;
+  } catch (error) {
+    console.error("Error get other list: ", error);
     throw error;
   }
 }
