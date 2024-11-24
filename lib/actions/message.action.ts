@@ -152,9 +152,12 @@ export async function createMessage(
         }
 
         const message = await createContent(data, files, userId);
-        const populatedMessage = await Message.findById(message._id).populate(
-          "contentId"
-        );
+        const populatedMessage = await Message.findById(message._id).populate({
+          path: "contentId",
+          model: "File",
+          select: "",
+          options: { strictPopulate: false }
+        });
         detailBox = await MessageBox.findByIdAndUpdate(
           data.boxId,
           {
@@ -189,9 +192,12 @@ export async function createMessage(
           },
           { new: true }
         );
-        const populatedMessage = await Message.findById(message._id).populate(
-          "contentId"
-        );
+        const populatedMessage = await Message.findById(message._id).populate({
+          path: "contentId",
+          model: "File",
+          select: "",
+          options: { strictPopulate: false }
+        });
 
         const pusherMessage: ResponseMessageDTO = {
           id: populatedMessage._id.toString(),
@@ -514,7 +520,12 @@ export async function findMessages(boxId: string, query: string) {
 
     const messages = await Message.find({
       _id: { $in: messageBox.messageIds }
-    }).populate("contentId");
+    }).populate({
+      path: "contentId",
+      model: "File",
+      select: "",
+      options: { strictPopulate: false }
+    });
 
     const resultMessages: ResponseMessageDTO[] = messages.filter((message) => {
       let content: string = "";
@@ -611,9 +622,12 @@ export async function fetchBoxChat(userId: string) {
 
         // Tìm message theo messageId cuối cùng
         const message = await Message.findById(lastMessageId);
-        populatedMessage = await Message.findById(lastMessageId).populate(
-          "contentId"
-        );
+        populatedMessage = await Message.findById(lastMessageId).populate({
+          path: "contentId",
+          model: "File",
+          select: "",
+          options: { strictPopulate: false }
+        });
         // .populate("readedId");
 
         if (populatedMessage && populatedMessage.contentId) {
@@ -699,13 +713,15 @@ export async function fetchBoxGroup(userId: string) {
 
         // Tìm message theo messageId cuối cùng
         const message = await Message.findById(lastMessageId);
-        populatedMessage = await Message.findById(lastMessageId).populate(
-          "contentId"
-        );
+        populatedMessage = await Message.findById(lastMessageId).populate({
+          path: "contentId",
+          model: "File",
+          select: ""
+        });
 
         if (populatedMessage && populatedMessage.contentId) {
           return {
-            ...messageBox,
+            ...messageBox.toObject(),
             lastMessage: populatedMessage
           };
         }

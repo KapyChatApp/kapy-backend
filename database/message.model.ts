@@ -14,13 +14,7 @@ const MessageSchema = new Schema<IMessage>({
   flag: { type: Boolean, required: true, default: true },
   isReact: { type: Boolean, required: true, default: false },
   readedId: [{ type: Schema.Types.ObjectId, ref: "User" }],
-  contentId: [
-    {
-      type: Schema.Types.ObjectId,
-      required: true,
-      refPath: "File"
-    }
-  ],
+  contentId: [{ type: Schema.Types.ObjectId, ref: "File" }],
   text: [{ type: String }]
 });
 
