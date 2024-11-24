@@ -14,6 +14,7 @@ import { z } from "zod";
 import { MediaResponseDTO } from "@/dtos/MediaDTO";
 import { PointResponseDTO } from "@/dtos/PointDTO";
 import { ReportResponseDTO } from "@/dtos/ReportDTO";
+import { FileResponseDTO } from "@/dtos/FileDTO";
 
 const c = initContract();
 
@@ -891,6 +892,118 @@ export const Contract = c.router(
         summary: "Get all message box group of a certain group",
         description:
           "Fetches all message box for a specific group using its `groupId`."
+      },
+      listImage: {
+        method: "GET",
+        path: "/api/message/get-list/images",
+        responses: {
+          200: c.type<FileResponseDTO[]>(),
+          400: c.type<{
+            message: string;
+          }>(),
+          404: c.type<{
+            message: string;
+          }>(),
+          500: c.type<{
+            message: string;
+          }>()
+        },
+        query: z.object({
+          boxId: z.string()
+        }),
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        summary: "Get image list in message box",
+        description: "Get the image file list in `boxId`."
+      },
+      listVideo: {
+        method: "GET",
+        path: "/api/message/get-list/videos",
+        responses: {
+          200: c.type<FileResponseDTO[]>(),
+          400: c.type<{
+            message: string;
+          }>(),
+          404: c.type<{
+            message: string;
+          }>(),
+          500: c.type<{
+            message: string;
+          }>()
+        },
+        query: z.object({
+          boxId: z.string()
+        }),
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        summary: "Get video list in message box",
+        description: "Get the video file list in `boxId`."
+      },
+      listAudio: {
+        method: "GET",
+        path: "/api/message/get-list/audios",
+        responses: {
+          200: c.type<FileResponseDTO[]>(),
+          400: c.type<{
+            message: string;
+          }>(),
+          404: c.type<{
+            message: string;
+          }>(),
+          500: c.type<{
+            message: string;
+          }>()
+        },
+        query: z.object({
+          boxId: z.string()
+        }),
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        summary: "Get audio list in message box",
+        description: "Get the audio file list in `boxId`."
+      },
+      listOther: {
+        method: "GET",
+        path: "/api/message/get-list/others",
+        responses: {
+          200: c.type<FileResponseDTO[]>(),
+          400: c.type<{
+            message: string;
+          }>(),
+          404: c.type<{
+            message: string;
+          }>(),
+          500: c.type<{
+            message: string;
+          }>()
+        },
+        query: z.object({
+          boxId: z.string()
+        }),
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        summary: "Get other files list in message box",
+        description: "Get the other file list in `boxId`."
       },
       listMessages: {
         method: "GET",
