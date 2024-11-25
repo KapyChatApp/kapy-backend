@@ -762,7 +762,6 @@ export const Contract = c.router(
         path: "/api/message/get-info-box-chat",
         responses: {
           200: c.type<{
-            success: true;
             box: DetailMessageBoxDTO;
           }>(),
           400: c.type<{
