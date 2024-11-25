@@ -393,7 +393,18 @@ export async function fetchMessage(boxId: string) {
           options: { strictPopulate: false }
         });
 
-        return populatedMessage;
+        const responseMessage: ResponseMessageDTO = {
+          id: populatedMessage._id,
+          flag: populatedMessage.flag,
+          isReact: populatedMessage.isReact,
+          readedId: populatedMessage.readedId,
+          contentId: populatedMessage.contentId,
+          text: populatedMessage.text,
+          createAt: populatedMessage.createAt,
+          createBy: populatedMessage.createBy
+        };
+
+        return responseMessage;
       })
     );
 
@@ -527,22 +538,36 @@ export async function findMessages(boxId: string, query: string) {
       options: { strictPopulate: false }
     });
 
-    const resultMessages: ResponseMessageDTO[] = messages.filter((message) => {
-      let content: string = "";
-      if (message.text.length > 0 && message.contentId.length === 0) {
-        content = message.text[message.text.length - 1];
-      } else {
-        const contentId = message.contentId[message.contentId.length - 1];
-        if ("fileName" in contentId) {
-          // contentId là FileContent
-          content = contentId.fileName;
-        } else if ("description" in contentId) {
-          // contentId là GPSContent
-          content = contentId.description ? contentId.description : "";
+    const resultMessages: ResponseMessageDTO[] = messages
+      .filter((message) => {
+        let content: string = "";
+        if (message.text.length > 0 && message.contentId.length === 0) {
+          content = message.text[message.text.length - 1];
+        } else {
+          const contentId = message.contentId[message.contentId.length - 1];
+          if ("fileName" in contentId) {
+            // contentId là FileContent
+            content = contentId.fileName;
+          } else if ("description" in contentId) {
+            // contentId là GPSContent
+            content = contentId.description ? contentId.description : "";
+          }
         }
-      }
-      return content.toLowerCase().trim().includes(query.toLowerCase().trim());
-    });
+        return content
+          .toLowerCase()
+          .trim()
+          .includes(query.toLowerCase().trim());
+      })
+      .map((message) => ({
+        id: message._id,
+        flag: message.flag,
+        isReact: message.isReact,
+        readedId: message.readedId,
+        contentId: message.contentId,
+        text: message.text,
+        createAt: message.createAt,
+        createBy: message.createBy
+      }));
 
     return { success: true, messages: resultMessages };
   } catch (error) {
