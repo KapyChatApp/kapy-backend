@@ -10,6 +10,7 @@ import {
   MessageBoxGroupDTO,
   RequestSendMessageDTO,
   ResponseAMessageBoxDTO,
+  DetailMessageBoxDTO,
   ResponseMessageBoxDTO,
   ResponseMessageDTO
 } from "@/dtos/MessageDTO";
@@ -624,7 +625,10 @@ export async function fetchBoxChat(userId: string) {
     let populatedMessage;
     const messageBoxes = await MessageBox.find({
       $and: [{ receiverIds: { $in: [userId] } }, { receiverIds: { $size: 2 } }]
-    }).populate("receiverIds", "firstName lastName avatar phoneNumber");
+    }).populate(
+      "receiverIds",
+      "firstName lastName nickName avatar phoneNumber"
+    );
     // .populate("senderId", "nickName")
     // .populate("receiverIds", "fullName avatar")
     // .populate("messageIds");
@@ -679,9 +683,12 @@ export async function fetchBoxChat(userId: string) {
 export async function fetchOneBoxChat(boxId: string) {
   try {
     await connectToDatabase();
-    const messageBox = await MessageBox.findById(boxId)
-      .populate("senderId")
-      .populate("receiverIds");
+    const messageBox: DetailMessageBoxDTO = await MessageBox.findById(boxId)
+      .populate("senderId", "firstName lastName nickName avatar phoneNumber")
+      .populate(
+        "receiverIds",
+        "firstName lastName nickName avatar phoneNumber"
+      );
     // .populate({
     //   path: "messageIds",
     //   populate: {

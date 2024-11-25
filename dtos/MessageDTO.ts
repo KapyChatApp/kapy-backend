@@ -1,5 +1,3 @@
-import { UserResponseDTO } from "./UserDTO";
-
 export interface FileContent {
   _id: string;
   fileName: string;
@@ -29,6 +27,7 @@ export interface UserInfoBox {
   _id: string;
   firstName: string;
   lastName: string;
+  nickName: string;
   avatar: string;
   phone: string;
 }
@@ -84,8 +83,8 @@ export interface ResponseAMessageBoxDTO {
 
 export interface DetailMessageBoxDTO {
   _id: string;
-  senderId: UserResponseDTO;
-  receiverIds: UserResponseDTO[];
+  senderId: UserInfoBox;
+  receiverIds: UserInfoBox[];
   messageIds: string[];
   groupName: string;
   groupAva: string[];
@@ -93,5 +92,4 @@ export interface DetailMessageBoxDTO {
   pin: boolean;
   createAt: string;
   createBy: string;
-  lastMessage: ResponseMessageDTO;
 }
