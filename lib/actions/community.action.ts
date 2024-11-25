@@ -84,7 +84,9 @@ export async function getAllRates() {
 export async function getRatesOfUser(id: string) {
   try {
     connectToDatabase();
+    console.log(id);
     const points = await Point.find({ userId: id });
+    console.log(points);
     const pointResponses: PointResponseDTO[] = [];
     for (const point of points) {
       const user = await User.findById(point.createBy);
