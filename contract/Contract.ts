@@ -656,7 +656,7 @@ export const Contract = c.router(
       },
       revokeMessage: {
         method: "DELETE",
-        path: "/api/message/delete",
+        path: "/api/message/revoke",
         responses: {
           200: c.type<{
             success: boolean;
