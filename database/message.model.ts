@@ -4,10 +4,9 @@ import { IAudit, AuditSchema } from "./audit.model";
 export interface IMessage extends Document, IAudit {
   flag: boolean;
   readedId: Schema.Types.ObjectId[];
-  contentModel: string;
   contentId: Schema.Types.ObjectId[];
   text: string[];
-  boxId: string;
+  boxId: Schema.Types.ObjectId;
   isReact: boolean;
 }
 
@@ -16,7 +15,7 @@ const MessageSchema = new Schema<IMessage>({
   isReact: { type: Boolean, required: true, default: false },
   readedId: [{ type: Schema.Types.ObjectId, ref: "User" }],
   contentId: [{ type: Schema.Types.ObjectId, ref: "File" }],
-  boxId: [{ type: Schema.Types.ObjectId, ref: "MessageBox" }],
+  boxId: { type: Schema.Types.ObjectId, ref: "MessageBox" },
   text: [{ type: String }]
 });
 

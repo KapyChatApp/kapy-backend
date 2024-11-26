@@ -119,6 +119,7 @@ async function createContent(
     readedId: [userId],
     contentId: contentIds,
     text: text,
+    boxId: new Types.ObjectId(data.boxId),
     createAt: Date.now(),
     updatedAt: Date.now(),
     createBy: userObjectId
@@ -208,7 +209,7 @@ export async function createMessage(
           readedId: populatedMessage.readedId.map((id: any) => id.toString()),
           contentId: populatedMessage.contentId,
           text: populatedMessage.text,
-          boxId: populatedMessage.boxId,
+          boxId: data.boxId,
           // Chuyển ObjectId sang chuỗi
           createAt: populatedMessage.createAt, // ISO string đã hợp lệ
           createBy: populatedMessage.createBy.toString()
@@ -216,7 +217,7 @@ export async function createMessage(
 
         await pusherServer
           .trigger(`private-${data.boxId}`, "new-message", pusherMessage)
-          .then(() => console.log("Message sent successfully"))
+          .then(() => console.log("Message sent successfully: ", pusherMessage))
           .catch((error) => console.error("Failed to send message:", error));
 
         // return { success: true, populatedMessage, detailBox };
