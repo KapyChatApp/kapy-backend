@@ -15,8 +15,16 @@ export default async function handler(
           if (!boxId) {
             return res.status(400).json({ message: "boxId is required" });
           }
-          const result = await fetchOneBoxChat(boxId as string);
-          res.status(200).json(result);
+          if (req.user && req.user.id) {
+            const userId = req.user.id.toString();
+            if (!userId) {
+              return res
+                .status(400)
+                .json({ success: false, message: "UserId is required" });
+            }
+            const result = await fetchOneBoxChat(boxId as string, userId);
+            res.status(200).json(result);
+          }
         } catch (error) {
           console.error("Error fetching messageBox: ", error);
           const errorMessage =

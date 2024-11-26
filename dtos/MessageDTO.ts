@@ -43,6 +43,7 @@ export interface MessageBoxDTO {
   createAt: string;
   createBy: string;
   lastMessage: ResponseMessageDTO;
+  readStatus: boolean;
 }
 export interface MessageBoxGroupDTO {
   _id: string;
@@ -56,6 +57,7 @@ export interface MessageBoxGroupDTO {
   createAt: string;
   createBy: string;
   lastMessage: ResponseMessageDTO;
+  readStatus: boolean;
 }
 export interface ResponseMessageBoxDTO {
   box: MessageBoxDTO[];
@@ -68,6 +70,7 @@ export interface ResponseMessageDTO {
   readedId: string[];
   contentId: FileContent[] | GPSContent[];
   text: string[];
+  boxId: string;
   createAt: string;
   createBy: string;
   isReact: boolean;
@@ -92,4 +95,5 @@ export interface DetailMessageBoxDTO {
   pin: boolean;
   createAt: string;
   createBy: string;
+  readStatus: boolean;
 }

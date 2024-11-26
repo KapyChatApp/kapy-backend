@@ -71,7 +71,8 @@ async function createFile(file: formidable.File, userId: string) {
     }
 
     const createdFile = await File.create({
-      fileName: generateRandomString(),
+      fileName:
+        type === "Other" ? file.originalFilename : generateRandomString(),
       url: result.url,
       publicId: result.public_id,
       bytes: result.bytes,
@@ -174,15 +175,15 @@ export async function createMessage(
         //return { success: true, populatedMessage, detailBox };
         return { success: true, message: "Send successfully" };
       } else {
-        // const [stUserId, ndUserId] = [receiverIdsArray[0], userId].sort();
-        // const relationBlock = await Relation.findOne({
-        //   stUser: stUserId,
-        //   ndUser: ndUserId,
-        //   relation: "block"
-        // });
-        // if (relationBlock) {
-        //   throw new Error("Sender is blocked by Receiver");
-        // }
+        const [stUserId, ndUserId] = [receiverIdsArray[0], userId].sort();
+        const relationBlock = await Relation.findOne({
+          stUser: stUserId,
+          ndUser: ndUserId,
+          relation: "block"
+        });
+        if (relationBlock) {
+          throw new Error("Sender is blocked by Receiver");
+        }
         const message = await createContent(data, files, userId);
         detailBox = await MessageBox.findByIdAndUpdate(
           detailBox._id,
@@ -207,6 +208,7 @@ export async function createMessage(
           readedId: populatedMessage.readedId.map((id: any) => id.toString()),
           contentId: populatedMessage.contentId,
           text: populatedMessage.text,
+          boxId: populatedMessage.boxId,
           // Chuyển ObjectId sang chuỗi
           createAt: populatedMessage.createAt, // ISO string đã hợp lệ
           createBy: populatedMessage.createBy.toString()
@@ -401,6 +403,7 @@ export async function fetchMessage(boxId: string) {
           readedId: populatedMessage.readedId,
           contentId: populatedMessage.contentId,
           text: populatedMessage.text,
+          boxId: populatedMessage.boxId,
           createAt: populatedMessage.createAt,
           createBy: populatedMessage.createBy
         };
@@ -566,6 +569,7 @@ export async function findMessages(boxId: string, query: string) {
         readedId: message.readedId,
         contentId: message.contentId,
         text: message.text,
+        boxId: message.boxId,
         createAt: message.createAt,
         createBy: message.createBy
       }));
@@ -622,56 +626,66 @@ export async function getAMessageBox(
 export async function fetchBoxChat(userId: string) {
   try {
     await connectToDatabase();
-    let populatedMessage;
+
     const messageBoxes = await MessageBox.find({
       $and: [{ receiverIds: { $in: [userId] } }, { receiverIds: { $size: 2 } }]
     }).populate(
       "receiverIds",
       "firstName lastName nickName avatar phoneNumber"
     );
-    // .populate("senderId", "nickName")
-    // .populate("receiverIds", "fullName avatar")
-    // .populate("messageIds");
+
     if (!messageBoxes.length) {
       return {
         success: false,
         box: "No message boxes found for this userId"
       };
     }
-    // Lấy nội dung contentId từ messageId cuối cùng trong mỗi messageBox
-    const messageBoxesWithContent: MessageBoxDTO[] = await Promise.all(
+
+    // Xử lý từng box để lấy tin nhắn cuối và kiểm tra trạng thái đọc
+    const messageBoxesWithDetails: MessageBoxDTO[] = await Promise.all(
       messageBoxes.map(async (messageBox) => {
-        // Lấy messageId cuối cùng
+        // Lấy tin nhắn cuối cùng
         const lastMessageId =
           messageBox.messageIds[messageBox.messageIds.length - 1];
 
         if (!lastMessageId) {
-          return messageBox; // Nếu không có messageId nào, trả về messageBox gốc
-        }
-
-        // Tìm message theo messageId cuối cùng
-        const message = await Message.findById(lastMessageId);
-        populatedMessage = await Message.findById(lastMessageId).populate({
-          path: "contentId",
-          model: "File",
-          select: "",
-          options: { strictPopulate: false }
-        });
-        // .populate("readedId");
-
-        if (populatedMessage && populatedMessage.contentId) {
           return {
             ...messageBox.toObject(),
-            lastMessage: populatedMessage
+            lastMessage: null,
+            readStatus: false
           };
         }
 
-        return messageBox;
+        // Lấy thông tin tin nhắn cuối
+        const lastMessage = await Message.findById(lastMessageId).populate({
+          path: "contentId",
+          model: "File",
+          options: { strictPopulate: false }
+        });
+
+        if (!lastMessage) {
+          return {
+            ...messageBox.toObject(),
+            lastMessage: null,
+            readStatus: false
+          };
+        }
+
+        // Kiểm tra trạng thái đã đọc
+        const isRead = lastMessage.readedId.includes(userId);
+        const readStatus = isRead ? true : false;
+
+        return {
+          ...messageBox.toObject(),
+          lastMessage,
+          readStatus
+        };
       })
     );
+
     return {
       success: true,
-      box: messageBoxesWithContent,
+      box: messageBoxesWithDetails,
       adminId: userId
     };
   } catch (error) {
@@ -680,32 +694,63 @@ export async function fetchBoxChat(userId: string) {
   }
 }
 
-export async function fetchOneBoxChat(boxId: string) {
+export async function fetchOneBoxChat(boxId: string, userId: string) {
   try {
     await connectToDatabase();
-    const messageBox: DetailMessageBoxDTO = await MessageBox.findById(boxId)
+
+    // Tìm messageBox theo boxId
+    const messageBox = await MessageBox.findById(boxId)
       .populate("senderId", "firstName lastName nickName avatar phoneNumber")
       .populate(
         "receiverIds",
         "firstName lastName nickName avatar phoneNumber"
       );
-    // .populate({
-    //   path: "messageIds",
-    //   populate: {
-    //     path: "contentId",
-    //     model: "File",
-    //     select: "",
-    //     options: { strictPopulate: false }
-    //   }
-    // });
+
     if (!messageBox) {
       return {
         success: false,
-        message: "No message boxes found for this userId"
+        message: "No message boxes found for this boxId"
       };
     }
 
-    return { box: messageBox };
+    // Lấy tin nhắn cuối cùng
+    const lastMessageId =
+      messageBox.messageIds[messageBox.messageIds.length - 1];
+
+    if (!lastMessageId) {
+      return {
+        box: {
+          ...messageBox.toObject(),
+          readStatus: false // Không có tin nhắn thì mặc định là chưa đọc
+        }
+      };
+    }
+
+    // Tìm tin nhắn cuối cùng
+    const lastMessage = await Message.findById(lastMessageId).populate({
+      path: "contentId",
+      model: "File",
+      select: ""
+    });
+
+    if (!lastMessageId) {
+      return {
+        box: {
+          ...messageBox.toObject(),
+          readStatus: false // Không có tin nhắn thì mặc định là chưa đọc
+        }
+      };
+    }
+
+    // Kiểm tra trạng thái đã đọc
+    const readStatus = lastMessage.readedId.includes(userId);
+
+    return {
+      box: {
+        ...messageBox.toObject(),
+        readStatus // Thêm readStatus vào messageBox
+      }
+    };
   } catch (error) {
     console.error("Error fetching messages: ", error);
     throw error;
@@ -716,6 +761,8 @@ export async function fetchBoxGroup(userId: string) {
   try {
     let populatedMessage;
     await connectToDatabase();
+
+    // Lấy danh sách các nhóm chat
     const messageBoxes = await MessageBox.find({
       $and: [
         { receiverIds: { $in: [userId] } },
@@ -726,13 +773,15 @@ export async function fetchBoxGroup(userId: string) {
     })
       .populate("receiverIds", "firstName lastName")
       .populate("senderId", "firstName lastName");
+
     if (!messageBoxes.length) {
       return {
         success: false,
         box: "No message boxes found for this userId"
       };
     }
-    // Lấy nội dung contentId từ messageId cuối cùng trong mỗi messageBox
+
+    // Xử lý nội dung từng nhóm
     const messageBoxesWithContent: MessageBoxGroupDTO[] = await Promise.all(
       messageBoxes.map(async (messageBox) => {
         // Lấy messageId cuối cùng
@@ -740,27 +789,39 @@ export async function fetchBoxGroup(userId: string) {
           messageBox.messageIds[messageBox.messageIds.length - 1];
 
         if (!lastMessageId) {
-          return messageBox; // Nếu không có messageId nào, trả về messageBox gốc
+          return {
+            ...messageBox.toObject(),
+            lastMessage: null,
+            readStatus: false
+          };
         }
 
-        // Tìm message theo messageId cuối cùng
-        const message = await Message.findById(lastMessageId);
+        // Lấy tin nhắn cuối cùng
         populatedMessage = await Message.findById(lastMessageId).populate({
           path: "contentId",
           model: "File",
           select: ""
         });
 
-        if (populatedMessage && populatedMessage.contentId) {
+        if (populatedMessage) {
+          // Kiểm tra trạng thái đã đọc
+          const readStatus = populatedMessage.readedId.includes(userId);
+
           return {
             ...messageBox.toObject(),
-            lastMessage: populatedMessage
+            lastMessage: populatedMessage,
+            readStatus // true hoặc false
           };
         }
 
-        return messageBox;
+        return {
+          ...messageBox.toObject(),
+          lastMessage: null,
+          readStatus: false
+        };
       })
     );
+
     return { success: true, box: messageBoxesWithContent, adminId: userId };
   } catch (error) {
     console.error("Error fetching messages: ", error);
