@@ -173,6 +173,23 @@ export async function createMessage(
           throw new Error("Group MessageBox cannot update");
         }
 
+        const pusherMessage: ResponseMessageDTO = {
+          id: populatedMessage._id.toString(),
+          flag: true,
+          isReact: false,
+          readedId: populatedMessage.readedId.map((id: any) => id.toString()),
+          contentId: populatedMessage.contentId,
+          text: populatedMessage.text,
+          boxId: data.boxId,
+          // Chuyển ObjectId sang chuỗi
+          createAt: populatedMessage.createAt, // ISO string đã hợp lệ
+          createBy: populatedMessage.createBy.toString()
+        };
+
+        await pusherServer
+          .trigger(`private-${data.boxId}`, "new-message", pusherMessage)
+          .then(() => console.log("Message sent successfully: ", pusherMessage))
+          .catch((error) => console.error("Failed to send message:", error));
         //return { success: true, populatedMessage, detailBox };
         return { success: true, message: "Send successfully" };
       } else {
@@ -225,6 +242,12 @@ export async function createMessage(
       }
     } else {
       const message = await createContent(data, files, userId);
+      const populatedMessage = await Message.findById(message._id).populate({
+        path: "contentId",
+        model: "File",
+        select: "",
+        options: { strictPopulate: false }
+      });
       detailBox = await MessageBox.create({
         senderId: userId,
         receiverIds: [data.boxId, userId],
@@ -235,6 +258,23 @@ export async function createMessage(
         pin: false,
         createBy: userObjectId
       });
+      const pusherMessage: ResponseMessageDTO = {
+        id: populatedMessage._id.toString(),
+        flag: true,
+        isReact: false,
+        readedId: populatedMessage.readedId.map((id: any) => id.toString()),
+        contentId: populatedMessage.contentId,
+        text: populatedMessage.text,
+        boxId: data.boxId,
+        // Chuyển ObjectId sang chuỗi
+        createAt: populatedMessage.createAt, // ISO string đã hợp lệ
+        createBy: populatedMessage.createBy.toString()
+      };
+
+      await pusherServer
+        .trigger(`private-${userId}`, "new-message", pusherMessage)
+        .then(() => console.log("Message sent successfully: ", pusherMessage))
+        .catch((error) => console.error("Failed to send message:", error));
       return { success: true, message: "Create new box and send successfully" };
     }
   } catch (error) {
@@ -512,7 +552,6 @@ export async function markMessageAsRead(boxId: string, userId: string) {
     } else {
       return {
         success: true,
-        lastMessage,
         messages: "Messages already read"
       };
     }
