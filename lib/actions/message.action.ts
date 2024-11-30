@@ -58,13 +58,15 @@ async function createFile(file: formidable.File, userId: string) {
     } else if (mimetype?.startsWith("audio/")) {
       // Upload âm thanh
       result = await cloudinary.uploader.upload(file.filepath, {
-        resource_type: "raw",
+        resource_type: "auto",
+        public_id: `Audios/${file.originalFilename}`,
         folder: "Audios"
       });
       type = "Audio";
     } else {
       result = await cloudinary.uploader.upload(file.filepath, {
         resource_type: "raw",
+        public_id: `Documents/${file.originalFilename}`,
         folder: "Documents"
       });
       type = "Other";
@@ -78,7 +80,7 @@ async function createFile(file: formidable.File, userId: string) {
       bytes: result.bytes,
       width: result.width || "0",
       height: result.height || "0",
-      format: result.format || "unknown",
+      format: result.type || "unknown",
       type: type,
       createBy: new Types.ObjectId(userId)
     });
@@ -100,7 +102,12 @@ async function createContent(
 
   if (typeof data.content === "string") {
     text = [data.content];
-  } else if (["image", "audio", "video", "other"].includes(data.content.type)) {
+  } else if (
+    data.content &&
+    data.content.fileName &&
+    data.content.format &&
+    data.content.type
+  ) {
     if (files.file) {
       const file = Array.isArray(files.file) ? files.file[0] : files.file;
       const createdFile = await createFile(file, userId);
@@ -883,7 +890,7 @@ export async function getImageList(boxId: string) {
 
     const fileIds = messages.flatMap((msg: any) => msg.contentId);
 
-    const imageFiles = await File.find({
+    const imageFiles: FileContent[] = await File.find({
       _id: { $in: fileIds },
       type: "Image"
     }).exec();
