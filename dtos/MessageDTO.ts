@@ -97,3 +97,13 @@ export interface DetailMessageBoxDTO {
   createBy: string;
   readStatus: boolean;
 }
+
+export interface PusherDeleteAndRevoke {
+  id: string;
+  flag: boolean;
+  isReact: boolean;
+  contentId: FileContent[] | GPSContent[];
+  text: string;
+  boxId: string;
+  action: string;
+}

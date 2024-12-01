@@ -6,7 +6,7 @@ export default function handler(req: any, res: any) {
     const { socket_id, channel_name } = req.body;
 
     try {
-      const auth = pusherServer.authenticate(socket_id, channel_name);
+      const auth = pusherServer.authorizeChannel(socket_id, channel_name);
       res.status(200).send(auth);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
     } catch (error: any) {
