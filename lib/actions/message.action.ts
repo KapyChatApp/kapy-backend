@@ -12,7 +12,8 @@ import {
   ResponseAMessageBoxDTO,
   DetailMessageBoxDTO,
   ResponseMessageBoxDTO,
-  ResponseMessageDTO
+  ResponseMessageDTO,
+  PusherDeleteAndRevoke
 } from "@/dtos/MessageDTO";
 import mongoose, { Schema, Types } from "mongoose";
 import User from "@/database/user.model";
@@ -405,10 +406,42 @@ export async function deleteOrRevokeMessage(
         message.text.push("Message revoked");
       }
       await message.save();
+      const pusherMessage: PusherDeleteAndRevoke = {
+        id: message._id.toString(),
+        flag: message.flag,
+        isReact: message.isReact,
+        contentId: message.contentId,
+        text: message.text,
+        boxId: message.boxId.toString(),
+        action: "revoke"
+      };
+
+      await pusherServer
+        .trigger(`private-${message.boxId}`, "revoke-message", pusherMessage)
+        .then(() =>
+          console.log("Message revoked successfully: ", pusherMessage)
+        )
+        .catch((error) => console.error("Failed to revoke message:", error));
       return { success: true, message: "Message revoked" };
     } else if (action == "delete") {
       message.flag = false;
       await message.save();
+      const pusherMessage: PusherDeleteAndRevoke = {
+        id: message._id.toString(),
+        flag: message.flag,
+        isReact: message.isReact,
+        contentId: message.contentId,
+        text: message.text,
+        boxId: message.boxId.toString(),
+        action: "delete"
+      };
+
+      await pusherServer
+        .trigger(`private-${message.boxId}`, "delete-message", pusherMessage)
+        .then(() =>
+          console.log("Message deleted successfully: ", pusherMessage)
+        )
+        .catch((error) => console.error("Failed to delete message:", error));
       return { success: true, message: "Message deleted" };
     } else {
       throw new Error("Invalid action");
