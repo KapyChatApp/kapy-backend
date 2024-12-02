@@ -18,7 +18,7 @@ export default async function handler(
     authenticateToken(req, res, async () => {
       if (req.method === "DELETE") {
         if (typeof postId !== "string") {
-          return res.status(400).json({ error: "Invalid user ID" });
+          return res.status(400).json({ error: "Invalid post ID" });
         }
         if (!req.user?.id) {
           return res.status(401).json({ error: "You are unauthenticated!" });

@@ -4,6 +4,7 @@ import formidable from "formidable";
 import mongoose, { Schema } from "mongoose";
 import { connectToDatabase } from "../mongoose";
 import { FileResponseDTO } from "@/dtos/FileDTO";
+import User from "@/database/user.model";
 
 const generateRandomString = (length = 20) => {
     const characters =
@@ -92,3 +93,19 @@ export const createFile = async (file: formidable.File, userId:Schema.Types.Obje
     throw error;
   }
 };
+
+export const deleteFile = async (id:string, userId:Schema.Types.ObjectId | undefined)=>{
+  try{
+    const existFile = await File.findById(id);
+    const user = await User.findById(userId);
+    if(existFile.createBy.toString()!=userId?.toString() && user.roles.includes("admin")!){
+      throw new Error('You cannot delete this file!');
+    }
+    await cloudinary.uploader.destroy(existFile.publicId);
+    await File.findByIdAndDelete(id);
+    return {message:"Deleted!"}
+  }catch(error){
+    console.log(error);
+    throw error;
+  }
+}
