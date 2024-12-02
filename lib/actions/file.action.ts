@@ -92,3 +92,18 @@ export const createFile = async (file: formidable.File, userId:Schema.Types.Obje
     throw error;
   }
 };
+
+export const deleteFile = async (id:string, userId:Schema.Types.ObjectId | undefined)=>{
+  try{
+    const existFile = await File.findById(id);
+    if(existFile.createBy.toString()!=userId?.toString()){
+      throw new Error('You cannot delete this file!');
+    }
+    await cloudinary.uploader.destroy(existFile.publicId);
+    await File.findByIdAndDelete(id);
+    return {message:"Deleted!"}
+  }catch(error){
+    console.log(error);
+    throw error;
+  }
+}

@@ -8,7 +8,7 @@ export interface ISticker extends Document, IAudit {
 
 const StickerSchema = new Schema<ISticker>({
   name:{type:String, required:true},
-  file:{type:Schema.Types.ObjectId, required:true}
+  file:{type:Schema.Types.ObjectId, required:true, ref:"File"}
 });
 
 StickerSchema.add(AuditSchema);
