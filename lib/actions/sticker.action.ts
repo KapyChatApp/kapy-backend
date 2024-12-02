@@ -23,7 +23,7 @@ export const getASticker = async (id: string) => {
     throw error;
   }
 };
-export const allStickers = async () => {
+export const getAllStickers = async () => {
   try {
     const stickers = await Sticker.find().populate(
       "file",
@@ -75,8 +75,8 @@ export const findSticker = async (q: string) => {
 
 export const createSticker = async (
   file: formidable.File,
-  name: string,
-  userId: Schema.Types.ObjectId
+  name: string | undefined,
+  userId: Schema.Types.ObjectId | undefined
 ) => {
   try {
     const stickerFile = await createFile(file, userId);
@@ -93,9 +93,9 @@ export const createSticker = async (
 };
 
 export const updateSticker = async (
-  name: string,
+  name: string|undefined,
   id: string,
-  userId: Schema.Types.ObjectId,
+  userId: Schema.Types.ObjectId |undefined,
   file: formidable.File | undefined
 ) => {
   try {
