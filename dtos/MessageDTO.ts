@@ -68,6 +68,18 @@ export interface ResponseMessageDTO {
   id: string;
   flag: boolean;
   readedId: string[];
+  contentId: FileContent | GPSContent;
+  text: string;
+  boxId: string;
+  createAt: string;
+  createBy: string;
+  isReact: boolean;
+}
+
+export interface ResponseMessageManageDTO {
+  id: string;
+  flag: boolean;
+  readedId: string[];
   contentId: FileContent[] | GPSContent[];
   text: string[];
   boxId: string;
@@ -98,12 +110,25 @@ export interface DetailMessageBoxDTO {
   readStatus: boolean;
 }
 
-export interface PusherDeleteAndRevoke {
+export interface PusherRevoke {
   id: string;
   flag: boolean;
   isReact: boolean;
-  contentId: FileContent[] | GPSContent[];
   text: string;
   boxId: string;
   action: string;
+  createAt: string;
+  createBy: string;
+}
+
+export interface PusherDelete {
+  id: string;
+  flag: boolean;
+  visibility: boolean;
+  isReact: boolean;
+  text: string;
+  boxId: string;
+  action: string;
+  createAt: string;
+  createBy: string;
 }
