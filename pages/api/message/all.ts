@@ -17,9 +17,17 @@ export default async function handler(
               .status(400)
               .json({ message: "chatId or groupId is required" });
           }
-
-          const result = await fetchMessage(boxId as string);
-          res.status(200).json(result);
+          if (req.user && req.user.id) {
+            const userId = req.user.id.toString();
+            if (!userId) {
+              return res.status(400).json({ message: "userId is required" });
+            }
+            const result = await fetchMessage(
+              boxId as string,
+              userId as string
+            );
+            res.status(200).json(result);
+          }
         } catch (error) {
           console.error("Error fetching messages: ", error);
           const errorMessage =

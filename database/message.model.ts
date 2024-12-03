@@ -8,6 +8,7 @@ export interface IMessage extends Document, IAudit {
   text: string[];
   boxId: Schema.Types.ObjectId;
   isReact: boolean;
+  visibility: Map<string, boolean>;
 }
 
 const MessageSchema = new Schema<IMessage>({
@@ -16,7 +17,12 @@ const MessageSchema = new Schema<IMessage>({
   readedId: [{ type: Schema.Types.ObjectId, ref: "User" }],
   contentId: [{ type: Schema.Types.ObjectId, ref: "File" }],
   boxId: { type: Schema.Types.ObjectId, ref: "MessageBox" },
-  text: [{ type: String }]
+  text: [{ type: String }],
+  visibility: {
+    type: Map,
+    of: Boolean,
+    default: () => new Map([["defaultUserId", true]])
+  }
 });
 
 MessageSchema.add(AuditSchema);
