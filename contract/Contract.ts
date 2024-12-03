@@ -1504,6 +1504,9 @@ export const Contract = c.router(
         method: "DELETE",
         path: "/api/sticker/delete",
         description: "Delete a sticker",
+        responses:{
+          200:c.type<{message:string}>(),
+        },
         headers: z.object({
           auth: z
             .string()
