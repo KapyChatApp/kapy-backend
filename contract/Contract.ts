@@ -3,7 +3,8 @@ import {
   MessageBoxDTO,
   ResponseMessageDTO,
   DetailMessageBoxDTO,
-  ResponseAMessageBoxDTO
+  ResponseAMessageBoxDTO,
+  TextingEvent
 } from "@/dtos/MessageDTO";
 import { FriendResponseDTO } from "@/dtos/FriendDTO";
 import { OTPResponseDTO } from "@/dtos/OTPDTO";
@@ -206,6 +207,26 @@ export const Contract = c.router(
         }),
         summary: "Disable a user",
         metadata: { role: "admin" } as const
+      },
+      onlineEvent: {
+        method: "POST",
+        path: "/api/user/online",
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        body: z.object({}),
+        responses: {
+          200: c.type<TextingEvent>(),
+          400: c.type<{ success: false; message: string }>(),
+          500: c.type<{ success: false; message: string }>()
+        },
+        summary: "Create online event",
+        description: "Creates online event.",
+        metadata: { role: "user" } as const
       }
     }),
     friend: c.router({
@@ -755,6 +776,28 @@ export const Contract = c.router(
             )
         }),
         summary: "Send a message",
+        metadata: { role: "user" } as const
+      },
+      textingEvent: {
+        method: "POST",
+        path: "/api/message/texting",
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        body: z.object({
+          boxId: z.string()
+        }),
+        responses: {
+          200: c.type<TextingEvent>(),
+          400: c.type<{ success: false; message: string }>(),
+          500: c.type<{ success: false; message: string }>()
+        },
+        summary: "Create texting event",
+        description: "Creates texting event in a box chat.",
         metadata: { role: "user" } as const
       },
       aBoxChat: {

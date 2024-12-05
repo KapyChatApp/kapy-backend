@@ -132,3 +132,9 @@ export interface PusherDelete {
   createAt: string;
   createBy: string;
 }
+
+export interface TextingEvent {
+  boxId: string;
+  userId: string;
+  texting: boolean;
+}

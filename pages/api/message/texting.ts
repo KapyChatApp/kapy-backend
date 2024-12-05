@@ -1,4 +1,4 @@
-import { createGroup } from "@/lib/actions/message.action";
+import { textingEvent } from "@/lib/actions/message.action";
 import { authenticateToken } from "@/middleware/auth-middleware";
 import cors from "@/middleware/cors-middleware";
 import { NextApiRequest, NextApiResponse } from "next/types";
@@ -10,11 +10,11 @@ export default async function handler(
   cors(req, res, async () => {
     authenticateToken(req, res, async () => {
       if (req.method === "POST") {
-        const { membersIds, groupName, groupAva } = req.body;
-        if (!Array.isArray(membersIds) || membersIds.length === 0) {
+        const { boxId } = req.body;
+        if (!boxId) {
           return res.status(400).json({
             success: false,
-            message: "membersIds must be a non-empty array"
+            message: "boxId is required"
           });
         }
         if (req.user && req.user.id) {
@@ -22,15 +22,10 @@ export default async function handler(
           if (!userId) {
             return res
               .status(400)
-              .json({ success: false, message: "LeaderId is required" });
+              .json({ success: false, message: "userId is required" });
           }
           try {
-            const result = await createGroup(
-              membersIds,
-              userId,
-              groupName,
-              groupAva
-            );
+            const result = await textingEvent(boxId, userId);
 
             return res.status(200).json(result);
           } catch (error) {
