@@ -1,4 +1,4 @@
-import { createGroup } from "@/lib/actions/message.action";
+import { onlineEvent } from "@/lib/actions/user.action";
 import { authenticateToken } from "@/middleware/auth-middleware";
 import cors from "@/middleware/cors-middleware";
 import { NextApiRequest, NextApiResponse } from "next/types";
@@ -10,27 +10,15 @@ export default async function handler(
   cors(req, res, async () => {
     authenticateToken(req, res, async () => {
       if (req.method === "POST") {
-        const { membersIds, groupName, groupAva } = req.body;
-        if (!Array.isArray(membersIds) || membersIds.length === 0) {
-          return res.status(400).json({
-            success: false,
-            message: "membersIds must be a non-empty array"
-          });
-        }
         if (req.user && req.user.id) {
           const userId = req.user.id.toString();
           if (!userId) {
             return res
               .status(400)
-              .json({ success: false, message: "LeaderId is required" });
+              .json({ success: false, message: "userId is required" });
           }
           try {
-            const result = await createGroup(
-              membersIds,
-              userId,
-              groupName,
-              groupAva
-            );
+            const result = await onlineEvent(userId);
 
             return res.status(200).json(result);
           } catch (error) {

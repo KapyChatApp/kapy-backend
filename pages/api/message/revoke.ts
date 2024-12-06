@@ -42,7 +42,7 @@ export default async function handle(
             .json({ success: false, message: errorMessage });
         }
       } else {
-        res.setHeader("Allow", ["POST"]);
+        res.setHeader("Allow", ["DELETE"]);
         res.status(405).end(`Method ${req.method} Not Allowed`);
       }
     });

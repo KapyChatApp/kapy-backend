@@ -20,7 +20,7 @@ export interface GPSContent {
 
 export interface RequestSendMessageDTO {
   boxId: string;
-  content: string | GPSContent | FileContent;
+  content: string | FileContent;
 }
 
 export interface UserInfoBox {
@@ -68,6 +68,18 @@ export interface ResponseMessageDTO {
   id: string;
   flag: boolean;
   readedId: string[];
+  contentId: FileContent | GPSContent;
+  text: string;
+  boxId: string;
+  createAt: string;
+  createBy: string;
+  isReact: boolean;
+}
+
+export interface ResponseMessageManageDTO {
+  id: string;
+  flag: boolean;
+  readedId: string[];
   contentId: FileContent[] | GPSContent[];
   text: string[];
   boxId: string;
@@ -96,4 +108,33 @@ export interface DetailMessageBoxDTO {
   createAt: string;
   createBy: string;
   readStatus: boolean;
+}
+
+export interface PusherRevoke {
+  id: string;
+  flag: boolean;
+  isReact: boolean;
+  text: string;
+  boxId: string;
+  action: string;
+  createAt: string;
+  createBy: string;
+}
+
+export interface PusherDelete {
+  id: string;
+  flag: boolean;
+  visibility: boolean;
+  isReact: boolean;
+  text: string;
+  boxId: string;
+  action: string;
+  createAt: string;
+  createBy: string;
+}
+
+export interface TextingEvent {
+  boxId: string;
+  userId: string;
+  texting: boolean;
 }
