@@ -201,7 +201,7 @@ export async function createMessage(
           text: populatedMessage.text[populatedMessage.text.length - 1],
           boxId: data.boxId,
           // Chuyển ObjectId sang chuỗi
-          createAt: populatedMessage.createAt, // ISO string đã hợp lệ
+          createAt: new Date().toISOString(), // ISO string đã hợp lệ
           createBy: populatedMessage.createBy.toString()
         };
 
@@ -254,7 +254,7 @@ export async function createMessage(
           text: populatedMessage.text[populatedMessage.text.length - 1],
           boxId: data.boxId,
           // Chuyển ObjectId sang chuỗi
-          createAt: populatedMessage.createAt, // ISO string đã hợp lệ
+          createAt: new Date().toISOString(), // ISO string đã hợp lệ
           createBy: populatedMessage.createBy.toString()
         };
 
@@ -297,7 +297,7 @@ export async function createMessage(
         text: populatedMessage.text[populatedMessage.text.length - 1],
         boxId: data.boxId,
         // Chuyển ObjectId sang chuỗi
-        createAt: populatedMessage.createAt, // ISO string đã hợp lệ
+        createAt: new Date().toISOString(), // ISO string đã hợp lệ
         createBy: populatedMessage.createBy.toString()
       };
 
@@ -439,15 +439,16 @@ export async function deleteOrRevokeMessage(
 
     if (action === "revoke") {
       message.flag = false;
+
       await message.save();
       const pusherMessage: PusherRevoke = {
         id: message._id.toString(),
         flag: message.flag,
         isReact: message.isReact,
-        text: "Revoked message",
+        text: "Message revoked",
         boxId: message.boxId.toString(),
         action: "revoke",
-        createAt: message.createAt,
+        createAt: new Date().toISOString(),
         createBy: userId
       };
 
@@ -466,10 +467,10 @@ export async function deleteOrRevokeMessage(
         flag: message.flag,
         visibility: false,
         isReact: message.isReact,
-        text: "Deleted message",
+        text: "Message deleted",
         boxId: message.boxId.toString(),
         action: "delete",
-        createAt: message.createAt,
+        createAt: new Date().toISOString(),
         createBy: userId
       };
 
