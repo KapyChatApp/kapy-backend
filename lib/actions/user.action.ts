@@ -3,6 +3,7 @@
 
 import {
   FindUserDTO,
+  OnlineEvent,
   UpdateUserDTO,
   UserRegisterDTO,
   UserResponseDTO
@@ -12,6 +13,7 @@ import User from "@/database/user.model";
 import bcrypt from "bcrypt";
 import mongoose, { Schema } from "mongoose";
 import Relation from "@/database/relation.model";
+import { pusherServer } from "../pusher";
 const saltRounds = 10;
 
 export async function getAllUsers() {
@@ -282,6 +284,24 @@ export async function getMyProfile(id: Schema.Types.ObjectId | undefined) {
     return myProfile;
   } catch (error) {
     console.log(error);
+    throw error;
+  }
+}
+
+export async function onlineEvent(userId: string) {
+  try {
+    const pusherOnline: OnlineEvent = {
+      userId: userId,
+      online: true
+    };
+
+    await pusherServer
+      .trigger(`private-${userId}`, "online-status", pusherOnline)
+      .then(() => console.log("User is online", pusherOnline))
+      .catch((error) => console.error("Failed to create event: ", error));
+    return pusherOnline;
+  } catch (error) {
+    console.error("Error to create event: ", error);
     throw error;
   }
 }

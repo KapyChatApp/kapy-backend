@@ -1,4 +1,3 @@
-
 import { Schema } from "mongoose";
 export interface UserRegisterDTO {
   firstName: string;
@@ -7,7 +6,7 @@ export interface UserRegisterDTO {
   phoneNumber: string;
   email: string;
   password: string;
-  rePassword:string;
+  rePassword: string;
   gender: boolean;
   birthDay: Date;
 }
@@ -16,13 +15,13 @@ export interface UserLoginDTO {
   phoneNumber: string;
   password: string;
 }
-export interface AuthenticationDTO{
-  message:string;
-  token:string;
+export interface AuthenticationDTO {
+  message: string;
+  token: string;
 }
 
 export interface UserResponseDTO {
-  _id:string;
+  _id: string;
   firstName: string;
   lastName: string;
   nickName: string;
@@ -48,7 +47,7 @@ export interface UserResponseDTO {
   createBy: Schema.Types.ObjectId;
 }
 
-export interface UpdateUserDTO{
+export interface UpdateUserDTO {
   firstName: string;
   lastName: string;
   nickName: string;
@@ -61,8 +60,8 @@ export interface UpdateUserDTO{
   birthDay: Date;
 }
 
-export interface PublicUserDTO{
-  _id:string;
+export interface PublicUserDTO {
+  _id: string;
   firstName: string;
   lastName: string;
   nickName: string;
@@ -73,21 +72,26 @@ export interface PublicUserDTO{
   bio: string;
   relationShip: string;
   birthDay: Date;
-  relations:string[];
+  relations: string[];
 }
-export interface FindUserDTO{
-  _id:string;
+export interface FindUserDTO {
+  _id: string;
   firstName: string;
   lastName: string;
   nickName: string;
-  avatar:string;
-  relation:string;
+  avatar: string;
+  relation: string;
 }
 
-export interface ShortUserResponseDTO{
-  _id:string;
-  firstName:string;
-  lastName:string;
-  nickName:string;
-  avatar:string;
+export interface ShortUserResponseDTO {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  nickName: string;
+  avatar: string;
+}
+
+export interface OnlineEvent {
+  userId: string;
+  online: boolean;
 }

@@ -15,7 +15,8 @@ import {
   ResponseMessageDTO,
   ResponseMessageManageDTO,
   PusherDelete,
-  PusherRevoke
+  PusherRevoke,
+  TextingEvent
 } from "@/dtos/MessageDTO";
 import mongoose, { Schema, Types } from "mongoose";
 import User from "@/database/user.model";
@@ -25,6 +26,7 @@ import cloudinary from "@/cloudinary";
 import File from "@/database/file.model";
 import { pusherServer } from "../pusher";
 import Relation from "@/database/relation.model";
+import { boolean } from "zod";
 
 const generateRandomString = (length = 20) => {
   const characters =
@@ -199,7 +201,7 @@ export async function createMessage(
           text: populatedMessage.text[populatedMessage.text.length - 1],
           boxId: data.boxId,
           // Chuyển ObjectId sang chuỗi
-          createAt: populatedMessage.createAt, // ISO string đã hợp lệ
+          createAt: new Date().toISOString(), // ISO string đã hợp lệ
           createBy: populatedMessage.createBy.toString()
         };
 
@@ -252,7 +254,7 @@ export async function createMessage(
           text: populatedMessage.text[populatedMessage.text.length - 1],
           boxId: data.boxId,
           // Chuyển ObjectId sang chuỗi
-          createAt: populatedMessage.createAt, // ISO string đã hợp lệ
+          createAt: new Date().toISOString(), // ISO string đã hợp lệ
           createBy: populatedMessage.createBy.toString()
         };
 
@@ -295,7 +297,7 @@ export async function createMessage(
         text: populatedMessage.text[populatedMessage.text.length - 1],
         boxId: data.boxId,
         // Chuyển ObjectId sang chuỗi
-        createAt: populatedMessage.createAt, // ISO string đã hợp lệ
+        createAt: new Date().toISOString(), // ISO string đã hợp lệ
         createBy: populatedMessage.createBy.toString()
       };
 
@@ -624,16 +626,17 @@ export async function deleteOrRevokeMessage(
 
     if (action === "revoke") {
       message.flag = false;
+
       await message.save();
       const pusherMessage: PusherRevoke = {
         id: message._id.toString(),
         flag: message.flag,
         isReact: message.isReact,
-        text: "Revoked message",
+        text: "Message revoked",
         boxId: message.boxId.toString(),
         action: "revoke",
-        createAt: message.createAt,
-        createBy: message.createBy
+        createAt: new Date().toISOString(),
+        createBy: userId
       };
 
       await pusherServer
@@ -651,11 +654,11 @@ export async function deleteOrRevokeMessage(
         flag: message.flag,
         visibility: false,
         isReact: message.isReact,
-        text: "Deleted message",
+        text: "Message deleted",
         boxId: message.boxId.toString(),
         action: "delete",
-        createAt: message.createAt,
-        createBy: message.createBy
+        createAt: new Date().toISOString(),
+        createBy: userId
       };
 
       await pusherServer
@@ -906,6 +909,25 @@ export async function findMessages(boxId: string, query: string) {
     return { success: true, messages: resultMessages };
   } catch (error) {
     console.error("Error searching messages: ", error);
+    throw error;
+  }
+}
+
+export async function textingEvent(boxId: string, userId: string) {
+  try {
+    const pusherTexting: TextingEvent = {
+      boxId: boxId,
+      userId: userId,
+      texting: true
+    };
+
+    await pusherServer
+      .trigger(`private-${boxId}`, "texting-status", pusherTexting)
+      .then(() => console.log("User is texting...", pusherTexting))
+      .catch((error) => console.error("Failed to create event: ", error));
+    return pusherTexting;
+  } catch (error) {
+    console.error("Error to create event: ", error);
     throw error;
   }
 }
