@@ -20,7 +20,7 @@ export interface GPSContent {
 
 export interface RequestSendMessageDTO {
   boxId: string;
-  content: string | FileContent;
+  content: string | FileContent| undefined;
 }
 
 export interface UserInfoBox {
