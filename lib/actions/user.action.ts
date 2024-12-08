@@ -305,3 +305,21 @@ export async function onlineEvent(userId: string) {
     throw error;
   }
 }
+
+export async function offlineEvent(userId: string) {
+  try {
+    const pusherOnline: OnlineEvent = {
+      userId: userId,
+      online: false
+    };
+
+    await pusherServer
+      .trigger(`private-${userId}`, "offline-status", pusherOnline)
+      .then(() => console.log("User is offline", pusherOnline))
+      .catch((error) => console.error("Failed to create event: ", error));
+    return pusherOnline;
+  } catch (error) {
+    console.error("Error to create event: ", error);
+    throw error;
+  }
+}

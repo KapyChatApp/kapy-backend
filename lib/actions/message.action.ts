@@ -313,6 +313,7 @@ export async function createMessage(
   }
 }
 
+
 export async function createGroup(
   membersIds: string[],
   leaderId: string,
@@ -529,8 +530,9 @@ export async function fetchMessage(boxId: string, userId: string) {
           flag: populatedMessage.flag,
           isReact: populatedMessage.isReact,
           readedId: populatedMessage.readedId,
-          contentId:
-            populatedMessage.contentId[populatedMessage.contentId.length - 1],
+          contentId: populatedMessage.flag
+            ? populatedMessage.contentId[populatedMessage.contentId.length - 1]
+            : undefined,
           text: populatedMessage.flag
             ? populatedMessage.text[populatedMessage.text.length - 1]
             : "Message revoked", // Nếu tin nhắn bị thu hồi
@@ -745,6 +747,25 @@ export async function textingEvent(boxId: string, userId: string) {
   }
 }
 
+export async function disableTextingEvent(boxId: string, userId: string) {
+  try {
+    const pusherTexting: TextingEvent = {
+      boxId: boxId,
+      userId: userId,
+      texting: false
+    };
+
+    await pusherServer
+      .trigger(`private-${boxId}`, "disable-texting-status", pusherTexting)
+      .then(() => console.log("User is not texting...", pusherTexting))
+      .catch((error) => console.error("Failed to create event: ", error));
+    return pusherTexting;
+  } catch (error) {
+    console.error("Error to create event: ", error);
+    throw error;
+  }
+}
+
 export async function getAMessageBox(
   boxId: string | undefined,
   userId: string
@@ -856,7 +877,9 @@ export async function fetchBoxChat(userId: string) {
           flag: lastMessage.flag,
           isReact: lastMessage.isReact,
           readedId: lastMessage.readedId,
-          contentId: lastMessage.contentId[lastMessage.contentId.length - 1],
+          contentId: lastMessage.flag
+            ? lastMessage.contentId[lastMessage.contentId.length - 1]
+            : undefined,
           text: lastMessage.flag
             ? lastMessage.text[lastMessage.text.length - 1]
             : "Message revoked",
@@ -1022,8 +1045,9 @@ export async function fetchBoxGroup(userId: string) {
           flag: populatedMessage.flag,
           isReact: populatedMessage.isReact,
           readedId: populatedMessage.readedId,
-          contentId:
-            populatedMessage.contentId[populatedMessage.contentId.length - 1],
+          contentId: populatedMessage.flag
+            ? populatedMessage.contentId[populatedMessage.contentId.length - 1]
+            : undefined,
           text: populatedMessage.flag
             ? populatedMessage.text[populatedMessage.text.length - 1]
             : "Message revoked",
