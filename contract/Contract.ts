@@ -9,7 +9,11 @@ import {
 import { FriendResponseDTO } from "@/dtos/FriendDTO";
 import { OTPResponseDTO } from "@/dtos/OTPDTO";
 import { SingleMessageResponseDTO } from "@/dtos/ShareDTO";
-import { AuthenticationDTO, UserResponseDTO } from "@/dtos/UserDTO";
+import {
+  AuthenticationDTO,
+  OnlineEvent,
+  UserResponseDTO
+} from "@/dtos/UserDTO";
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 import { MediaResponseDTO } from "@/dtos/MediaDTO";
@@ -220,12 +224,32 @@ export const Contract = c.router(
         }),
         body: z.object({}),
         responses: {
-          200: c.type<TextingEvent>(),
+          200: c.type<OnlineEvent>(),
           400: c.type<{ success: false; message: string }>(),
           500: c.type<{ success: false; message: string }>()
         },
         summary: "Create online event",
         description: "Creates online event.",
+        metadata: { role: "user" } as const
+      },
+      offlineEvent: {
+        method: "POST",
+        path: "/api/user/offline",
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        body: z.object({}),
+        responses: {
+          200: c.type<OnlineEvent>(),
+          400: c.type<{ success: false; message: string }>(),
+          500: c.type<{ success: false; message: string }>()
+        },
+        summary: "Create offline event",
+        description: "Creates offline event.",
         metadata: { role: "user" } as const
       }
     }),
@@ -781,6 +805,28 @@ export const Contract = c.router(
       textingEvent: {
         method: "POST",
         path: "/api/message/texting",
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        body: z.object({
+          boxId: z.string()
+        }),
+        responses: {
+          200: c.type<TextingEvent>(),
+          400: c.type<{ success: false; message: string }>(),
+          500: c.type<{ success: false; message: string }>()
+        },
+        summary: "Create texting event",
+        description: "Creates texting event in a box chat.",
+        metadata: { role: "user" } as const
+      },
+      disableTextingEvent: {
+        method: "POST",
+        path: "/api/message/disable-texting",
         headers: z.object({
           auth: z
             .string()
