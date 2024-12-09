@@ -4,7 +4,7 @@ import {
   ResponseMessageDTO,
   DetailMessageBoxDTO,
   ResponseAMessageBoxDTO,
-  TextingEvent
+  TextingEvent,
 } from "@/dtos/MessageDTO";
 import { FriendResponseDTO } from "@/dtos/FriendDTO";
 import { OTPResponseDTO } from "@/dtos/OTPDTO";
@@ -12,7 +12,7 @@ import { SingleMessageResponseDTO } from "@/dtos/ShareDTO";
 import {
   AuthenticationDTO,
   OnlineEvent,
-  UserResponseDTO
+  UserResponseDTO,
 } from "@/dtos/UserDTO";
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
@@ -211,7 +211,7 @@ export const Contract = c.router(
           userId: z.string().optional()
         }),
         summary: "Disable a user",
-        metadata: { role: "admin" } as const
+        metadata: { role: "admin" } as const,
       },
       onlineEvent: {
         method: "POST",
@@ -221,17 +221,17 @@ export const Contract = c.router(
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            )
+            ),
         }),
         body: z.object({}),
         responses: {
           200: c.type<OnlineEvent>(),
           400: c.type<{ success: false; message: string }>(),
-          500: c.type<{ success: false; message: string }>()
+          500: c.type<{ success: false; message: string }>(),
         },
         summary: "Create online event",
         description: "Creates online event.",
-        metadata: { role: "user" } as const
+        metadata: { role: "user" } as const,
       },
       offlineEvent: {
         method: "POST",
@@ -241,18 +241,18 @@ export const Contract = c.router(
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            )
+            ),
         }),
         body: z.object({}),
         responses: {
           200: c.type<OnlineEvent>(),
           400: c.type<{ success: false; message: string }>(),
-          500: c.type<{ success: false; message: string }>()
+          500: c.type<{ success: false; message: string }>(),
         },
         summary: "Create offline event",
         description: "Creates offline event.",
-        metadata: { role: "user" } as const
-      }
+        metadata: { role: "user" } as const,
+      },
     }),
     friend: c.router({
       addFriend: {
@@ -811,19 +811,20 @@ export const Contract = c.router(
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            )
+            ),
         }),
         body: z.object({
-          boxId: z.string()
+          boxId: z.string(),
+          avatar: z.string(),
         }),
         responses: {
           200: c.type<TextingEvent>(),
           400: c.type<{ success: false; message: string }>(),
-          500: c.type<{ success: false; message: string }>()
+          500: c.type<{ success: false; message: string }>(),
         },
         summary: "Create texting event",
         description: "Creates texting event in a box chat.",
-        metadata: { role: "user" } as const
+        metadata: { role: "user" } as const,
       },
       disableTextingEvent: {
         method: "POST",
@@ -833,19 +834,20 @@ export const Contract = c.router(
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            )
+            ),
         }),
         body: z.object({
-          boxId: z.string()
+          boxId: z.string(),
+          avatar: z.string(),
         }),
         responses: {
           200: c.type<TextingEvent>(),
           400: c.type<{ success: false; message: string }>(),
-          500: c.type<{ success: false; message: string }>()
+          500: c.type<{ success: false; message: string }>(),
         },
         summary: "Create texting event",
         description: "Creates texting event in a box chat.",
-        metadata: { role: "user" } as const
+        metadata: { role: "user" } as const,
       },
       aBoxChat: {
         method: "GET",
@@ -1510,7 +1512,7 @@ export const Contract = c.router(
         path: "/api/sticker/delete",
         description: "Delete a sticker",
         responses: {
-          200: c.type<{ message: string }>()
+          200: c.type<{ message: string }>(),
         },
         headers: z.object({
           auth: z
