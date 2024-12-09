@@ -1,4 +1,4 @@
-import { getVideoList } from "@/lib/actions/message.action";
+import { getFileList } from "@/lib/actions/message.action";
 import { NextApiRequest, NextApiResponse } from "next/types";
 import { authenticateToken } from "@/middleware/auth-middleware";
 import cors from "@/middleware/cors-middleware";
@@ -15,10 +15,10 @@ export default async function handler(
           if (!boxId) {
             return res.status(400).json({ message: "boxId is required" });
           }
-          const result = await getVideoList(boxId as string);
+          const result = await getFileList(boxId as string);
           res.status(200).json(result);
         } catch (error) {
-          console.error("Error get video list of this message box: ", error);
+          console.error("Error get image list of this message box: ", error);
           const errorMessage =
             error instanceof Error ? error.message : "Unknown error occurred";
           res

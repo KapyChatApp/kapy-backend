@@ -1173,8 +1173,8 @@ export async function fetchBoxGroup(userId: string) {
         }
       ]
     })
-      .populate("receiverIds", "firstName lastName")
-      .populate("senderId", "firstName lastName");
+      .populate("receiverIds", "firstName lastName nickName avatar phoneNumber")
+      .populate("senderId", "firstName lastName nickName avatar phoneNumber");
 
     console.log(messageBoxes);
 
@@ -1262,7 +1262,7 @@ export async function fetchBoxGroup(userId: string) {
   }
 }
 
-export async function getImageList(boxId: string) {
+export async function getFileList(boxId: string) {
   try {
     await connectToDatabase();
     const messageBox = await MessageBox.findById(boxId);
@@ -1289,131 +1289,13 @@ export async function getImageList(boxId: string) {
 
     const fileIds = filteredMessages.flatMap((msg: any) => msg.contentId);
 
-    const imageFiles: FileContent[] = await File.find({
-      _id: { $in: fileIds },
-      type: "Image"
+    const fileContent: FileContent[] = await File.find({
+      _id: { $in: fileIds }
     }).exec();
 
-    return imageFiles;
+    return fileContent;
   } catch (error) {
     console.error("Error get image list: ", error);
-    throw error;
-  }
-}
-
-export async function getVideoList(boxId: string) {
-  try {
-    await connectToDatabase();
-    const messageBox = await MessageBox.findById(boxId);
-    if (!messageBox || !messageBox.messageIds) {
-      throw new Error("MessageBox not found or has no messages");
-    }
-
-    const messages = await Message.find({
-      _id: { $in: messageBox.messageIds },
-      flag: true // Lọc flag là true
-    })
-      .select("contentId visibility")
-      .exec();
-
-    if (messages.length === 0) {
-      return [];
-    }
-    const filteredMessages = messages.filter((message) => {
-      // Kiểm tra tất cả giá trị trong `visibility` là true
-      return Array.from(message.visibility.values()).every(
-        (value) => value === true
-      );
-    });
-
-    const fileIds = filteredMessages.flatMap((msg: any) => msg.contentId);
-
-    const imageFiles = await File.find({
-      _id: { $in: fileIds },
-      type: "Video"
-    }).exec();
-
-    return imageFiles;
-  } catch (error) {
-    console.error("Error get video list: ", error);
-    throw error;
-  }
-}
-
-export async function getAudioList(boxId: string) {
-  try {
-    await connectToDatabase();
-    const messageBox = await MessageBox.findById(boxId);
-    if (!messageBox || !messageBox.messageIds) {
-      throw new Error("MessageBox not found or has no messages");
-    }
-
-    const messages = await Message.find({
-      _id: { $in: messageBox.messageIds },
-      flag: true // Lọc flag là true
-    })
-      .select("contentId visibility")
-      .exec();
-
-    if (messages.length === 0) {
-      return [];
-    }
-    const filteredMessages = messages.filter((message) => {
-      // Kiểm tra tất cả giá trị trong `visibility` là true
-      return Array.from(message.visibility.values()).every(
-        (value) => value === true
-      );
-    });
-
-    const fileIds = filteredMessages.flatMap((msg: any) => msg.contentId);
-
-    const audioFiles = await File.find({
-      _id: { $in: fileIds },
-      type: "Audio"
-    }).exec();
-
-    return audioFiles;
-  } catch (error) {
-    console.error("Error get audio list: ", error);
-    throw error;
-  }
-}
-
-export async function getOtherList(boxId: string) {
-  try {
-    await connectToDatabase();
-    const messageBox = await MessageBox.findById(boxId);
-    if (!messageBox || !messageBox.messageIds) {
-      throw new Error("MessageBox not found or has no messages");
-    }
-
-    const messages = await Message.find({
-      _id: { $in: messageBox.messageIds },
-      flag: true // Lọc flag là true
-    })
-      .select("contentId visibility")
-      .exec();
-
-    if (messages.length === 0) {
-      return [];
-    }
-    const filteredMessages = messages.filter((message) => {
-      // Kiểm tra tất cả giá trị trong `visibility` là true
-      return Array.from(message.visibility.values()).every(
-        (value) => value === true
-      );
-    });
-
-    const fileIds = filteredMessages.flatMap((msg: any) => msg.contentId);
-
-    const imageFiles = await File.find({
-      _id: { $in: fileIds },
-      type: "Other"
-    }).exec();
-
-    return imageFiles;
-  } catch (error) {
-    console.error("Error get other list: ", error);
     throw error;
   }
 }

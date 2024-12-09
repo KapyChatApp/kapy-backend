@@ -31,60 +31,60 @@ export const Contract = c.router(
         method: "POST",
         path: "/api/auth/login",
         responses: {
-          200: c.type<AuthenticationDTO>(),
+          200: c.type<AuthenticationDTO>()
         },
         headers: z.object({}),
         body: z.object({
           phoneNumber: z.string(),
-          password: z.string(),
+          password: z.string()
         }),
         summary: "Login",
-        metadata: { role: "guest" } as const,
+        metadata: { role: "guest" } as const
       },
       logout: {
         method: "POST",
         path: "/api/auth/logout",
         responses: {
-          200: c.type<SingleMessageResponseDTO>(),
+          200: c.type<SingleMessageResponseDTO>()
         },
         body: z.object({}),
         headers: z.object({}),
         summary: "Logout",
-        metadata: { role: "guest" } as const,
+        metadata: { role: "guest" } as const
       },
       sendOTP: {
         method: "POST",
         path: "/api/auth/send-otp",
         responses: {
-          200: c.type<OTPResponseDTO>(),
+          200: c.type<OTPResponseDTO>()
         },
         headers: z.object({}),
         body: z.object({
-          phonenumber: z.string(),
+          phonenumber: z.string()
         }),
         summary: "Get otp",
-        metadata: { role: "guest" } as const,
+        metadata: { role: "guest" } as const
       },
       verifyOTP: {
         method: "POST",
         path: "/api/auth/verify-otp",
         responses: {
-          200: c.type<SingleMessageResponseDTO>(),
+          200: c.type<SingleMessageResponseDTO>()
         },
         headers: z.object({}),
         body: z.object({
-          phonenumber: z.string(),
+          phonenumber: z.string()
         }),
         summary: "Verify otp",
-        metadata: { role: "guest" } as const,
-      },
+        metadata: { role: "guest" } as const
+      }
     }),
     user: c.router({
       createAdmin: {
         method: "POST",
         path: "/api/user/create-admin",
         responses: {
-          201: c.type<UserResponseDTO>(),
+          201: c.type<UserResponseDTO>()
         },
         body: z.object({
           firstName: z.string(),
@@ -96,17 +96,17 @@ export const Contract = c.router(
           rePassword: z.string(),
           gender: z.boolean(),
           address: z.string(),
-          birthDay: z.date(),
+          birthDay: z.date()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Create a admin",
-        metadata: { role: "admin" } as const,
+        metadata: { role: "admin" } as const
       },
       getAllUsers: {
         method: "GET",
@@ -116,18 +116,18 @@ export const Contract = c.router(
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         responses: {
-          200: c.type<{ users: UserResponseDTO[]; total: number }>(),
+          200: c.type<{ users: UserResponseDTO[]; total: number }>()
         },
-        summary: "Get all users",
+        summary: "Get all users"
       },
       register: {
         method: "POST",
         path: "/api/user/register",
         responses: {
-          201: c.type<UserResponseDTO>(),
+          201: c.type<UserResponseDTO>()
         },
         body: z.object({
           firstName: z.string(),
@@ -139,17 +139,17 @@ export const Contract = c.router(
           rePassword: z.string(),
           gender: z.boolean(),
           address: z.string(),
-          birthDay: z.date(),
+          birthDay: z.date()
         }),
         headers: z.object({}),
         summary: "Register",
-        metadata: { role: "guest" } as const,
+        metadata: { role: "guest" } as const
       },
       updateUser: {
         method: "PATCH",
         path: "/api/user/update",
         responses: {
-          201: c.type<UserResponseDTO>(),
+          201: c.type<UserResponseDTO>()
         },
         body: z.object({
           firstName: z.string(),
@@ -161,23 +161,23 @@ export const Contract = c.router(
           rePassword: z.string(),
           gender: z.boolean(),
           address: z.string(),
-          birthDay: z.date(),
+          birthDay: z.date()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Update a user",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       disableUser: {
         method: "POST",
         path: "/api/user/disable",
         responses: {
-          201: c.type<UserResponseDTO>(),
+          201: c.type<UserResponseDTO>()
         },
         body: z.object({}),
         headers: z.object({
@@ -185,30 +185,30 @@ export const Contract = c.router(
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         query: z.object({
-          id: z.string(),
+          id: z.string()
         }),
         summary: "Disable a user",
-        metadata: { role: "admin" } as const,
+        metadata: { role: "admin" } as const
       },
       findUser: {
         method: "GET",
         path: "/api/user/find",
         responses: {
-          201: c.type<UserResponseDTO>(),
+          201: c.type<UserResponseDTO>()
         },
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         query: z.object({
           phonenumber: z.string().optional(),
-          userId: z.string().optional(),
+          userId: z.string().optional()
         }),
         summary: "Disable a user",
         metadata: { role: "admin" } as const
@@ -259,282 +259,282 @@ export const Contract = c.router(
         method: "POST",
         path: "/api/request/friend",
         responses: {
-          201: c.type<SingleMessageResponseDTO>(),
+          201: c.type<SingleMessageResponseDTO>()
         },
         body: z.object({
           sender: z.string(),
-          receiver: z.string(),
+          receiver: z.string()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Add friend",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       addBFF: {
         method: "POST",
         path: "/api/request/bff",
         responses: {
-          201: c.type<SingleMessageResponseDTO>(),
+          201: c.type<SingleMessageResponseDTO>()
         },
         body: z.object({
           sender: z.string(),
-          receiver: z.string(),
+          receiver: z.string()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Add bestfriend",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       block: {
         method: "POST",
         path: "/api/request/block",
         responses: {
-          201: c.type<SingleMessageResponseDTO>(),
+          201: c.type<SingleMessageResponseDTO>()
         },
         body: z.object({
           sender: z.string(),
-          receiver: z.string(),
+          receiver: z.string()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Block a user",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       acceptFriend: {
         method: "POST",
         path: "/api/request/accept-friend",
         responses: {
-          201: c.type<SingleMessageResponseDTO>(),
+          201: c.type<SingleMessageResponseDTO>()
         },
         body: z.object({
           sender: z.string(),
-          receiver: z.string(),
+          receiver: z.string()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Accept a friend request",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       acceptBFF: {
         method: "POST",
         path: "/api/request/accept-bff",
         responses: {
-          201: c.type<SingleMessageResponseDTO>(),
+          201: c.type<SingleMessageResponseDTO>()
         },
         body: z.object({
           sender: z.string(),
-          receiver: z.string(),
+          receiver: z.string()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Accept a bestfriend request",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       unFriend: {
         method: "POST",
         path: "/api/request/unfriend",
         responses: {
-          201: c.type<SingleMessageResponseDTO>(),
+          201: c.type<SingleMessageResponseDTO>()
         },
         body: z.object({
           sender: z.string(),
-          receiver: z.string(),
+          receiver: z.string()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Unfriend",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       unBFF: {
         method: "POST",
         path: "/api/request/unbff",
         responses: {
-          201: c.type<SingleMessageResponseDTO>(),
+          201: c.type<SingleMessageResponseDTO>()
         },
         body: z.object({
           sender: z.string(),
-          receiver: z.string(),
+          receiver: z.string()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Unbestfriend",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       unBlock: {
         method: "POST",
         path: "/api/request/unblock",
         responses: {
-          201: c.type<SingleMessageResponseDTO>(),
+          201: c.type<SingleMessageResponseDTO>()
         },
         body: z.object({
           sender: z.string(),
-          receiver: z.string(),
+          receiver: z.string()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Unblock",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       requestFriendProfile: {
         method: "GET",
         path: "/api/friend/profile",
         responses: {
-          201: c.type<UserResponseDTO>(),
+          201: c.type<UserResponseDTO>()
         },
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         query: z.object({
-          friendId: z.string(),
+          friendId: z.string()
         }),
         summary: "Friend Profile",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       find: {
         method: "GET",
         path: "/api/friend/find",
         responses: {
-          201: c.type<FriendResponseDTO[]>(),
+          201: c.type<FriendResponseDTO[]>()
         },
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         query: z.object({
-          q: z.string(),
+          q: z.string()
         }),
         summary: "Find friend regex",
-        metadata: { role: "user" } as const,
-      },
+        metadata: { role: "user" } as const
+      }
     }),
     mine: c.router({
       profile: {
         method: "GET",
         path: "/api/mine/profile",
         responses: {
-          201: c.type<UserResponseDTO>(),
+          201: c.type<UserResponseDTO>()
         },
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "My Profile",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       friends: {
         method: "GET",
         path: "/api/mine/friends",
         responses: {
-          201: c.type<FriendResponseDTO[]>(),
+          201: c.type<FriendResponseDTO[]>()
         },
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "My Friends",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       bffs: {
         method: "GET",
         path: "/api/mine/bffs",
         responses: {
-          201: c.type<FriendResponseDTO[]>(),
+          201: c.type<FriendResponseDTO[]>()
         },
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "My estfriends",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       blocks: {
         method: "GET",
         path: "/api/mine/blocks",
         responses: {
-          201: c.type<FriendResponseDTO[]>(),
+          201: c.type<FriendResponseDTO[]>()
         },
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "My Blocks",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       requested: {
         method: "GET",
         path: "/api/mine/requested",
         responses: {
-          201: c.type<FriendResponseDTO[]>(),
+          201: c.type<FriendResponseDTO[]>()
         },
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "My Requested",
-        metadata: { role: "user" } as const,
-      },
+        metadata: { role: "user" } as const
+      }
     }),
     message: c.router({
       all: {
@@ -544,21 +544,21 @@ export const Contract = c.router(
           200: c.type<ResponseMessageDTO[]>(),
           400: c.type<{ message: string }>(),
           404: c.type<{ message: string }>(),
-          500: c.type<{ message: string; error?: string }>(),
+          500: c.type<{ message: string; error?: string }>()
         },
         query: z.object({
-          boxId: z.string(),
+          boxId: z.string()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Get all messages of a certain message-box",
         description:
-          "Fetches all messages for a specific message-box using its `boxId`.",
+          "Fetches all messages for a specific message-box using its `boxId`."
       },
       createGroup: {
         method: "POST",
@@ -568,21 +568,21 @@ export const Contract = c.router(
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         body: z.object({
           membersIds: z.array(z.string()).nonempty(),
-          leaderId: z.string(),
+          leaderId: z.string()
         }),
         responses: {
           200: c.type<{ success: true; message: string }>(),
           400: c.type<{ success: false; message: string }>(),
-          500: c.type<{ success: false; message: string }>(),
+          500: c.type<{ success: false; message: string }>()
         },
         summary: "Create a new group",
         description:
           "Creates a new group with specified member IDs and the name and ava of group.",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       deleteMessage: {
         method: "DELETE",
@@ -604,20 +604,20 @@ export const Contract = c.router(
           500: c.type<{
             success: boolean;
             message: string;
-          }>(),
+          }>()
         },
         query: z.object({
-          messageId: z.string(),
+          messageId: z.string()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Delete a message",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       editMessage: {
         method: "PUT",
@@ -638,21 +638,21 @@ export const Contract = c.router(
           500: c.type<{
             message: string;
             error?: string;
-          }>(),
+          }>()
         },
         body: z.object({
           messageId: z.string(),
-          newContent: z.any(),
+          newContent: z.any()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Edit a text message",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       markAsRead: {
         method: "POST",
@@ -661,21 +661,21 @@ export const Contract = c.router(
           200: c.type<{
             success: boolean;
             messages: string;
-          }>(),
+          }>()
         },
         body: z.object({
-          boxId: z.string(),
+          boxId: z.string()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         query: z.object({}),
         summary: "Mark messages as read",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       checkMarkAsRead: {
         method: "POST",
@@ -684,21 +684,21 @@ export const Contract = c.router(
           200: c.type<{
             success: boolean;
             messages: string;
-          }>(),
+          }>()
         },
         body: z.object({
-          boxIds: z.array(z.string()).nonempty(),
+          boxIds: z.array(z.string()).nonempty()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         query: z.object({}),
         summary: "Check mark messages as read at all boxId",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       revokeMessage: {
         method: "DELETE",
@@ -719,19 +719,19 @@ export const Contract = c.router(
           500: c.type<{
             success: boolean;
             message: string;
-          }>(),
+          }>()
         },
         query: z.object({
-          messageId: z.string(),
+          messageId: z.string()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
-        summary: "Revoke a message",
+        summary: "Revoke a message"
       },
       findMessages: {
         method: "GET",
@@ -744,20 +744,20 @@ export const Contract = c.router(
           500: c.type<{
             success: boolean;
             message: string;
-          }>(),
+          }>()
         },
         query: z.object({
-          query: z.string().optional(),
+          query: z.string().optional()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Search messages by query",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       sendMessage: {
         method: "POST",
@@ -770,13 +770,13 @@ export const Contract = c.router(
           500: c.type<{
             success: boolean;
             message: string;
-          }>(),
+          }>()
         },
         body: z.union([
           // Trường hợp `content` là string[]
           z.object({
             boxId: z.string(),
-            content: z.string(),
+            content: z.string()
           }),
           // Trường hợp `content` là file JSON
           z.object({
@@ -789,19 +789,19 @@ export const Contract = c.router(
               width: z.string(),
               height: z.string(),
               format: z.string(),
-              type: z.string(),
-            }),
-          }),
+              type: z.string()
+            })
+          })
         ]),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Send a message",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       textingEvent: {
         method: "POST",
@@ -865,21 +865,21 @@ export const Contract = c.router(
           500: c.type<{
             success: false;
             error?: string;
-          }>(),
+          }>()
         },
         query: z.object({
-          boxId: z.string(),
+          boxId: z.string()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Get all message box of a certain user",
         description:
-          "Fetches all message box for a specific user using its `userId`.",
+          "Fetches all message box for a specific user using its `userId`."
       },
       aBoxChatMobile: {
         method: "GET",
@@ -900,21 +900,21 @@ export const Contract = c.router(
           500: c.type<{
             success: false;
             error?: string;
-          }>(),
+          }>()
         },
         query: z.object({
-          boxId: z.string(),
+          boxId: z.string()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Get all message box of a certain user",
         description:
-          "Fetches all message box for a specific user using its `userId`.",
+          "Fetches all message box for a specific user using its `userId`."
       },
       allChat: {
         method: "GET",
@@ -936,18 +936,18 @@ export const Contract = c.router(
           500: c.type<{
             success: false;
             error?: string;
-          }>(),
+          }>()
         },
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Get all message box of a certain user",
         description:
-          "Fetches all message box for a specific user using its `userId`.",
+          "Fetches all message box for a specific user using its `userId`."
       },
       allGroup: {
         method: "GET",
@@ -969,22 +969,22 @@ export const Contract = c.router(
           500: c.type<{
             success: false;
             error?: string;
-          }>(),
+          }>()
         },
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Get all message box group of a certain group",
         description:
-          "Fetches all message box for a specific group using its `groupId`.",
+          "Fetches all message box for a specific group using its `groupId`."
       },
-      listImage: {
+      listFiles: {
         method: "GET",
-        path: "/api/message/get-list/images",
+        path: "/api/message/files",
         responses: {
           200: c.type<FileResponseDTO[]>(),
           400: c.type<{
@@ -995,104 +995,20 @@ export const Contract = c.router(
           }>(),
           500: c.type<{
             message: string;
-          }>(),
+          }>()
         },
         query: z.object({
-          boxId: z.string(),
+          boxId: z.string()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
-        summary: "Get image list in message box",
-        description: "Get the image file list in `boxId`.",
-      },
-      listVideo: {
-        method: "GET",
-        path: "/api/message/get-list/videos",
-        responses: {
-          200: c.type<FileResponseDTO[]>(),
-          400: c.type<{
-            message: string;
-          }>(),
-          404: c.type<{
-            message: string;
-          }>(),
-          500: c.type<{
-            message: string;
-          }>(),
-        },
-        query: z.object({
-          boxId: z.string(),
-        }),
-        headers: z.object({
-          auth: z
-            .string()
-            .regex(
-              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
-        }),
-        summary: "Get video list in message box",
-        description: "Get the video file list in `boxId`.",
-      },
-      listAudio: {
-        method: "GET",
-        path: "/api/message/get-list/audios",
-        responses: {
-          200: c.type<FileResponseDTO[]>(),
-          400: c.type<{
-            message: string;
-          }>(),
-          404: c.type<{
-            message: string;
-          }>(),
-          500: c.type<{
-            message: string;
-          }>(),
-        },
-        query: z.object({
-          boxId: z.string(),
-        }),
-        headers: z.object({
-          auth: z
-            .string()
-            .regex(
-              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
-        }),
-        summary: "Get audio list in message box",
-        description: "Get the audio file list in `boxId`.",
-      },
-      listOther: {
-        method: "GET",
-        path: "/api/message/get-list/others",
-        responses: {
-          200: c.type<FileResponseDTO[]>(),
-          400: c.type<{
-            message: string;
-          }>(),
-          404: c.type<{
-            message: string;
-          }>(),
-          500: c.type<{
-            message: string;
-          }>(),
-        },
-        query: z.object({
-          boxId: z.string(),
-        }),
-        headers: z.object({
-          auth: z
-            .string()
-            .regex(
-              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
-        }),
-        summary: "Get other files list in message box",
-        description: "Get the other file list in `boxId`.",
+        summary: "Get file list in message box",
+        description: "Get the file list in `boxId`."
       },
       listMessages: {
         method: "GET",
@@ -1109,17 +1025,17 @@ export const Contract = c.router(
           500: c.type<{
             message: string;
             error?: string;
-          }>(),
+          }>()
         },
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Get all messages from the management list",
-        metadata: { role: "admin" } as const,
+        metadata: { role: "admin" } as const
       },
       removeMessage: {
         method: "DELETE",
@@ -1140,20 +1056,20 @@ export const Contract = c.router(
           500: c.type<{
             success: boolean;
             message: string;
-          }>(),
+          }>()
         },
         query: z.object({
-          messageId: z.string(),
+          messageId: z.string()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Remove a message from database",
-        metadata: { role: "admin" } as const,
+        metadata: { role: "admin" } as const
       },
       searchMessages: {
         method: "GET",
@@ -1171,21 +1087,21 @@ export const Contract = c.router(
             success: boolean;
             message: string;
             error?: string;
-          }>(),
+          }>()
         },
         query: z.object({
           id: z.string().optional(),
-          query: z.string().optional(),
+          query: z.string().optional()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Search messages by ID and query",
-        metadata: { role: "admin" } as const,
+        metadata: { role: "admin" } as const
       },
       media: c.router({
         uploadAvatar: {
@@ -1197,17 +1113,17 @@ export const Contract = c.router(
             200: c.type<MediaResponseDTO>(),
             400: c.type<MediaResponseDTO>(),
             405: c.type<MediaResponseDTO>(),
-            500: c.type<MediaResponseDTO>(),
+            500: c.type<MediaResponseDTO>()
           },
           headers: z.object({
             auth: z
               .string()
               .regex(
                 /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-              ),
+              )
           }),
           body: c.type<{ file: File }>(),
-          summary: "Upload user avatar image",
+          summary: "Upload user avatar image"
         },
         uploadBackground: {
           method: "POST",
@@ -1218,19 +1134,19 @@ export const Contract = c.router(
             200: c.type<MediaResponseDTO>(),
             400: c.type<MediaResponseDTO>(),
             405: c.type<MediaResponseDTO>(),
-            500: c.type<MediaResponseDTO>(),
+            500: c.type<MediaResponseDTO>()
           },
           headers: z.object({
             auth: z
               .string()
               .regex(
                 /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-              ),
+              )
           }),
           body: c.type<{ file: File }>(),
-          summary: "Upload user background image",
-        },
-      }),
+          summary: "Upload user background image"
+        }
+      })
     }),
     point: c.router({
       plus: {
@@ -1238,11 +1154,11 @@ export const Contract = c.router(
         path: "/api/point/plus",
         description: "add point for user",
         responses: {
-          200: c.type(),
+          200: c.type()
         },
         query: z.object({
           userId: z.string(),
-          point: z.number(),
+          point: z.number()
         }),
         body: z.object({}),
         headers: z.object({
@@ -1250,21 +1166,21 @@ export const Contract = c.router(
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Plus user point",
-        metadata: { role: "admin" } as const,
+        metadata: { role: "admin" } as const
       },
       minus: {
         method: "PATCH",
         path: "/api/point/minus",
         description: "minus point for user",
         responses: {
-          200: c.type(),
+          200: c.type()
         },
         query: z.object({
           userId: z.string(),
-          point: z.number(),
+          point: z.number()
         }),
         body: z.object({}),
         headers: z.object({
@@ -1272,55 +1188,55 @@ export const Contract = c.router(
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Minus user point",
-        metadata: { role: "admin" } as const,
+        metadata: { role: "admin" } as const
       },
       all: {
         method: "GET",
         path: "/api/point/all",
         responses: {
-          200: c.type<PointResponseDTO[]>(),
+          200: c.type<PointResponseDTO[]>()
         },
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Get all rate",
-        metadata: { role: "admin" } as const,
+        metadata: { role: "admin" } as const
       },
       user: {
         method: "GET",
         path: "/api/point/user",
         responses: {
-          200: c.type<PointResponseDTO[]>(),
+          200: c.type<PointResponseDTO[]>()
         },
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         query: z.object({
-          userId: z.string(),
+          userId: z.string()
         }),
         summary: "Get all rate of a user",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       delete: {
         method: "DELETE",
         path: "/api/point/delete",
         description: "Delete a rate for admin",
         responses: {
-          200: c.type(),
+          200: c.type()
         },
         query: z.object({
-          pointId: z.string(),
+          pointId: z.string()
         }),
         body: z.object({}),
         headers: z.object({
@@ -1328,180 +1244,180 @@ export const Contract = c.router(
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Delete a rate for admin",
-        metadata: { role: "admin" } as const,
+        metadata: { role: "admin" } as const
       },
       create: {
         method: "POST",
         path: "/api/point/create",
         description: "Create a rate",
         responses: {
-          200: c.type<PointResponseDTO>(),
+          200: c.type<PointResponseDTO>()
         },
         body: z.object({
           userId: z.string(),
           point: z.number(),
-          message: z.string(),
+          message: z.string()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Create a rate",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       edit: {
         method: "PATCH",
         path: "/api/point/edit",
         description: "Edit a rate",
         responses: {
-          200: c.type<PointResponseDTO>(),
+          200: c.type<PointResponseDTO>()
         },
 
         body: z.object({
           point: z.number(),
-          message: z.string(),
+          message: z.string()
         }),
         query: z.object({
-          pointId: z.string(),
+          pointId: z.string()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Edit a rate",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       deleteMy: {
         method: "DELETE",
         path: "/api/point/delete-my",
         description: "Delete my rate",
         responses: {
-          200: c.type<PointResponseDTO>(),
+          200: c.type<PointResponseDTO>()
         },
         query: z.object({
-          pointId: z.string(),
+          pointId: z.string()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Delete my rate",
-        metadata: { role: "user" } as const,
-      },
+        metadata: { role: "user" } as const
+      }
     }),
     report: c.router({
       all: {
         method: "GET",
         path: "/api/report/all",
         responses: {
-          200: c.type<ReportResponseDTO[]>(),
+          200: c.type<ReportResponseDTO[]>()
         },
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Get all reports",
-        metadata: { role: "admin" } as const,
+        metadata: { role: "admin" } as const
       },
       mine: {
         method: "GET",
         path: "/api/report/mine",
         responses: {
-          200: c.type<ReportResponseDTO[]>(),
+          200: c.type<ReportResponseDTO[]>()
         },
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Get my reports",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       create: {
         method: "POST",
         path: "/api/report/create",
         description: "Create a report",
         responses: {
-          200: c.type<ReportResponseDTO>(),
+          200: c.type<ReportResponseDTO>()
         },
         body: z.object({
           content: z.string(),
           targetId: z.string(),
-          targetType: z.string(),
+          targetType: z.string()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Create a report",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       update: {
         method: "PATCH",
         path: "/api/report/update",
         description: "Update a report",
         responses: {
-          200: c.type<PointResponseDTO>(),
+          200: c.type<PointResponseDTO>()
         },
 
         body: z.object({
-          content: z.string(),
+          content: z.string()
         }),
         query: z.object({
-          reportId: z.string(),
+          reportId: z.string()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Update a report",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       verify: {
         method: "PATCH",
         path: "/api/report/verify",
         responses: {
-          200: c.type<PointResponseDTO>(),
+          200: c.type<PointResponseDTO>()
         },
         body: z.object({
-          status: z.string(),
+          status: z.string()
         }),
         query: z.object({
-          reportId: z.string(),
+          reportId: z.string()
         }),
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         summary: "Verify a report",
-        metadata: { role: "admin" } as const,
-      },
+        metadata: { role: "admin" } as const
+      }
     }),
     sticker: c.router({
       a: {
@@ -1509,58 +1425,58 @@ export const Contract = c.router(
         path: "/api/sticker/asticker",
         description: "Get a sticker by Id",
         responses: {
-          200: c.type<StickerResponseDTO>(),
+          200: c.type<StickerResponseDTO>()
         },
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         query: z.object({
-          stickerId: z.string(),
-        }),
+          stickerId: z.string()
+        })
       },
       all: {
         method: "GET",
         path: "/api/sticker/all",
         description: "Get all sticker",
         responses: {
-          200: c.type<StickerResponseDTO[]>(),
+          200: c.type<StickerResponseDTO[]>()
         },
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
-        }),
+            )
+        })
       },
       find: {
         method: "GET",
         path: "/api/sticker/find",
         description: "Get find stickers",
         responses: {
-          200: c.type<StickerResponseDTO[]>(),
+          200: c.type<StickerResponseDTO[]>()
         },
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         query: z.object({
-          q: z.string(),
-        }),
+          q: z.string()
+        })
       },
       create: {
         method: "POST",
         path: "/api/sticker/create",
         description: "Create a sticker",
         responses: {
-          200: c.type<{ message: string }>(),
+          200: c.type<{ message: string }>()
         },
         body: c.type<{ name: string; file: File }>(),
         headers: z.object({
@@ -1568,16 +1484,16 @@ export const Contract = c.router(
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       update: {
         method: "PATCH",
         path: "/api/sticker/update",
         description: "Update a sticker",
         responses: {
-          200: c.type<{ message: string }>(),
+          200: c.type<{ message: string }>()
         },
         body: c.type<{ name: string; file: File }>(),
         headers: z.object({
@@ -1585,31 +1501,31 @@ export const Contract = c.router(
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       delete: {
         method: "DELETE",
         path: "/api/sticker/delete",
         description: "Delete a sticker",
-        responses:{
-          200:c.type<{message:string}>(),
+        responses: {
+          200: c.type<{ message: string }>()
         },
         headers: z.object({
           auth: z
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
-        metadata: { role: "user" } as const,
-      },
-    }),
+        metadata: { role: "user" } as const
+      }
+    })
   },
   {
     baseHeaders: z.object({
-      isOpenApi: z.boolean().default(true),
-    }),
+      isOpenApi: z.boolean().default(true)
+    })
   }
 );
