@@ -27,6 +27,7 @@ import File from "@/database/file.model";
 import { pusherServer } from "../pusher";
 import Relation from "@/database/relation.model";
 import { boolean } from "zod";
+import swaggerJSDoc from "swagger-jsdoc";
 
 const generateRandomString = (length = 20) => {
   const characters =
@@ -728,11 +729,12 @@ export async function findMessages(boxId: string, query: string) {
   }
 }
 
-export async function textingEvent(boxId: string, userId: string) {
+export async function textingEvent(boxId: string,avatar:string, userId: string) {
   try {
     const pusherTexting: TextingEvent = {
       boxId: boxId,
       userId: userId,
+      avatar:avatar,
       texting: true
     };
 
@@ -747,16 +749,17 @@ export async function textingEvent(boxId: string, userId: string) {
   }
 }
 
-export async function disableTextingEvent(boxId: string, userId: string) {
+export async function disableTextingEvent(boxId: string,avatar:string, userId: string) {
   try {
     const pusherTexting: TextingEvent = {
       boxId: boxId,
       userId: userId,
+      avatar:avatar,
       texting: false
     };
 
     await pusherServer
-      .trigger(`private-${boxId}`, "disable-texting-status", pusherTexting)
+      .trigger(`private-${boxId}`, "texting-status", pusherTexting)
       .then(() => console.log("User is not texting...", pusherTexting))
       .catch((error) => console.error("Failed to create event: ", error));
     return pusherTexting;

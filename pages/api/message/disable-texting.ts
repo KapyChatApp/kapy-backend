@@ -10,7 +10,7 @@ export default async function handler(
   cors(req, res, async () => {
     authenticateToken(req, res, async () => {
       if (req.method === "POST") {
-        const { boxId } = req.body;
+        const { boxId,avatar } = req.body;
         if (!boxId) {
           return res.status(400).json({
             success: false,
@@ -25,7 +25,7 @@ export default async function handler(
               .json({ success: false, message: "userId is required" });
           }
           try {
-            const result = await disableTextingEvent(boxId, userId);
+            const result = await disableTextingEvent(boxId,avatar, userId);
 
             return res.status(200).json(result);
           } catch (error) {

@@ -136,5 +136,6 @@ export interface PusherDelete {
 export interface TextingEvent {
   boxId: string;
   userId: string;
+  avatar:string;
   texting: boolean;
 }
