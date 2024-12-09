@@ -313,7 +313,6 @@ export async function createMessage(
   }
 }
 
-
 export async function createGroup(
   membersIds: string[],
   leaderId: string,
@@ -1081,7 +1080,7 @@ export async function getFileList(boxId: string) {
 
     const messages = await Message.find({
       _id: { $in: messageBox.messageIds },
-      flag: true // Lọc flag là true
+      flag: true
     })
       .select("contentId visibility")
       .exec();
