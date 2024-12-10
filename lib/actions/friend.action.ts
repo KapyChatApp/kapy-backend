@@ -2,7 +2,7 @@ import Relation from "@/database/relation.model";
 import { FriendRequestDTO, FriendResponseDTO } from "@/dtos/FriendDTO";
 import { findPairUser } from "./user.action";
 import User from "@/database/user.model";
-import { Schema } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import { connectToDatabase } from "../mongoose";
 export async function addFriend(param: FriendRequestDTO) {
   try {
@@ -291,10 +291,16 @@ export const getMutualFriends = async (
     connectToDatabase();
     const user = await User.findById(userId);
     const targetUser = await User.findById(targetUserId);
-    const targetFriendIds = new Set(targetUser.friendIds);
-    const mutualFriendIds = user.friendIds.filter((item: string) =>
-      targetFriendIds.has(item)
+
+    const targetFriendIds = new Set(
+      targetUser.friendIds.map((id: mongoose.Types.ObjectId) => id.toString())
     );
+    console.log(targetUser.friendIds, " ", targetFriendIds);
+
+    const mutualFriendIds = user.friendIds
+      .map((id: mongoose.Types.ObjectId) => id.toString()) 
+      .filter((item: string) => targetFriendIds.has(item));
+
     return mutualFriendIds.length;
   } catch (error) {
     console.log(error);
