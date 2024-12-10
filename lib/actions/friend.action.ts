@@ -2,7 +2,8 @@ import Relation from "@/database/relation.model";
 import { FriendRequestDTO, FriendResponseDTO } from "@/dtos/FriendDTO";
 import { findPairUser } from "./user.action";
 import User from "@/database/user.model";
-import { Schema } from "mongoose";
+import mongoose, { Schema } from "mongoose";
+import { connectToDatabase } from "../mongoose";
 export async function addFriend(param: FriendRequestDTO) {
   try {
     const [stUser, ndUser] = [param.sender, param.receiver].sort();
@@ -240,36 +241,135 @@ export async function unBlock(param: FriendRequestDTO) {
   }
 }
 
-export async function find(q:string, userId:Schema.Types.ObjectId | undefined){
-  try{
+export async function find(
+  q: string,
+  userId: Schema.Types.ObjectId | undefined
+) {
+  try {
     const friends = await User.find({
       $or: [
-        { firstName: { $regex: q, $options: 'i' } },  
-        { lastName: { $regex: q, $options: 'i' } }   
-      ]
+        { firstName: { $regex: q, $options: "i" } },
+        { lastName: { $regex: q, $options: "i" } },
+      ],
     });
 
-    console.log("friends: ",friends)
-    
-    const friendResponses:FriendResponseDTO[] = [];
+    console.log("friends: ", friends);
 
-    for(const friend of friends){
-      const friendResponse:FriendResponseDTO={
-        _id:friend._id,
-        firstName:friend.firstName,
-        lastName:friend.lastName,
-        avatar:friend.avatar,
-        nickName:friend.nickName
-      } 
+    const friendResponses: FriendResponseDTO[] = [];
 
-      if(friend.friendIds.includes(userId)){
+    for (const friend of friends) {
+      const mutualFriends = await getMutualFriends(
+        userId?.toString(),
+        friend._id
+      );
+      const friendResponse: FriendResponseDTO = {
+        _id: friend._id,
+        firstName: friend.firstName,
+        lastName: friend.lastName,
+        avatar: friend.avatar,
+        nickName: friend.nickName,
+        mutualFriends: mutualFriends,
+      };
+
+      if (friend.friendIds.includes(userId)) {
         friendResponses.push(friendResponse);
       }
     }
 
     return friendResponses;
-  }catch(error){
+  } catch (error) {
     console.log(error);
     throw error;
   }
 }
+
+export const getMutualFriends = async (
+  userId: string | undefined,
+  targetUserId: string
+) => {
+  try {
+    connectToDatabase();
+    const user = await User.findById(userId);
+    const targetUser = await User.findById(targetUserId);
+
+    const targetFriendIds = new Set(
+      targetUser.friendIds.map((id: mongoose.Types.ObjectId) => id.toString())
+    );
+    console.log(targetUser.friendIds, " ", targetFriendIds);
+
+    const mutualFriendIds = user.friendIds
+      .map((id: mongoose.Types.ObjectId) => id.toString())
+      .filter((item: string) => targetFriendIds.has(item));
+
+    return mutualFriendIds.length;
+  } catch (error) {
+    console.log(error);
+  }
+};
+export const suggestFriends = async (
+  userId: Schema.Types.ObjectId | undefined
+) => {
+  try {
+    connectToDatabase();
+    const user = await User.findById(userId).select("friendIds");
+    if (!user) throw new Error("User not found");
+
+    // Lấy tất cả friendIds và loại bỏ chính userId và các friendIds hiện tại
+    const friendIds = user.friendIds.flat();
+    const friendIdsString = friendIds.map((item:any) => item.toString());
+    console.log(friendIdsString);
+    const suggestions = await User.aggregate([
+      { $match: { _id: { $in: friendIds } } },
+      
+      { $unwind: "$friendIds" },
+
+      {
+        $group: {
+          _id: "$friendIds",
+          count: { $sum: 1 },  
+        },
+      },
+
+      {
+        $match: {
+          $and: [
+            { _id: { $ne: userId } },  
+            { _id: { $nin: user.friendIds } }, 
+          ],
+        },
+      },
+
+      { $sort: { count: -1 } },
+
+      { $limit: 10 },
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",  
+          foreignField: "_id", 
+          as: "userDetails", 
+        },
+      },
+
+      { $unwind: "$userDetails" },
+    ]);
+
+    const suggestionResponses: FriendResponseDTO[] = [];
+    for (const suggest of suggestions) {
+      if((suggest.userDetails._id.toString()!=userId?.toString())&&(!friendIdsString.includes(suggest.userDetails._id.toString()))){
+      const suggestionResponse: FriendResponseDTO = {
+        _id: suggest.userDetails._id,
+        firstName: suggest.userDetails.firstName,
+        lastName: suggest.userDetails.lastName,
+        nickName: suggest.userDetails.nickName,
+        avatar: suggest.userDetails.avatar,
+        mutualFriends: suggest.count,  
+      };
+      suggestionResponses.push(suggestionResponse);}
+    }
+    return suggestionResponses;
+  } catch (error) {
+    console.error(error);
+  }
+};

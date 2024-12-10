@@ -4,6 +4,7 @@ import { connectToDatabase } from "../mongoose";
 import { PublicUserDTO } from "@/dtos/UserDTO";
 import { Schema } from "mongoose";
 import { FriendProfileResponseDTO } from "@/dtos/FriendDTO";
+import { getMutualFriends } from "./friend.action";
 
 export async function getFriendProfile(
   friendId: string,
@@ -13,14 +14,15 @@ export async function getFriendProfile(
     connectToDatabase();
     let friendProfileResponse: FriendProfileResponseDTO | null = null;
     const [stUserId, ndUserId] = [friendId, userId].sort();
+    const mutualFriends = await getMutualFriends(userId?.toString(), friendId);
     const relations = await Relation.find({
       stUser: stUserId,
       ndUser: ndUserId,
       status: true,
     });
-    for(const relation of relations){
-      if(relation.relation==="block"){
-        throw new Error('User not found!');
+    for (const relation of relations) {
+      if (relation.relation === "block") {
+        throw new Error("User not found!");
       }
     }
     const pendingRelations = await Relation.find({
@@ -63,6 +65,7 @@ export async function getFriendProfile(
           birthDay: bffProfile.birthDay,
           attendDate: bffProfile.attendDate,
           relation: "bff",
+          mutualFriends: mutualFriends,
         };
         return bffProfileRes;
       }
@@ -92,6 +95,7 @@ export async function getFriendProfile(
         birthDay: friendProfile.birthDay,
         attendDate: friendProfile.attendDate,
         relation: "friend",
+        mutualFriends: mutualFriends,
       };
       friendProfileResponse = friendProfileRes;
     }
@@ -134,6 +138,7 @@ export async function getFriendProfile(
           birthDay: friendProfile.birthDay,
           attendDate: friendProfile.attendDate,
           relation: relationStatus,
+          mutualFriends: mutualFriends,
         };
         friendProfileResponse = friendProfileRes;
       }
