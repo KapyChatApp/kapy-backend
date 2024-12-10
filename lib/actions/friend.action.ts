@@ -298,11 +298,78 @@ export const getMutualFriends = async (
     console.log(targetUser.friendIds, " ", targetFriendIds);
 
     const mutualFriendIds = user.friendIds
-      .map((id: mongoose.Types.ObjectId) => id.toString()) 
+      .map((id: mongoose.Types.ObjectId) => id.toString())
       .filter((item: string) => targetFriendIds.has(item));
 
     return mutualFriendIds.length;
   } catch (error) {
     console.log(error);
+  }
+};
+export const suggestFriends = async (
+  userId: Schema.Types.ObjectId | undefined
+) => {
+  try {
+    connectToDatabase();
+    const user = await User.findById(userId).select("friendIds");
+    if (!user) throw new Error("User not found");
+
+    // Lấy tất cả friendIds và loại bỏ chính userId và các friendIds hiện tại
+    const friendIds = user.friendIds.flat();
+    const friendIdsString = friendIds.map((item:any) => item.toString());
+    console.log(friendIdsString);
+    const suggestions = await User.aggregate([
+      { $match: { _id: { $in: friendIds } } },
+      
+      { $unwind: "$friendIds" },
+
+      {
+        $group: {
+          _id: "$friendIds",
+          count: { $sum: 1 },  
+        },
+      },
+
+      {
+        $match: {
+          $and: [
+            { _id: { $ne: userId } },  
+            { _id: { $nin: user.friendIds } }, 
+          ],
+        },
+      },
+
+      { $sort: { count: -1 } },
+
+      { $limit: 10 },
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",  
+          foreignField: "_id", 
+          as: "userDetails", 
+        },
+      },
+
+      { $unwind: "$userDetails" },
+    ]);
+
+    const suggestionResponses: FriendResponseDTO[] = [];
+    for (const suggest of suggestions) {
+      if((suggest.userDetails._id.toString()!=userId?.toString())&&(!friendIdsString.includes(suggest.userDetails._id.toString()))){
+      const suggestionResponse: FriendResponseDTO = {
+        _id: suggest.userDetails._id,
+        firstName: suggest.userDetails.firstName,
+        lastName: suggest.userDetails.lastName,
+        nickName: suggest.userDetails.nickName,
+        avatar: suggest.userDetails.avatar,
+        mutualFriends: suggest.count,  
+      };
+      suggestionResponses.push(suggestionResponse);}
+    }
+    return suggestionResponses;
+  } catch (error) {
+    console.error(error);
   }
 };
