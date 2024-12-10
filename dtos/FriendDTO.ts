@@ -10,7 +10,8 @@ export interface FriendResponseDTO{
     avatar:string,
     firstName:string,
     lastName:string,
-    nickName:string
+    nickName:string,
+    mutualFriends:number,
 }
 
 export interface RequestedResponseDTO{
@@ -41,4 +42,5 @@ export interface FriendProfileResponseDTO{
   birthDay: Date;
   attendDate: Date;
   relation:string;
+  mutualFriends:number;
 }

@@ -3,6 +3,7 @@ import { FriendRequestDTO, FriendResponseDTO } from "@/dtos/FriendDTO";
 import { findPairUser } from "./user.action";
 import User from "@/database/user.model";
 import { Schema } from "mongoose";
+import { connectToDatabase } from "../mongoose";
 export async function addFriend(param: FriendRequestDTO) {
   try {
     const [stUser, ndUser] = [param.sender, param.receiver].sort();
@@ -240,36 +241,62 @@ export async function unBlock(param: FriendRequestDTO) {
   }
 }
 
-export async function find(q:string, userId:Schema.Types.ObjectId | undefined){
-  try{
+export async function find(
+  q: string,
+  userId: Schema.Types.ObjectId | undefined
+) {
+  try {
     const friends = await User.find({
       $or: [
-        { firstName: { $regex: q, $options: 'i' } },  
-        { lastName: { $regex: q, $options: 'i' } }   
-      ]
+        { firstName: { $regex: q, $options: "i" } },
+        { lastName: { $regex: q, $options: "i" } },
+      ],
     });
 
-    console.log("friends: ",friends)
-    
-    const friendResponses:FriendResponseDTO[] = [];
+    console.log("friends: ", friends);
 
-    for(const friend of friends){
-      const friendResponse:FriendResponseDTO={
-        _id:friend._id,
-        firstName:friend.firstName,
-        lastName:friend.lastName,
-        avatar:friend.avatar,
-        nickName:friend.nickName
-      } 
+    const friendResponses: FriendResponseDTO[] = [];
 
-      if(friend.friendIds.includes(userId)){
+    for (const friend of friends) {
+      const mutualFriends = await getMutualFriends(
+        userId?.toString(),
+        friend._id
+      );
+      const friendResponse: FriendResponseDTO = {
+        _id: friend._id,
+        firstName: friend.firstName,
+        lastName: friend.lastName,
+        avatar: friend.avatar,
+        nickName: friend.nickName,
+        mutualFriends: mutualFriends,
+      };
+
+      if (friend.friendIds.includes(userId)) {
         friendResponses.push(friendResponse);
       }
     }
 
     return friendResponses;
-  }catch(error){
+  } catch (error) {
     console.log(error);
     throw error;
   }
 }
+
+export const getMutualFriends = async (
+  userId: string | undefined,
+  targetUserId: string
+) => {
+  try {
+    connectToDatabase();
+    const user = await User.findById(userId);
+    const targetUser = await User.findById(targetUserId);
+    const targetFriendIds = new Set(targetUser.friendIds);
+    const mutualFriendIds = user.friendIds.filter((item: string) =>
+      targetFriendIds.has(item)
+    );
+    return mutualFriendIds.length;
+  } catch (error) {
+    console.log(error);
+  }
+};

@@ -3,6 +3,7 @@ import { connectToDatabase } from "../mongoose";
 import { FriendResponseDTO, RequestedResponseDTO } from "@/dtos/FriendDTO";
 import Relation from "@/database/relation.model";
 import { Schema } from "mongoose";
+import { getMutualFriends } from "./friend.action";
 
 export async function getMyFriends(myId: Schema.Types.ObjectId | undefined) {
   try {
@@ -12,11 +13,26 @@ export async function getMyFriends(myId: Schema.Types.ObjectId | undefined) {
     if (friendIds.length == 0) {
       console.log("You dont have any friend");
     }
-    const friends: FriendResponseDTO[] = await User.find({
+    const friends = await User.find({
       _id: { $in: friendIds },
     }).exec();
-
-    return friends;
+    const friendResponses: FriendResponseDTO[] = [];
+    for (const friend of friends) {
+      const mutualFriends = await getMutualFriends(
+        myId?.toString(),
+        friend._id
+      );
+      const friendResponse: FriendResponseDTO = {
+        _id: friend._id,
+        firstName: friend.firstName,
+        lastName: friend.lastName,
+        nickName: friend.nickName,
+        avatar: friend.avatar,
+        mutualFriends: mutualFriends,
+      };
+      friendResponses.push(friendResponse);
+    }
+    return friendResponses;
   } catch (error) {
     console.log(error);
     throw error;
@@ -31,11 +47,26 @@ export async function getMyBFFs(myId: Schema.Types.ObjectId | undefined) {
     if (bestFriendIds.length == 0) {
       console.log("You dont have any bestfriend");
     }
-    const bestfriends: FriendResponseDTO[] = await User.find({
+    const bestfriends = await User.find({
       _id: { $in: bestFriendIds },
     }).exec();
-
-    return bestfriends;
+    const bffResponses: FriendResponseDTO[] = [];
+    for (const friend of bestfriends) {
+      const mutualFriends = await getMutualFriends(
+        myId?.toString(),
+        friend._id
+      );
+      const bffResponse: FriendResponseDTO = {
+        _id: friend._id,
+        firstName: friend.firstName,
+        lastName: friend.lastName,
+        nickName: friend.nickName,
+        avatar: friend.avatar,
+        mutualFriends: mutualFriends,
+      };
+      bffResponses.push(bffResponse);
+    }
+    return bffResponses;
   } catch (error) {
     console.log(error);
     throw error;
@@ -50,11 +81,26 @@ export async function getMyBlocks(myId: Schema.Types.ObjectId | undefined) {
     if (blockedIds.length == 0) {
       console.log("You dont have any block");
     }
-    const blocks: FriendResponseDTO[] = await User.find({
+    const blocks = await User.find({
       _id: { $in: blockedIds },
     }).exec();
-
-    return blocks;
+    const blocksResponses: FriendResponseDTO[] = [];
+    for (const friend of blocks) {
+      const mutualFriends = await getMutualFriends(
+        myId?.toString(),
+        friend._id
+      );
+      const blocksResponse: FriendResponseDTO = {
+        _id: friend._id,
+        firstName: friend.firstName,
+        lastName: friend.lastName,
+        nickName: friend.nickName,
+        avatar: friend.avatar,
+        mutualFriends: mutualFriends,
+      };
+      blocksResponses.push(blocksResponse);
+    }
+    return blocksResponses;
   } catch (error) {
     console.log(error);
     throw error;
@@ -88,7 +134,7 @@ export async function getMyRequested(myId: Schema.Types.ObjectId | undefined) {
         lastName: item.lastName,
         avatar: item.avatar,
         relation: "bff",
-        createAt:item.createAt
+        createAt: item.createAt,
       });
     });
     friendSenderUsers.map((item) => {
@@ -98,7 +144,7 @@ export async function getMyRequested(myId: Schema.Types.ObjectId | undefined) {
         lastName: item.lastName,
         avatar: item.avatar,
         relation: "friend",
-        createAt:item.createAt
+        createAt: item.createAt,
       });
     });
     return bffRequesteds.concat(friendRequesteds);
