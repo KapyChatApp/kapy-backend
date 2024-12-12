@@ -21,5 +21,6 @@ export interface CommentResponseDTO {
   replieds: CommentResponseDTO[];
   caption: string;
   createAt: string;
+  createBy:string;
   content?: FileResponseDTO;
 }

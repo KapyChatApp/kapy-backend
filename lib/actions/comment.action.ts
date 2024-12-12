@@ -32,6 +32,7 @@ export const getAComment = async (commentId: string) => {
         replieds: repliedComments,
         caption: comment.caption,
         createAt: comment.createAt,
+        createBy: comment.createBy,
         content: fileResponse,
       };
       return commentResponse;
@@ -47,6 +48,7 @@ export const getAComment = async (commentId: string) => {
         replieds: repliedComments,
         caption: comment.caption,
         createAt: comment.createAt,
+        createBy: comment.createBy,
       };
       return commentResponse;
     }
@@ -103,6 +105,7 @@ export const createComment = async (param: CreateCommentDTO) => {
         caption: comment.caption,
         createAt: comment.createAt,
         content: fileResponse,
+        createBy: comment.createBy,
       };
       return commentResponse;
     } else {
@@ -137,6 +140,7 @@ export const createComment = async (param: CreateCommentDTO) => {
         replieds: comment.repliedIds,
         caption: comment.caption,
         createAt: comment.createAt,
+        createBy: comment.createBy,
       };
       return commentResponse;
     }
@@ -146,29 +150,34 @@ export const createComment = async (param: CreateCommentDTO) => {
   }
 };
 
-export const likeComment = async (commentId:string, userId:Schema.Types.ObjectId | undefined)=>{
- try{
+export const likeComment = async (
+  commentId: string,
+  userId: Schema.Types.ObjectId | undefined
+) => {
+  try {
     connectToDatabase();
     const comment = await Comment.findById(commentId);
     await comment.likedIds.addToSet(userId);
     await comment.save();
-    return {message:`Liked ${commentId}`}
- }catch(error){
-  console.log(error);
-  throw error;
- }
-}
-
-export const disLikeComment = async (commentId:string, userId:Schema.Types.ObjectId | undefined)=>{
-  try{
-     connectToDatabase();
-     const comment = await Comment.findById(commentId);
-     await comment.likedIds.pull(userId);
-     await comment.save();
-     return { message: `Disliked comment ${commentId}` };
-  }catch(error){
-   console.log(error);
-   throw error;
+    return { message: `Liked ${commentId}` };
+  } catch (error) {
+    console.log(error);
+    throw error;
   }
- }
- 
+};
+
+export const disLikeComment = async (
+  commentId: string,
+  userId: Schema.Types.ObjectId | undefined
+) => {
+  try {
+    connectToDatabase();
+    const comment = await Comment.findById(commentId);
+    await comment.likedIds.pull(userId);
+    await comment.save();
+    return { message: `Disliked comment ${commentId}` };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
