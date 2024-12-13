@@ -181,3 +181,20 @@ export const disLikeComment = async (
     throw error;
   }
 };
+
+export const deleteComment = async (id:string,userId:Schema.Types.ObjectId) =>{
+   try{
+     const comment = await Comment.findById(id);
+     if(!comment){
+      return {message:"Post not exist!"}
+     }
+     if(userId.toString()!=comment.createBy){
+      return {message:"You cannot delete this comment!"}
+     }
+     await Comment.findOneAndDelete({_id:id});
+     return {message:"Deleted!"}
+   }catch(error){
+    console.log(error);
+    throw error;
+   }
+}
