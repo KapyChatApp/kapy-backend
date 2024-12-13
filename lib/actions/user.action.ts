@@ -4,6 +4,7 @@
 import {
   FindUserDTO,
   OnlineEvent,
+  UpdatePasswordDTO,
   UpdateUserDTO,
   UserRegisterDTO,
   UserResponseDTO
@@ -249,6 +250,37 @@ export async function updateUser(
     );
 
     return { status: true, newProfile: updatedUser };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function updatePassword(
+  userId: Schema.Types.ObjectId | undefined,
+  params: UpdatePasswordDTO
+) {
+  try {
+    connectToDatabase();
+
+    // Cập nhật mật khẩu
+    const updatedUser: UserResponseDTO | null = await User.findByIdAndUpdate(
+      userId,
+      {
+        password: params.password,
+        rePassword: params.rePassword
+      },
+      { new: true } // Để trả về document đã cập nhật
+    );
+
+    if (!updatedUser) {
+      throw new Error("User not found.");
+    }
+
+    return {
+      success: true,
+      message: "Password updated successfully."
+    };
   } catch (error) {
     console.log(error);
     throw error;
