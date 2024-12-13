@@ -60,6 +60,11 @@ export interface UpdateUserDTO {
   birthDay: Date;
 }
 
+export interface UpdatePasswordDTO {
+  password: string;
+  rePassword: string;
+}
+
 export interface PublicUserDTO {
   _id: string;
   firstName: string;
