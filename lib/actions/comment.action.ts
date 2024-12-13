@@ -1,4 +1,4 @@
-import { CommentResponseDTO, CreateCommentDTO } from "@/dtos/CommentDTO";
+import { CommentResponseDTO, CreateCommentDTO, EditCommentDTO } from "@/dtos/CommentDTO";
 import { createFile, getAFile } from "./file.action";
 import Post from "@/database/post.model";
 import Comment from "@/database/comment.model";
@@ -181,3 +181,30 @@ export const disLikeComment = async (
     throw error;
   }
 };
+
+export const editComment = async (id:string, userId:Schema.Types.ObjectId, edit:EditCommentDTO)=>{
+  try{
+    
+  }catch(error){
+    console.log(error);
+    throw error;
+  }
+}
+
+export const deleteComment = async (id:string,userId:Schema.Types.ObjectId) =>{
+   try{
+     const comment = await Comment.findById(id);
+     if(!comment){
+      return {message:"Post not exist!"}
+     }
+     if(userId.toString()!=comment.createBy){
+      return {message:"You cannot delete this comment!"}
+     }
+     await Comment.findOneAndDelete({_id:id});
+     return {message:"Deleted!"}
+   }catch(error){
+    console.log(error);
+    throw error;
+   }
+}
+
