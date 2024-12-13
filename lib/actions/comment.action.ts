@@ -1,4 +1,4 @@
-import { CommentResponseDTO, CreateCommentDTO } from "@/dtos/CommentDTO";
+import { CommentResponseDTO, CreateCommentDTO, EditCommentDTO } from "@/dtos/CommentDTO";
 import { createFile, getAFile } from "./file.action";
 import Post from "@/database/post.model";
 import Comment from "@/database/comment.model";
@@ -182,6 +182,15 @@ export const disLikeComment = async (
   }
 };
 
+export const editComment = async (id:string, userId:Schema.Types.ObjectId, edit:EditCommentDTO)=>{
+  try{
+    
+  }catch(error){
+    console.log(error);
+    throw error;
+  }
+}
+
 export const deleteComment = async (id:string,userId:Schema.Types.ObjectId) =>{
    try{
      const comment = await Comment.findById(id);
@@ -198,3 +207,4 @@ export const deleteComment = async (id:string,userId:Schema.Types.ObjectId) =>{
     throw error;
    }
 }
+

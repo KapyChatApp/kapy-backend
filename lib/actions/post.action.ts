@@ -1,4 +1,4 @@
-import { CreatePostDTO, PostResponseDTO } from "@/dtos/PostFTO";
+import { CreatePostDTO, EditPostDTO, PostResponseDTO } from "@/dtos/PostDTO";
 import { connectToDatabase } from "../mongoose";
 import mongoose, { Schema } from "mongoose";
 import Post from "@/database/post.model";
@@ -12,6 +12,7 @@ import Relation from "@/database/relation.model";
 import { CommentResponseDTO } from "@/dtos/CommentDTO";
 import Comment from "@/database/comment.model";
 import { getAComment } from "./comment.action";
+import _ from "lodash";
 
 export const getAPost = async (
   postId: string,
@@ -251,3 +252,32 @@ export const deletePost = async (
     throw error;
   }
 };
+
+export const editPost = async (id:string, userId:Schema.Types.ObjectId| undefined,editContent:EditPostDTO )=>{
+  try{
+    const post = await Post.findById(id);
+    if(!post){
+      return {message:"Post not exist!"}
+    }
+    if(post.createBy.toString()!=userId?.toString()){
+      return {message:"You cannot edit this post!"}
+    }
+    const contentIds = post.contentIds.map((item:Schema.Types.ObjectId)=>item.toString());
+    const deleteFileIds =  _.difference(contentIds, editContent.remainContentIds);
+    for(const id of deleteFileIds){
+      await File.findByIdAndDelete(id);
+    }
+    const createdFileIds:string[] = [];
+    for(const file of editContent.contents){
+      const createdFile = await createFile(file, userId);
+      createdFileIds.push(createdFile._id);
+    }
+    post.contentIds.push(createdFileIds);
+    await post.save();
+  
+    return await getAPost(post._id, userId!); 
+  }catch(error){
+    console.log(error);
+    throw error;
+  }
+}

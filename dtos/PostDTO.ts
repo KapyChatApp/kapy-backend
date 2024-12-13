@@ -1,11 +1,18 @@
 import { Schema } from "mongoose";
 import { FileResponseDTO } from "./FileDTO";
 import { CommentResponseDTO } from "./CommentDTO";
+import formidable from "formidable";
 
 export interface CreatePostDTO {
   userId: Schema.Types.ObjectId|undefined;
   caption: string;
   contentIds: Schema.Types.ObjectId[];
+}
+
+export interface EditPostDTO{
+  caption:string;
+  remainContentIds:string[];
+  contents:formidable.File[];
 }
 
 export interface PostResponseDTO{

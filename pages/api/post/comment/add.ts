@@ -40,7 +40,7 @@ export default async function handler(
                 : [files.file];
                 const commentData:CreateCommentDTO ={
                     filesToUpload:filesToUpload[0],
-                    caption:fields.caption,
+                    caption:fields.caption?.toString(),
                     userId:req.user?.id,
                     replyId:replyId,
                     targetType:targetType
@@ -54,7 +54,7 @@ export default async function handler(
           } else {
             const commentData:CreateCommentDTO ={
                 filesToUpload:null,
-                caption:fields.caption,
+                caption:fields.caption?.toString(),
                 userId:req.user?.id,
                 replyId:replyId,
                 targetType:targetType
