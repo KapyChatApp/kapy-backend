@@ -5,6 +5,7 @@ import {
   DetailMessageBoxDTO,
   ResponseAMessageBoxDTO,
   TextingEvent,
+  ResponseReactMessageDTO
 } from "@/dtos/MessageDTO";
 import { FriendResponseDTO } from "@/dtos/FriendDTO";
 import { OTPResponseDTO } from "@/dtos/OTPDTO";
@@ -12,7 +13,7 @@ import { SingleMessageResponseDTO } from "@/dtos/ShareDTO";
 import {
   AuthenticationDTO,
   OnlineEvent,
-  UserResponseDTO,
+  UserResponseDTO
 } from "@/dtos/UserDTO";
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
@@ -211,7 +212,7 @@ export const Contract = c.router(
           userId: z.string().optional()
         }),
         summary: "Disable a user",
-        metadata: { role: "admin" } as const,
+        metadata: { role: "admin" } as const
       },
       onlineEvent: {
         method: "POST",
@@ -221,17 +222,17 @@ export const Contract = c.router(
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         body: z.object({}),
         responses: {
           200: c.type<OnlineEvent>(),
           400: c.type<{ success: false; message: string }>(),
-          500: c.type<{ success: false; message: string }>(),
+          500: c.type<{ success: false; message: string }>()
         },
         summary: "Create online event",
         description: "Creates online event.",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       offlineEvent: {
         method: "POST",
@@ -241,18 +242,18 @@ export const Contract = c.router(
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         body: z.object({}),
         responses: {
           200: c.type<OnlineEvent>(),
           400: c.type<{ success: false; message: string }>(),
-          500: c.type<{ success: false; message: string }>(),
+          500: c.type<{ success: false; message: string }>()
         },
         summary: "Create offline event",
         description: "Creates offline event.",
-        metadata: { role: "user" } as const,
-      },
+        metadata: { role: "user" } as const
+      }
     }),
     friend: c.router({
       addFriend: {
@@ -575,7 +576,11 @@ export const Contract = c.router(
           leaderId: z.string()
         }),
         responses: {
-          200: c.type<{ success: true; message: string }>(),
+          200: c.type<{
+            success: true;
+            message: string;
+            newBox: MessageBoxDTO;
+          }>(),
           400: c.type<{ success: false; message: string }>(),
           500: c.type<{ success: false; message: string }>()
         },
@@ -811,20 +816,20 @@ export const Contract = c.router(
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         body: z.object({
           boxId: z.string(),
-          avatar: z.string(),
+          avatar: z.string()
         }),
         responses: {
           200: c.type<TextingEvent>(),
           400: c.type<{ success: false; message: string }>(),
-          500: c.type<{ success: false; message: string }>(),
+          500: c.type<{ success: false; message: string }>()
         },
         summary: "Create texting event",
         description: "Creates texting event in a box chat.",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       disableTextingEvent: {
         method: "POST",
@@ -834,20 +839,20 @@ export const Contract = c.router(
             .string()
             .regex(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+            )
         }),
         body: z.object({
           boxId: z.string(),
-          avatar: z.string(),
+          avatar: z.string()
         }),
         responses: {
           200: c.type<TextingEvent>(),
           400: c.type<{ success: false; message: string }>(),
-          500: c.type<{ success: false; message: string }>(),
+          500: c.type<{ success: false; message: string }>()
         },
         summary: "Create texting event",
         description: "Creates texting event in a box chat.",
-        metadata: { role: "user" } as const,
+        metadata: { role: "user" } as const
       },
       aBoxChat: {
         method: "GET",
@@ -925,7 +930,6 @@ export const Contract = c.router(
           200: c.type<{
             success: true;
             box: MessageBoxDTO[];
-            adminId: string;
           }>(),
           400: c.type<{
             success: false;
@@ -958,7 +962,6 @@ export const Contract = c.router(
           200: c.type<{
             success: true;
             box: MessageBoxGroupDTO[];
-            adminId: string;
           }>(),
           400: c.type<{
             success: false;
@@ -1011,6 +1014,28 @@ export const Contract = c.router(
         }),
         summary: "Get file list in message box",
         description: "Get the file list in `boxId`."
+      },
+      reactMessage: {
+        method: "POST",
+        path: "/api/message/react",
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        body: z.object({
+          messageId: z.string()
+        }),
+        responses: {
+          200: c.type<ResponseReactMessageDTO>(),
+          400: c.type<{ success: false; message: string }>(),
+          500: c.type<{ success: false; message: string }>()
+        },
+        summary: "React message",
+        description: "Message is reacted or not.",
+        metadata: { role: "user" } as const
       },
       listMessages: {
         method: "GET",
@@ -1512,7 +1537,7 @@ export const Contract = c.router(
         path: "/api/sticker/delete",
         description: "Delete a sticker",
         responses: {
-          200: c.type<{ message: string }>(),
+          200: c.type<{ message: string }>()
         },
         headers: z.object({
           auth: z
