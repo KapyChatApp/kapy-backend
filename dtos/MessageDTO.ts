@@ -20,7 +20,7 @@ export interface GPSContent {
 
 export interface RequestSendMessageDTO {
   boxId: string;
-  content: string | FileContent| undefined;
+  content: string | FileContent | undefined;
 }
 
 export interface UserInfoBox {
@@ -35,33 +35,22 @@ export interface MessageBoxDTO {
   _id: string;
   senderId: string;
   receiverIds: UserInfoBox[];
-  messageIds: string[];
   groupName: string;
   groupAva: string[];
   flag: boolean;
   pin: boolean;
-  createAt: string;
-  createBy: string;
-  lastMessage: ResponseMessageDTO;
   readStatus: boolean;
+  stranger: boolean;
 }
 export interface MessageBoxGroupDTO {
   _id: string;
   senderId: UserInfoBox[];
   receiverIds: UserInfoBox[];
-  messageIds: string[];
   groupName: string;
   groupAva: string[];
   flag: boolean;
   pin: boolean;
-  createAt: string;
-  createBy: string;
-  lastMessage: ResponseMessageDTO;
   readStatus: boolean;
-}
-export interface ResponseMessageBoxDTO {
-  box: MessageBoxDTO[];
-  adminId: string;
 }
 
 export interface ResponseMessageDTO {
@@ -73,7 +62,13 @@ export interface ResponseMessageDTO {
   boxId: string;
   createAt: string;
   createBy: string;
-  isReact: boolean;
+  isReact: string[];
+}
+
+export interface ResponseReactMessageDTO {
+  id: string;
+  boxId: string;
+  isReact: string[];
 }
 
 export interface ResponseMessageManageDTO {
@@ -113,7 +108,7 @@ export interface DetailMessageBoxDTO {
 export interface PusherRevoke {
   id: string;
   flag: boolean;
-  isReact: boolean;
+  isReact: string[];
   text: string;
   boxId: string;
   action: string;
@@ -125,7 +120,7 @@ export interface PusherDelete {
   id: string;
   flag: boolean;
   visibility: boolean;
-  isReact: boolean;
+  isReact: string[];
   text: string;
   boxId: string;
   action: string;
@@ -136,6 +131,6 @@ export interface PusherDelete {
 export interface TextingEvent {
   boxId: string;
   userId: string;
-  avatar:string;
+  avatar: string;
   texting: boolean;
 }

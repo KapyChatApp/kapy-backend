@@ -14,8 +14,10 @@ import User from "@/database/user.model";
 import bcrypt from "bcrypt";
 import mongoose, { Schema } from "mongoose";
 import Relation from "@/database/relation.model";
+import jwt from "jsonwebtoken";
 import { pusherServer } from "../pusher";
 const saltRounds = 10;
+const SECRET_KEY = process.env.JWT_SECRET!;
 
 export async function getAllUsers() {
   try {

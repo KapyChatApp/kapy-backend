@@ -7,13 +7,13 @@ export interface IMessage extends Document, IAudit {
   contentId: Schema.Types.ObjectId[];
   text: string[];
   boxId: Schema.Types.ObjectId;
-  isReact: boolean;
+  isReact: Schema.Types.ObjectId[];
   visibility: Map<string, boolean>;
 }
 
 const MessageSchema = new Schema<IMessage>({
   flag: { type: Boolean, required: true, default: true },
-  isReact: { type: Boolean, required: true, default: false },
+  isReact: [{ type: Schema.Types.ObjectId, ref: "User" }],
   readedId: [{ type: Schema.Types.ObjectId, ref: "User" }],
   contentId: [{ type: Schema.Types.ObjectId, ref: "File" }],
   boxId: { type: Schema.Types.ObjectId, ref: "MessageBox" },
