@@ -1,7 +1,6 @@
 import { Schema } from "mongoose";
 import { FileResponseDTO } from "./FileDTO";
 import formidable from "formidable";
-import { File } from "buffer";
 
 export interface CreateCommentDTO {
   filesToUpload: formidable.File|null;
@@ -12,8 +11,9 @@ export interface CreateCommentDTO {
 }
 
 export interface EditCommentDTO{
-  caption:string,
-  contents:File
+ caption:string;
+   keepOldContent:boolean;
+   content:formidable.File | null;
 }
 
 export interface CommentResponseDTO {
