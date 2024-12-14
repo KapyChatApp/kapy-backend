@@ -255,6 +255,7 @@ export const deletePost = async (
 
 export const editPost = async (id:string, userId:Schema.Types.ObjectId| undefined,editContent:EditPostDTO )=>{
   try{
+    console.log("Edit content: ", editContent);
     const post = await Post.findById(id);
     if(!post){
       return {message:"Post not exist!"}
@@ -266,13 +267,15 @@ export const editPost = async (id:string, userId:Schema.Types.ObjectId| undefine
     const deleteFileIds =  _.difference(contentIds, editContent.remainContentIds);
     for(const id of deleteFileIds){
       await File.findByIdAndDelete(id);
+      post.contentIds.filter((item:Schema.Types.ObjectId)=>item.toString()!=id.toString())
     }
     const createdFileIds:string[] = [];
     for(const file of editContent.contents){
       const createdFile = await createFile(file, userId);
       createdFileIds.push(createdFile._id);
     }
-    post.contentIds.push(createdFileIds);
+    post.caption=editContent.caption;
+    post.contentIds.push(...createdFileIds);
     await post.save();
   
     return await getAPost(post._id, userId!); 
