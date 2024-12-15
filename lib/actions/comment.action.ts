@@ -65,7 +65,8 @@ export const createComment = async (param: CreateCommentDTO) => {
   try {
     connectToDatabase();
     if (param.filesToUpload) {
-      const file = await createFile(param.filesToUpload, param.userId);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+      const file = await createFile(param.filesToUpload, param.userId?.toString()!);
 
       const fileResponse: FileResponseDTO = {
         _id: file._id,
@@ -205,7 +206,8 @@ export const editComment = async (
       await comment.save();
       return await getAComment(id);
     } else {
-      const file = await createFile(editContent.content!, userId);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+      const file = await createFile(editContent.content!, userId?.toString()!);
       comment.contentId = file._id;
       await comment.save();
       return await getAComment(id);
