@@ -316,7 +316,7 @@ export const suggestFriends = async (
 
     // Lấy tất cả friendIds và loại bỏ chính userId và các friendIds hiện tại
     const friendIds = user.friendIds.flat();
-    const friendIdsString = friendIds.map((item:any) => item.toString());
+    const friendIdsString = friendIds.map((item:Schema.Types.ObjectId) => item.toString());
     console.log(friendIdsString);
     const suggestions = await User.aggregate([
       { $match: { _id: { $in: friendIds } } },

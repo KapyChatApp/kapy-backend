@@ -28,6 +28,7 @@ import { pusherServer } from "../pusher";
 import Relation from "@/database/relation.model";
 import { boolean } from "zod";
 import swaggerJSDoc from "swagger-jsdoc";
+import { createFile } from "./file.action";
 
 const generateRandomString = (length = 20) => {
   const characters =
@@ -42,60 +43,6 @@ const generateRandomString = (length = 20) => {
   return result;
 };
 
-async function createFile(file: formidable.File, userId: string) {
-  try {
-    connectToDatabase();
-    const mimetype = file.mimetype;
-    let result = null;
-    let type = "";
-    if (mimetype?.startsWith("image/")) {
-      // Upload hình ảnh
-      result = await cloudinary.uploader.upload(file.filepath, {
-        folder: "Avatar"
-      });
-      type = "Image";
-    } else if (mimetype?.startsWith("video/")) {
-      // Upload video
-      result = await cloudinary.uploader.upload(file.filepath, {
-        resource_type: "video",
-        folder: "Videos"
-      });
-      type = "Video";
-    } else if (mimetype?.startsWith("audio/")) {
-      // Upload âm thanh
-      result = await cloudinary.uploader.upload(file.filepath, {
-        resource_type: "auto",
-        public_id: `Audios/${file.originalFilename}`,
-        folder: "Audios"
-      });
-      type = "Audio";
-    } else {
-      result = await cloudinary.uploader.upload(file.filepath, {
-        resource_type: "raw",
-        public_id: `Documents/${file.originalFilename}`,
-        folder: "Documents"
-      });
-      type = "Other";
-    }
-
-    const createdFile = await File.create({
-      fileName:
-        type === "Other" ? file.originalFilename : generateRandomString(),
-      url: result.url,
-      publicId: result.public_id,
-      bytes: result.bytes,
-      width: result.width || "0",
-      height: result.height || "0",
-      format: result.type || "unknown",
-      type: type,
-      createBy: new Types.ObjectId(userId)
-    });
-    return createdFile;
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
-}
 
 async function createContent(
   data: RequestSendMessageDTO,
