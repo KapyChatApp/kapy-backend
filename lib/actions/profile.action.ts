@@ -65,7 +65,7 @@ export async function getFriendProfile(
           birthDay: bffProfile.birthDay,
           attendDate: bffProfile.attendDate,
           relation: "bff",
-          mutualFriends: mutualFriends,
+          mutualFriends: mutualFriends!,
         };
         return bffProfileRes;
       }
@@ -95,7 +95,7 @@ export async function getFriendProfile(
         birthDay: friendProfile.birthDay,
         attendDate: friendProfile.attendDate,
         relation: "friend",
-        mutualFriends: mutualFriends,
+        mutualFriends: mutualFriends!,
       };
       friendProfileResponse = friendProfileRes;
     }
@@ -138,7 +138,7 @@ export async function getFriendProfile(
           birthDay: friendProfile.birthDay,
           attendDate: friendProfile.attendDate,
           relation: relationStatus,
-          mutualFriends: mutualFriends,
+          mutualFriends: mutualFriends!,
         };
         friendProfileResponse = friendProfileRes;
       }

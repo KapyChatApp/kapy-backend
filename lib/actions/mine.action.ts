@@ -28,7 +28,7 @@ export async function getMyFriends(myId: Schema.Types.ObjectId | undefined) {
         lastName: friend.lastName,
         nickName: friend.nickName,
         avatar: friend.avatar,
-        mutualFriends: mutualFriends,
+        mutualFriends: mutualFriends!,
       };
       friendResponses.push(friendResponse);
     }
@@ -62,7 +62,7 @@ export async function getMyBFFs(myId: Schema.Types.ObjectId | undefined) {
         lastName: friend.lastName,
         nickName: friend.nickName,
         avatar: friend.avatar,
-        mutualFriends: mutualFriends,
+        mutualFriends: mutualFriends!,
       };
       bffResponses.push(bffResponse);
     }
@@ -96,7 +96,7 @@ export async function getMyBlocks(myId: Schema.Types.ObjectId | undefined) {
         lastName: friend.lastName,
         nickName: friend.nickName,
         avatar: friend.avatar,
-        mutualFriends: mutualFriends,
+        mutualFriends: mutualFriends!,
       };
       blocksResponses.push(blocksResponse);
     }

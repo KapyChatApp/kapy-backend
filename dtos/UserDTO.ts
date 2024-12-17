@@ -86,6 +86,7 @@ export interface FindUserDTO {
   nickName: string;
   avatar: string;
   relation: string;
+  mutualFriends:ShortUserResponseDTO[];
 }
 
 export interface ShortUserResponseDTO {

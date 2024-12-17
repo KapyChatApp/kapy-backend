@@ -201,7 +201,8 @@ export const addPost = async (
     const contendIds: Schema.Types.ObjectId[] = [];
     if (filesToUpload.length != 0) {
       for (const file of filesToUpload) {
-        const createdFile = await createFile(file, userId);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+        const createdFile = await createFile(file, userId?.toString()!);
         contendIds.push(createdFile._id);
       }
 
@@ -271,7 +272,8 @@ export const editPost = async (id:string, userId:Schema.Types.ObjectId| undefine
     }
     const createdFileIds:string[] = [];
     for(const file of editContent.contents){
-      const createdFile = await createFile(file, userId);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+      const createdFile = await createFile(file, userId?.toString()!);
       createdFileIds.push(createdFile._id);
     }
     post.caption=editContent.caption;
