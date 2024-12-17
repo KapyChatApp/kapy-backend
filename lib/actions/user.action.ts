@@ -181,7 +181,7 @@ export async function findUser(
             result.relation = "bff";
             break;
           } else {
-            result.relation = " friend";
+            result.relation = "friend";
           }
         }
       }
