@@ -2,8 +2,9 @@ import Relation from "@/database/relation.model";
 import { FriendRequestDTO, FriendResponseDTO } from "@/dtos/FriendDTO";
 import { findPairUser } from "./user.action";
 import User from "@/database/user.model";
-import mongoose, { Schema } from "mongoose";
+import { Schema } from "mongoose";
 import { connectToDatabase } from "../mongoose";
+import { ShortUserResponseDTO } from "@/dtos/UserDTO";
 export async function addFriend(param: FriendRequestDTO) {
   try {
     const [stUser, ndUser] = [param.sender, param.receiver].sort();
@@ -262,13 +263,14 @@ export async function find(
         userId?.toString(),
         friend._id
       );
+
       const friendResponse: FriendResponseDTO = {
         _id: friend._id,
         firstName: friend.firstName,
         lastName: friend.lastName,
         avatar: friend.avatar,
         nickName: friend.nickName,
-        mutualFriends: mutualFriends,
+        mutualFriends: mutualFriends!,
       };
 
       if (friend.friendIds.includes(userId)) {
@@ -288,20 +290,46 @@ export const getMutualFriends = async (
   targetUserId: string
 ) => {
   try {
-    connectToDatabase();
+
+    await connectToDatabase();
     const user = await User.findById(userId);
-    const targetUser = await User.findById(targetUserId);
+    const targetUser = await User.findById(targetUserId)
+    if (!user || !targetUser) {
+      console.log("User or Target User not found.");
+      return [];
+    }
 
-    const targetFriendIds = new Set(
-      targetUser.friendIds.map((id: mongoose.Types.ObjectId) => id.toString())
+    console.log("User's friendIds (before flatten): ", user.friendIds);
+    console.log("Target User's friendIds (before flatten): ", targetUser.friendIds);
+
+    const userFriendIds = user.friendIds.flat().map((id: Schema.Types.ObjectId) => id.toString());
+    const targetFriendIds = targetUser.friendIds
+      .flat()
+      .map((id: Schema.Types.ObjectId) => id.toString());
+
+    console.log("User's friendIds (after flatten): ", userFriendIds);
+    console.log("Target User's friendIds (after flatten): ", targetFriendIds);
+
+    const targetFriendSet = new Set<string>(targetFriendIds);
+
+    const mutualFriendIds: string[] = userFriendIds.filter((id: string) =>
+      targetFriendSet.has(id)
     );
-    console.log(targetUser.friendIds, " ", targetFriendIds);
-
-    const mutualFriendIds = user.friendIds
-      .map((id: mongoose.Types.ObjectId) => id.toString())
-      .filter((item: string) => targetFriendIds.has(item));
-
-    return mutualFriendIds.length;
+    console.log("idssS: ",mutualFriendIds);
+    const mutualFriends:ShortUserResponseDTO[] = [];
+    for(const id of mutualFriendIds){
+      const user = await User.findById(id);
+      const mutualFriend:ShortUserResponseDTO={
+        _id:user._id,
+        firstName:user.firstName,
+        lastName:user.lastName,
+        nickName:user.nickName,
+        avatar:user.avatar,
+      }
+      mutualFriends.push(mutualFriend);
+    }
+    
+    return mutualFriends || [];
   } catch (error) {
     console.log(error);
   }

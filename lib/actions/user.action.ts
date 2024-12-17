@@ -4,6 +4,7 @@
 import {
   FindUserDTO,
   OnlineEvent,
+  ShortUserResponseDTO,
   UpdatePasswordDTO,
   UpdateUserDTO,
   UserRegisterDTO,
@@ -16,6 +17,7 @@ import mongoose, { Schema } from "mongoose";
 import Relation from "@/database/relation.model";
 import jwt from "jsonwebtoken";
 import { pusherServer } from "../pusher";
+import { getMutualFriends } from "./friend.action";
 const saltRounds = 10;
 const SECRET_KEY = process.env.JWT_SECRET!;
 
@@ -139,13 +141,16 @@ export async function findUser(
     if (!user) {
       throw new Error("Not found");
     }
+    const mutualFriends = await getMutualFriends(userId?.toString(), user._id);
+   
     const result: FindUserDTO = {
       _id: user._id,
       firstName: user.firstName,
       lastName: user.lastName,
       nickName: user.nickName,
       avatar: user.avatar,
-      relation: ""
+      relation: "",
+      mutualFriends:mutualFriends!
     };
     const relations = await Relation.find({
       stUser: userId,

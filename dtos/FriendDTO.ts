@@ -1,4 +1,5 @@
 import { Schema } from "mongoose";
+import { ShortUserResponseDTO } from "./UserDTO";
 
 export interface FriendRequestDTO{
     sender:string,
@@ -11,7 +12,7 @@ export interface FriendResponseDTO{
     firstName:string,
     lastName:string,
     nickName:string,
-    mutualFriends:number,
+    mutualFriends:ShortUserResponseDTO[],
 }
 
 export interface RequestedResponseDTO{
@@ -42,5 +43,5 @@ export interface FriendProfileResponseDTO{
   birthDay: Date;
   attendDate: Date;
   relation:string;
-  mutualFriends:number;
+  mutualFriends:ShortUserResponseDTO[];
 }
