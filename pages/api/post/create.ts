@@ -34,7 +34,7 @@ export default async function handler(
               const filesToUpload = Array.isArray(files.file)
                 ? files.file
                 : [files.file];
-
+              console.log("file post: ",filesToUpload);
               const createdPost = await addPost(
                 filesToUpload,
                 fields.caption,

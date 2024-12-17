@@ -1,4 +1,8 @@
-import { CommentResponseDTO, CreateCommentDTO, EditCommentDTO } from "@/dtos/CommentDTO";
+import {
+  CommentResponseDTO,
+  CreateCommentDTO,
+  EditCommentDTO,
+} from "@/dtos/CommentDTO";
 import { createFile, getAFile } from "./file.action";
 import Post from "@/database/post.model";
 import Comment from "@/database/comment.model";
@@ -61,7 +65,8 @@ export const createComment = async (param: CreateCommentDTO) => {
   try {
     connectToDatabase();
     if (param.filesToUpload) {
-      const file = await createFile(param.filesToUpload, param.userId);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+      const file = await createFile(param.filesToUpload, param.userId?.toString()!);
 
       const fileResponse: FileResponseDTO = {
         _id: file._id,
@@ -182,29 +187,53 @@ export const disLikeComment = async (
   }
 };
 
-export const editComment = async (id:string, userId:Schema.Types.ObjectId, edit:EditCommentDTO)=>{
-  try{
-    
-  }catch(error){
+export const editComment = async (
+  id: string,
+  userId: Schema.Types.ObjectId | undefined,
+  editContent: EditCommentDTO
+) => {
+  try {
+    console.log("Edit content: ", editContent);
+    const comment = await Comment.findById(id);
+    if (!comment) {
+      return { message: "Comment not exist!" };
+    }
+    if (comment.createBy.toString() != userId?.toString()) {
+      return { message: "You cannot edit this comment!" };
+    }
+    if (editContent.keepOldContent) {
+      comment.caption = editContent.caption;
+      await comment.save();
+      return await getAComment(id);
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+      const file = await createFile(editContent.content!, userId?.toString()!);
+      comment.contentId = file._id;
+      await comment.save();
+      return await getAComment(id);
+    }
+  } catch (error) {
     console.log(error);
     throw error;
   }
-}
+};
 
-export const deleteComment = async (id:string,userId:Schema.Types.ObjectId) =>{
-   try{
-     const comment = await Comment.findById(id);
-     if(!comment){
-      return {message:"Post not exist!"}
-     }
-     if(userId.toString()!=comment.createBy){
-      return {message:"You cannot delete this comment!"}
-     }
-     await Comment.findOneAndDelete({_id:id});
-     return {message:"Deleted!"}
-   }catch(error){
+export const deleteComment = async (
+  id: string,
+  userId: Schema.Types.ObjectId
+) => {
+  try {
+    const comment = await Comment.findById(id);
+    if (!comment) {
+      return { message: "Post not exist!" };
+    }
+    if (userId.toString() != comment.createBy) {
+      return { message: "You cannot delete this comment!" };
+    }
+    await Comment.findOneAndDelete({ _id: id });
+    return { message: "Deleted!" };
+  } catch (error) {
     console.log(error);
     throw error;
-   }
-}
-
+  }
+};

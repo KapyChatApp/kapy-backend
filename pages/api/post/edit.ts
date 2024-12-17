@@ -1,5 +1,5 @@
-import { EditCommentDTO } from "@/dtos/CommentDTO";
-import { editComment } from "@/lib/actions/comment.action";
+import { EditPostDTO } from "@/dtos/PostDTO";
+import { editPost } from "@/lib/actions/post.action";
 import { authenticateToken } from "@/middleware/auth-middleware";
 import cors from "@/middleware/cors-middleware";
 import formidable from "formidable";
@@ -15,40 +15,39 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const { commentId } = req.query;
-  const commentIdString = Array.isArray(commentId) ? commentId[0] : commentId;
+  const { postId } = req.query;
+  const postIdString = Array.isArray(postId) ? postId[0] : postId;
 
-  if (!commentIdString) {
-    return res.status(400).json({ error: "Comment ID is required" });
+  if (!postIdString) {
+    return res.status(400).json({ error: "Post ID is required" });
   }
 
   cors(req, res, async () => {
     authenticateToken(req, res, async () => {
       if (req.method === "PATCH") {
         try {
-          const form = formidable() 
+          // Dùng `formidable` trực tiếp như một hàm
+          const form = formidable() // Không cần phải sửa `IncomingForm`
           form.parse(req, async (err, fields, files) => {
             if (err) {
               console.error(err);
               return res.status(400).json({ error: "Invalid form data" });
             }
-            const params: EditCommentDTO = {
-                caption: fields.caption ? String(fields.caption) : "",
-                keepOldContent: 
-    Array.isArray(fields.keepOldContent) // Check if it's an array
-      ? false  // Handle this case however you want (e.g., false by default)
-      : fields.keepOldContent === "true",
-                content: files.content ? (Array.isArray(files.content) ? files.content[0] : files.content) : null,
+            // Map dữ liệu từ FormData sang EditPostDTO
+            const params: EditPostDTO = {
+              caption: fields.caption ? String(fields.caption) : "",
+              remainContentIds: fields.remainContentIds ? fields.remainContentIds : [],
+              contents: files?.file ? (Array.isArray(files.file) ? files.file : [files.file]) : []
+            };
 
-              };
-
-            const editedComment = await editComment(
-              commentIdString,
+            // Gọi hàm `editPost`
+            const editedPost = await editPost(
+              postIdString,
               req.user?.id,
               params
             );
 
-            res.status(200).json(editedComment);
+            res.status(200).json(editedPost);
           });
         } catch (error) {
           console.error(error);
