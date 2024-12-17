@@ -413,7 +413,7 @@ export async function createGroup(
   const userObjectId = new Types.ObjectId(leaderId);
   const messageBox: MessageBoxDTO = await MessageBox.create({
     senderId: leaderId,
-    receiverIds: membersIds,
+    receiverIds: [leaderId, ...membersIds],
     messageIds: [],
     groupName: groupName,
     groupAva: groupAva,

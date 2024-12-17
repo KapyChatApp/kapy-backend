@@ -593,7 +593,7 @@ export const Contract = c.router(
         }),
         body: z.object({
           membersIds: z.array(z.string()).nonempty(),
-          leaderId: z.string(),
+          groupName: z.string()
         }),
         responses: {
           200: c.type<{
