@@ -100,4 +100,5 @@ export interface ShortUserResponseDTO {
 export interface OnlineEvent {
   userId: string;
   online: boolean;
+  updateTime:Date;
 }

@@ -1569,6 +1569,41 @@ export const Contract = c.router(
         metadata: { role: "user" } as const,
       },
     }),
+    realtime: c.router({
+      friends:{
+        method: "GET",
+        path: "/api/realtime/friends",
+        description: "Get realtime status of Friends",
+        responses: {
+          200: c.type<{userId:string, isOnline:boolean}[]>(),
+        },
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            ),
+        }),
+      },
+      user:{
+        method: "GET",
+        path: "/api/realtime/user",
+        description: "Get realtime status of Friends",
+        responses: {
+          200: c.type<{userId:string, isOnline:boolean}[]>(),
+        },
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            ),
+        }),
+        query: z.object({
+          userId: z.string(),
+        }),
+      }
+    })
   },
   {
     baseHeaders: z.object({
