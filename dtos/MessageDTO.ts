@@ -80,7 +80,7 @@ export interface ResponseMessageManageDTO {
   boxId: string;
   createAt: string;
   createBy: string;
-  isReact: boolean;
+  isReact: string[];
 }
 
 export interface ResponseAMessageBoxDTO {
