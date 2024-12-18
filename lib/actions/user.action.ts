@@ -8,16 +8,17 @@ import {
   UpdatePasswordDTO,
   UpdateUserDTO,
   UserRegisterDTO,
-  UserResponseDTO
+  UserResponseDTO,
 } from "@/dtos/UserDTO";
 import { connectToDatabase } from "../mongoose";
 import User from "@/database/user.model";
 import bcrypt from "bcrypt";
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema, Types } from "mongoose";
 import Relation from "@/database/relation.model";
 import jwt from "jsonwebtoken";
 import { pusherServer } from "../pusher";
 import { getMutualFriends } from "./friend.action";
+import Realtime from "@/database/realtime.model";
 const saltRounds = 10;
 const SECRET_KEY = process.env.JWT_SECRET!;
 
@@ -42,8 +43,8 @@ export async function createUser(
     const existedUser = await User.findOne({
       $or: [
         { email: params.email, flag: true },
-        { phoneNumber: params.phoneNumber, flag: true }
-      ]
+        { phoneNumber: params.phoneNumber, flag: true },
+      ],
     });
 
     if (params.password !== params.rePassword) {
@@ -63,7 +64,7 @@ export async function createUser(
       password: hashPassword,
       attendDate: new Date(),
       roles: ["user"],
-      createBy: createBy ? createBy : new mongoose.Types.ObjectId()
+      createBy: createBy ? createBy : new mongoose.Types.ObjectId(),
     });
 
     const newUser: UserResponseDTO = await User.create(createUserData);
@@ -82,7 +83,7 @@ export async function createAdmin(
     connectToDatabase();
 
     const existedUser = await User.findOne({
-      $or: [{ email: params.email }, { phoneNumber: params.phoneNumber }]
+      $or: [{ email: params.email }, { phoneNumber: params.phoneNumber }],
     });
 
     if (params.password !== params.rePassword) {
@@ -102,7 +103,7 @@ export async function createAdmin(
       password: hashPassword,
       attendDate: new Date(),
       roles: ["admin", "user"],
-      createBy: createBy ? createBy : "unknown"
+      createBy: createBy ? createBy : "unknown",
     });
 
     const newUser: UserResponseDTO = await User.create(createUserData);
@@ -136,13 +137,13 @@ export async function findUser(
     connectToDatabase();
 
     const user = await User.findOne({
-      phoneNumber: phoneNumber
+      phoneNumber: phoneNumber,
     });
     if (!user) {
       throw new Error("Not found");
     }
     const mutualFriends = await getMutualFriends(userId?.toString(), user._id);
-   
+
     const result: FindUserDTO = {
       _id: user._id,
       firstName: user.firstName,
@@ -150,11 +151,11 @@ export async function findUser(
       nickName: user.nickName,
       avatar: user.avatar,
       relation: "",
-      mutualFriends:mutualFriends!
+      mutualFriends: mutualFriends!,
     };
     const relations = await Relation.find({
       stUser: userId,
-      ndUSer: result._id
+      ndUSer: result._id,
     });
     if (relations.length === 0) {
       result.relation = "stranger";
@@ -226,7 +227,7 @@ export async function findUserById(userId: string) {
       friendIds: user.friendIds,
       bestFriendIds: user.bestFriendIds,
       blockedIds: user.blockedIds,
-      posts: user.posts
+      posts: user.posts,
     };
     return result;
   } catch (error) {
@@ -252,7 +253,7 @@ export async function updateUser(
       userId,
       params,
       {
-        new: true
+        new: true,
       }
     );
 
@@ -275,7 +276,7 @@ export async function updatePassword(
       userId,
       {
         password: params.password,
-        rePassword: params.rePassword
+        rePassword: params.rePassword,
       },
       { new: true } // Để trả về document đã cập nhật
     );
@@ -286,7 +287,7 @@ export async function updatePassword(
 
     return {
       success: true,
-      message: "Password updated successfully."
+      message: "Password updated successfully.",
     };
   } catch (error) {
     console.log(error);
@@ -331,8 +332,22 @@ export async function onlineEvent(userId: string) {
   try {
     const pusherOnline: OnlineEvent = {
       userId: userId,
-      online: true
+      online: true,
     };
+
+    const realtime = await Realtime.findOne({
+      userId: new Types.ObjectId(userId),
+    });
+    if (realtime) {
+      realtime.isOnline = true;
+      await realtime.save();
+    } else {
+      await Realtime.create({
+        userId: new Types.ObjectId(userId),
+        isOnline: true,
+        createBy: new Types.ObjectId(userId),
+      });
+    }
 
     await pusherServer
       .trigger(`private-${userId}`, "online-status", pusherOnline)
@@ -349,8 +364,22 @@ export async function offlineEvent(userId: string) {
   try {
     const pusherOnline: OnlineEvent = {
       userId: userId,
-      online: false
+      online: false,
     };
+
+    const realtime = await Realtime.findOne({
+      userId: new Types.ObjectId(userId),
+    });
+    if (realtime) {
+      realtime.isOnline = false;
+      await realtime.save();
+    } else {
+      await Realtime.create({
+        userId: new Types.ObjectId(userId),
+        isOnline: false,
+        createBy: new Types.ObjectId(userId),
+      });
+    }
 
     await pusherServer
       .trigger(`private-${userId}`, "offline-status", pusherOnline)
