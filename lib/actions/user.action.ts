@@ -333,6 +333,7 @@ export async function onlineEvent(userId: string) {
     const pusherOnline: OnlineEvent = {
       userId: userId,
       online: true,
+      updateTime:new Date()
     };
 
     const realtime = await Realtime.findOne({
@@ -340,12 +341,14 @@ export async function onlineEvent(userId: string) {
     });
     if (realtime) {
       realtime.isOnline = true;
+      realtime.updateTime = new Date();
       await realtime.save();
     } else {
       await Realtime.create({
         userId: new Types.ObjectId(userId),
         isOnline: true,
         createBy: new Types.ObjectId(userId),
+        updateTime: () => new Date(),
       });
     }
 
@@ -365,6 +368,7 @@ export async function offlineEvent(userId: string) {
     const pusherOnline: OnlineEvent = {
       userId: userId,
       online: false,
+      updateTime:new Date()
     };
 
     const realtime = await Realtime.findOne({
@@ -372,12 +376,14 @@ export async function offlineEvent(userId: string) {
     });
     if (realtime) {
       realtime.isOnline = false;
+      realtime.updateTime = new Date();
       await realtime.save();
     } else {
       await Realtime.create({
         userId: new Types.ObjectId(userId),
         isOnline: false,
         createBy: new Types.ObjectId(userId),
+        updateTime: () => new Date(),
       });
     }
 
