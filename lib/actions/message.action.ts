@@ -43,7 +43,6 @@ const generateRandomString = (length = 20) => {
   return result;
 };
 
-
 async function createContent(
   data: RequestSendMessageDTO,
   files: formidable.Files,
@@ -219,14 +218,14 @@ export async function createMessage(
       }
       //Message stranger
       else {
-        const membersIds: string[] = [
-          ...receiverIdsArray.map((id: { toString: () => any }) =>
-            id.toString()
-          ),
-          detailBox.senderId.toString()
-        ];
-        const message = await createContent(data, files, userId, membersIds);
         if (!detailBox.receiverIds.includes(userId)) {
+          const membersIds: string[] = [
+            ...receiverIdsArray.map((id: { toString: () => any }) =>
+              id.toString()
+            ),
+            userId
+          ];
+          const message = await createContent(data, files, userId, membersIds);
           // Cập nhật boxId mới
           const newBox = await MessageBox.create({
             senderId: detailBox.senderId,
@@ -269,7 +268,7 @@ export async function createMessage(
           };
 
           await pusherServer
-            .trigger(`private-${newBox._id}`, "new-message", pusherMessage)
+            .trigger(`private-${userId}`, "new-message", pusherMessage)
             .then(() =>
               console.log("Message sent successfully: ", pusherMessage)
             )
@@ -282,7 +281,20 @@ export async function createMessage(
           };
         } else {
           // Nếu người lạ gửi tin nhắn tiếp theo
-          detailBox.messageIds.push(message._id);
+          const membersIds: string[] = [
+            ...receiverIdsArray.map((id: { toString: () => any }) =>
+              id.toString()
+            ),
+            data.boxId
+          ];
+          const message = await createContent(data, files, userId, membersIds);
+          //detailBox.messageIds.push(message._id);
+
+          await MessageBox.findByIdAndUpdate(
+            data.boxId, // ID của hộp tin nhắn
+            { $push: { messageIds: message._id } }, // Thêm message._id vào mảng messageIds
+            { new: true } // Trả về tài liệu đã được cập nhật (tuỳ chọn)
+          );
           await detailBox.save();
           const populatedMessage = await Message.findById(message._id).populate(
             {
@@ -342,7 +354,11 @@ export async function createMessage(
         userId,
         data.boxId
       ]);
-
+      detailBox = await MessageBox.findByIdAndUpdate(
+        boxIdObjectId,
+        { $push: { messageIds: message._id } },
+        { new: true } // Trả về box đã được cập nhật
+      );
       const populatedMessage = await Message.findById(message._id).populate({
         path: "contentId",
         model: "File",
@@ -570,7 +586,7 @@ export async function fetchMessage(boxId: string, userId: string) {
     const messageBox = await MessageBox.findById(boxId).populate("messageIds");
 
     if (!messageBox) {
-      throw new Error("MessageBox not found");
+      return { success: false, messages: [] };
     }
 
     // Lọc các tin nhắn có visibility là true đối với userId
@@ -581,7 +597,7 @@ export async function fetchMessage(boxId: string, userId: string) {
           _id: messageId,
           [`visibility.${userId}`]: true // Kiểm tra visibility của userId
         });
-
+        console.log("message: ", message);
         if (!message) {
           // Nếu không tìm thấy tin nhắn có visibility đúng, bỏ qua
           return null;
@@ -1080,7 +1096,7 @@ export async function getFileList(boxId: string) {
     await connectToDatabase();
     const messageBox = await MessageBox.findById(boxId);
     if (!messageBox || !messageBox.messageIds) {
-      throw new Error("MessageBox not found or has no messages");
+      return [];
     }
 
     const messages = await Message.find({
@@ -1143,6 +1159,31 @@ export async function reactMessage(userId: string, messageId: string) {
     return pusherReaction;
   } catch (error) {
     console.error("Error react message: ", error);
+    throw error;
+  }
+}
+
+export async function findBoxChat(userId: string, receiverId: string) {
+  try {
+    await connectToDatabase();
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+    const receiverObjectId = new mongoose.Types.ObjectId(receiverId);
+
+    const boxChat = await MessageBox.findOne({
+      $expr: { $lte: [{ $size: "$receiverIds" }, 2] },
+      $or: [
+        { receiverIds: { $all: [userObjectId, receiverObjectId] } },
+        { receiverIds: { $in: [userObjectId, receiverObjectId] } }
+      ]
+    });
+
+    if (boxChat) {
+      return { success: true, boxId: boxChat._id.toString() };
+    } else {
+      return { success: false, boxId: "" };
+    }
+  } catch (error) {
+    console.error("Error sending message: ", error);
     throw error;
   }
 }
