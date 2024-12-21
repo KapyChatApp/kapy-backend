@@ -4,6 +4,7 @@ import { FriendResponseDTO, RequestedResponseDTO } from "@/dtos/FriendDTO";
 import Relation from "@/database/relation.model";
 import { Schema } from "mongoose";
 import { getMutualFriends } from "./friend.action";
+import { getRelationFromTo } from "./relation.action";
 
 export async function getMyFriends(myId: Schema.Types.ObjectId | undefined) {
   try {
@@ -110,44 +111,73 @@ export async function getMyBlocks(myId: Schema.Types.ObjectId | undefined) {
 export async function getMyRequested(myId: Schema.Types.ObjectId | undefined) {
   try {
     connectToDatabase();
-    const myPendingBFFs = await Relation.find({
-      receiver: myId,
-      status: false,
-      relation: "bff",
+    const myPendingRelations = await Relation.find({
+      $or:[
+        {sender:myId},
+        {receiver:myId}
+      ],
+      status:false
     });
-    const bffSenders = myPendingBFFs.map((item) => item.sender);
-    const myPendingFriends = await Relation.find({
-      receiver: myId,
-      status: false,
-      relation: "friend",
-      sender: { $nin: bffSenders },
-    });
-    const friendSenders = myPendingFriends.map((item) => item.sender);
-    const bffSenderUsers = await User.find({ _id: { $in: bffSenders } });
-    const friendSenderUsers = await User.find({ _id: { $in: friendSenders } });
-    const bffRequesteds: RequestedResponseDTO[] = [];
-    const friendRequesteds: RequestedResponseDTO[] = [];
-    bffSenderUsers.map((item) => {
-      bffRequesteds.push({
-        _id: item.id,
-        firstName: item.firstName,
-        lastName: item.lastName,
-        avatar: item.avatar,
-        relation: "bff",
-        createAt: item.createAt,
-      });
-    });
-    friendSenderUsers.map((item) => {
-      friendRequesteds.push({
-        _id: item.id,
-        firstName: item.firstName,
-        lastName: item.lastName,
-        avatar: item.avatar,
-        relation: "friend",
-        createAt: item.createAt,
-      });
-    });
-    return bffRequesteds.concat(friendRequesteds);
+    const myRequestResponses: RequestedResponseDTO[]=[];
+    for(const relation of myPendingRelations){
+      const otherUserId = relation.sender.toString()===myId?.toString()? relation.receiver : relation.sender;
+      const user = await User.findById(otherUserId);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+      const relationOfUs = await getRelationFromTo(myId?.toString()!, otherUserId.toString());
+      const requestUser:RequestedResponseDTO={
+        _id: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            avatar: user.avatar,
+            relation: relationOfUs,
+            createAt: user.createAt,
+      }
+      myRequestResponses.push(requestUser);
+    }
+    return myRequestResponses;
+    // const myPendingBFFs = await Relation.find({
+    //   receiver: myId,
+    //   status: false,
+    //   relation: "bff",
+    // });
+    // const bffSenders = myPendingBFFs.map((item) => item.sender);
+    // const myPendingFriends = await Relation.find({
+    //   $or:[
+    //     {receiver:myId},
+    //    {receiver: myId}, 
+    //   ],
+    //   status: false,
+    //   relation: "friend",
+    //   sender: { $nin: bffSenders },
+    // });
+    // const friendSenders = myPendingFriends.map((item) => item.sender);
+    // const bffSenderUsers = await User.find({ _id: { $in: bffSenders } });
+    // const friendSenderUsers = await User.find({ _id: { $in: friendSenders } });
+    // const bffRequesteds: RequestedResponseDTO[] = [];
+    // const friendRequesteds: RequestedResponseDTO[] = [];
+    // bffSenderUsers.map((item) => {
+    //   bffRequesteds.push({
+    //     _id: item.id,
+    //     firstName: item.firstName,
+    //     lastName: item.lastName,
+    //     avatar: item.avatar,
+    //     // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+    //     relation: "bff",
+    //     createAt: item.createAt,
+    //   });
+    // });
+    // friendSenderUsers.map( (item) => {
+    //   friendRequesteds.push({
+    //     _id: item.id,
+    //     firstName: item.firstName,
+    //     lastName: item.lastName,
+    //     avatar: item.avatar,
+    //     // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+    //     relation: "friend",
+    //     createAt: item.createAt,
+    //   });
+    // });
+    // return bffRequesteds.concat(friendRequesteds);
   } catch (error) {
     console.log(error);
     throw error;
