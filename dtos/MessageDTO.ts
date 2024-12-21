@@ -47,7 +47,7 @@ export interface MessageBoxGroupDTO {
   senderId: UserInfoBox[];
   receiverIds: UserInfoBox[];
   groupName: string;
-  groupAva: string[];
+  groupAva: string;
   flag: boolean;
   pin: boolean;
   readStatus: boolean;

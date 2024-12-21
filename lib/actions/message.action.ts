@@ -911,8 +911,15 @@ export async function fetchBoxChat(userId: string) {
 
     const messageBoxes = await MessageBox.find({
       $or: [
-        { receiverIds: { $all: [userId], $size: 2 } }, // Điều kiện 1
-        { _id: userId } // Điều kiện 2: ID của box là userId
+        {
+          $and: [
+            { receiverIds: { $in: [userId] } },
+            {
+              $expr: { $lte: [{ $size: "$receiverIds" }, 2] }
+            }
+          ]
+        },
+        { _id: userId } // Hoặc ID của box là userId
       ]
     }).populate("receiverIds", "firstName lastName nickName avatar");
 
