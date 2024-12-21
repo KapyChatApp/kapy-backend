@@ -388,7 +388,7 @@ export async function createMessage(
 
       return {
         success: true,
-        message: "Message from stranger sent successfully"
+        message: pusherMessage
       };
     }
   } catch (error) {
