@@ -299,23 +299,19 @@ export const getMutualFriends = async (
       return [];
     }
 
-    console.log("User's friendIds (before flatten): ", user.friendIds);
-    console.log("Target User's friendIds (before flatten): ", targetUser.friendIds);
 
     const userFriendIds = user.friendIds.flat().map((id: Schema.Types.ObjectId) => id.toString());
     const targetFriendIds = targetUser.friendIds
       .flat()
       .map((id: Schema.Types.ObjectId) => id.toString());
 
-    console.log("User's friendIds (after flatten): ", userFriendIds);
-    console.log("Target User's friendIds (after flatten): ", targetFriendIds);
 
     const targetFriendSet = new Set<string>(targetFriendIds);
 
     const mutualFriendIds: string[] = userFriendIds.filter((id: string) =>
       targetFriendSet.has(id)
     );
-    console.log("idssS: ",mutualFriendIds);
+
     const mutualFriends:ShortUserResponseDTO[] = [];
     for(const id of mutualFriendIds){
       const user = await User.findById(id);

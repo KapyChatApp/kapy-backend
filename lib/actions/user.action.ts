@@ -19,6 +19,7 @@ import jwt from "jsonwebtoken";
 import { pusherServer } from "../pusher";
 import { getMutualFriends } from "./friend.action";
 import Realtime from "@/database/realtime.model";
+import { getRelationFromTo } from "./relation.action";
 const saltRounds = 10;
 const SECRET_KEY = process.env.JWT_SECRET!;
 
@@ -143,14 +144,18 @@ export async function findUser(
       throw new Error("Not found");
     }
     const mutualFriends = await getMutualFriends(userId?.toString(), user._id);
-
+    // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+    const relation = await getRelationFromTo(
+      userId?.toString()!,
+      user._id.toString()
+    );
     const result: FindUserDTO = {
       _id: user._id,
       firstName: user.firstName,
       lastName: user.lastName,
       nickName: user.nickName,
       avatar: user.avatar,
-      relation: "",
+      relation: relation,
       mutualFriends: mutualFriends!
     };
     const relations = await Relation.find({
