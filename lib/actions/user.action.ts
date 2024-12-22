@@ -8,7 +8,7 @@ import {
   UpdatePasswordDTO,
   UpdateUserDTO,
   UserRegisterDTO,
-  UserResponseDTO,
+  UserResponseDTO
 } from "@/dtos/UserDTO";
 import { connectToDatabase } from "../mongoose";
 import User from "@/database/user.model";
@@ -44,8 +44,8 @@ export async function createUser(
     const existedUser = await User.findOne({
       $or: [
         { email: params.email, flag: true },
-        { phoneNumber: params.phoneNumber, flag: true },
-      ],
+        { phoneNumber: params.phoneNumber, flag: true }
+      ]
     });
 
     if (params.password !== params.rePassword) {
@@ -65,7 +65,7 @@ export async function createUser(
       password: hashPassword,
       attendDate: new Date(),
       roles: ["user"],
-      createBy: createBy ? createBy : new mongoose.Types.ObjectId(),
+      createBy: createBy ? createBy : new mongoose.Types.ObjectId()
     });
 
     const newUser: UserResponseDTO = await User.create(createUserData);
@@ -84,7 +84,7 @@ export async function createAdmin(
     connectToDatabase();
 
     const existedUser = await User.findOne({
-      $or: [{ email: params.email }, { phoneNumber: params.phoneNumber }],
+      $or: [{ email: params.email }, { phoneNumber: params.phoneNumber }]
     });
 
     if (params.password !== params.rePassword) {
@@ -104,7 +104,7 @@ export async function createAdmin(
       password: hashPassword,
       attendDate: new Date(),
       roles: ["admin", "user"],
-      createBy: createBy ? createBy : "unknown",
+      createBy: createBy ? createBy : "unknown"
     });
 
     const newUser: UserResponseDTO = await User.create(createUserData);
@@ -138,14 +138,17 @@ export async function findUser(
     connectToDatabase();
 
     const user = await User.findOne({
-      phoneNumber: phoneNumber,
+      phoneNumber: phoneNumber
     });
     if (!user) {
       throw new Error("Not found");
     }
     const mutualFriends = await getMutualFriends(userId?.toString(), user._id);
     // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
-    const relation = await getRelationFromTo(userId?.toString()!,user._id.toString());
+    const relation = await getRelationFromTo(
+      userId?.toString()!,
+      user._id.toString()
+    );
     const result: FindUserDTO = {
       _id: user._id,
       firstName: user.firstName,
@@ -153,9 +156,42 @@ export async function findUser(
       nickName: user.nickName,
       avatar: user.avatar,
       relation: relation,
-      mutualFriends: mutualFriends!,
+      mutualFriends: mutualFriends!
     };
-    
+    const relations = await Relation.find({
+      stUser: userId,
+      ndUSer: result._id
+    });
+    if (relations.length === 0) {
+      result.relation = "stranger";
+    } else {
+      for (const relation of relations) {
+        if (!relation.status) {
+          if (relation.relation === "bff") {
+            if (relation.sender.toString() === user._id.toString()) {
+              result.relation = "sent_bff";
+              break;
+            } else {
+              result.relation = "received_bff";
+              break;
+            }
+          } else {
+            if (relation.sender.toString() === user._id.toString()) {
+              result.relation = "sent_friend";
+            } else {
+              result.relation = "received_friend";
+            }
+          }
+        } else {
+          if (relation.relation === "bff") {
+            result.relation = "bff";
+            break;
+          } else {
+            result.relation = "friend";
+          }
+        }
+      }
+    }
     return result;
   } catch (error) {
     console.log(error);
@@ -196,7 +232,7 @@ export async function findUserById(userId: string) {
       friendIds: user.friendIds,
       bestFriendIds: user.bestFriendIds,
       blockedIds: user.blockedIds,
-      posts: user.posts,
+      posts: user.posts
     };
     return result;
   } catch (error) {
@@ -222,7 +258,7 @@ export async function updateUser(
       userId,
       params,
       {
-        new: true,
+        new: true
       }
     );
 
@@ -245,7 +281,7 @@ export async function updatePassword(
       userId,
       {
         password: params.password,
-        rePassword: params.rePassword,
+        rePassword: params.rePassword
       },
       { new: true } // Để trả về document đã cập nhật
     );
@@ -256,7 +292,7 @@ export async function updatePassword(
 
     return {
       success: true,
-      message: "Password updated successfully.",
+      message: "Password updated successfully."
     };
   } catch (error) {
     console.log(error);
@@ -302,11 +338,11 @@ export async function onlineEvent(userId: string) {
     const pusherOnline: OnlineEvent = {
       userId: userId,
       online: true,
-      updateTime:new Date()
+      updateTime: new Date()
     };
 
     const realtime = await Realtime.findOne({
-      userId: new Types.ObjectId(userId),
+      userId: new Types.ObjectId(userId)
     });
     if (realtime) {
       realtime.isOnline = true;
@@ -317,7 +353,7 @@ export async function onlineEvent(userId: string) {
         userId: new Types.ObjectId(userId),
         isOnline: true,
         createBy: new Types.ObjectId(userId),
-        updateTime: () => new Date(),
+        updateTime: () => new Date()
       });
     }
 
@@ -337,11 +373,11 @@ export async function offlineEvent(userId: string) {
     const pusherOnline: OnlineEvent = {
       userId: userId,
       online: false,
-      updateTime:new Date()
+      updateTime: new Date()
     };
 
     const realtime = await Realtime.findOne({
-      userId: new Types.ObjectId(userId),
+      userId: new Types.ObjectId(userId)
     });
     if (realtime) {
       realtime.isOnline = false;
@@ -352,7 +388,7 @@ export async function offlineEvent(userId: string) {
         userId: new Types.ObjectId(userId),
         isOnline: false,
         createBy: new Types.ObjectId(userId),
-        updateTime: () => new Date(),
+        updateTime: () => new Date()
       });
     }
 
@@ -366,3 +402,56 @@ export async function offlineEvent(userId: string) {
     throw error;
   }
 }
+
+export async function isUserExists(id: string | undefined) {
+  try {
+    const user = await User.findById(id);
+    if (!user) {
+      throw new Error("Your require user is not exist!");
+    }
+    return user;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export const checkRelation = async (
+  id1: string | undefined,
+  id2: string | undefined
+) => {
+  try {
+    await connectToDatabase();
+    const stUser = await isUserExists(id1);
+    const ndUser = await isUserExists(id2);
+    const [stUserId, ndUserId] = [id1, id2].sort();
+    const priorityMap: Record<string, number> = {
+      bff: 3,
+      friend: 2,
+      acquaintance: 1
+    };
+    if (stUser && ndUser) {
+      const relations = await Relation.find({
+        $or: [
+          { stUser: stUserId, ndUser: ndUserId },
+          { stUser: ndUserId, ndUser: stUserId }
+        ]
+      });
+
+      if (!relations || relations.length === 0) {
+        return null;
+      }
+
+      const highestRelation = relations.reduce((prev, current) => {
+        const prevPriority = priorityMap[prev.relation] || 0;
+        const currentPriority = priorityMap[current.relation] || 0;
+        return currentPriority > prevPriority ? current : prev;
+      });
+
+      return highestRelation;
+    }
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
