@@ -8,9 +8,9 @@ export interface IMapStatus extends Document, IAudit{
 } 
 
 const MapStatusSchema = new Schema<IMapStatus>({
-    caption:{type:String, required:true},
-    content:{type:Schema.Types.ObjectId},
-    location:{type:Schema.Types.ObjectId, required:true}
+    caption:{type:String},
+    content:{type:Schema.Types.ObjectId,ref:"File"},
+    location:{type:Schema.Types.ObjectId, required:true,ref:"Location"}
 });
 
 MapStatusSchema.add(AuditSchema);

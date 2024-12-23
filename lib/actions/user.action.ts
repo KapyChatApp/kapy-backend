@@ -146,6 +146,7 @@ export async function findUser(
     const mutualFriends = await getMutualFriends(userId?.toString(), user._id);
     // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
     const relation = await getRelationFromTo(
+      // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
       userId?.toString()!,
       user._id.toString()
     );
