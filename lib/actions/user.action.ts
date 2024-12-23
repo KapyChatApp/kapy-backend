@@ -353,7 +353,7 @@ export async function onlineEvent(userId: string) {
         userId: new Types.ObjectId(userId),
         isOnline: true,
         createBy: new Types.ObjectId(userId),
-        updateTime: () => new Date()
+        updateTime: new Date()
       });
     }
 
@@ -388,7 +388,7 @@ export async function offlineEvent(userId: string) {
         userId: new Types.ObjectId(userId),
         isOnline: false,
         createBy: new Types.ObjectId(userId),
-        updateTime: () => new Date()
+        updateTime: new Date()
       });
     }
 

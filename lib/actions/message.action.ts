@@ -16,7 +16,8 @@ import {
   PusherDelete,
   PusherRevoke,
   TextingEvent,
-  ResponseReactMessageDTO
+  ResponseReactMessageDTO,
+  ReadedStatusPusher
 } from "@/dtos/MessageDTO";
 import mongoose, { Schema, Types } from "mongoose";
 import User from "@/database/user.model";
@@ -350,11 +351,11 @@ export async function deleteOrRevokeMessage(
     if (!message) {
       throw new Error("Message is not found");
     }
-    if (!message.readedId.includes(userId)) {
-      throw new Error("Unauthorized to delete or recall this message");
-    }
 
     if (action === "revoke") {
+      if (message.createBy !== userId) {
+        throw new Error("Unauthorized to delete or recall this message");
+      }
       message.flag = false;
 
       await message.save();
@@ -543,9 +544,11 @@ export async function markMessageAsRead(boxId: string, userId: string) {
 
     const lastMessage = messageBox.messageIds[messageBox.messageIds.length - 1];
 
-    // Kiểm tra nếu user chưa đọc message cuối cùng
-    if (!lastMessage.readedId.includes(userId)) {
-      // Cập nhật tất cả message trong box với userId
+    // Lấy mảng readedId từ lastMessage
+    const readedId = lastMessage.readedId;
+
+    // Nếu user chưa đọc message cuối cùng, thêm userId vào readedId
+    if (!readedId.includes(userId)) {
       await Promise.all(
         messageBox.messageIds.map(async (messageId: any) => {
           const message = await Message.findById(messageId);
@@ -555,17 +558,21 @@ export async function markMessageAsRead(boxId: string, userId: string) {
           }
         })
       );
-
-      return {
-        success: true,
-        messages: "Messages marked as read"
-      };
-    } else {
-      return {
-        success: true,
-        messages: "Messages already read"
-      };
     }
+
+    // Gửi trạng thái lên Pusher (bao gồm cả trường hợp user đã đọc)
+    const pusherMarkRead: ReadedStatusPusher = {
+      success: true,
+      readedId, // Mảng readedId được cập nhật hoặc giữ nguyên
+      boxId: boxId
+    };
+
+    await pusherServer
+      .trigger(`private-${boxId}`, "readed-status", pusherMarkRead)
+      .then(() => console.log("Message status sent to Pusher", pusherMarkRead))
+      .catch((error) => console.error("Failed to create event: ", error));
+
+    return pusherMarkRead;
   } catch (error) {
     console.error("Error marking message as read: ", error);
     throw error;
@@ -774,12 +781,14 @@ export async function fetchBoxChat(userId: string) {
 
         const lastMessageId =
           messageBox.messageIds[messageBox.messageIds.length - 1];
-        let readStatus = true;
+        let readStatus = false;
+        let readedId = [];
 
         if (lastMessageId) {
           const lastMessage = await Message.findById(lastMessageId);
           if (lastMessage) {
             readStatus = lastMessage.readedId.includes(userId);
+            readedId = lastMessage.readedId;
           }
         }
 
@@ -791,8 +800,9 @@ export async function fetchBoxChat(userId: string) {
           groupAva: messageBox.groupAva || "",
           flag: messageBox.flag || false,
           pin: messageBox.pin || false,
+          stranger: relationStranger ? true : false,
           readStatus,
-          stranger: relationStranger ? true : false
+          readedId
         };
       })
     );
@@ -833,7 +843,8 @@ export async function fetchOneBoxChat(boxId: string, userId: string) {
       return {
         box: {
           ...messageBox.toObject(),
-          readStatus: false // Không có tin nhắn thì mặc định là chưa đọc
+          readStatus: false,
+          readedId: [] // Không có tin nhắn thì mặc định là chưa đọc
         }
       };
     }
@@ -849,18 +860,21 @@ export async function fetchOneBoxChat(boxId: string, userId: string) {
       return {
         box: {
           ...messageBox.toObject(),
-          readStatus: false // Không có tin nhắn thì mặc định là chưa đọc
+          readStatus: false,
+          readedId: [] // Không có tin nhắn thì mặc định là chưa đọc
         }
       };
     }
 
     // Kiểm tra trạng thái đã đọc
+    const readedId = lastMessage.readedId;
     const readStatus = lastMessage.readedId.includes(userId);
 
     return {
       box: {
         ...messageBox.toObject(),
-        readStatus // Thêm readStatus vào messageBox
+        readStatus,
+        readedId
       }
     };
   } catch (error) {
@@ -896,15 +910,18 @@ export async function fetchBoxGroup(userId: string) {
     const messageBoxesWithContent: MessageBoxGroupDTO[] = await Promise.all(
       messageBoxes.map(async (messageBox) => {
         // Lấy tin nhắn cuối cùng
-        const lastMessageId = messageBox.messageIds[messageBox.messageIds - 1];
-        let readStatus = true;
+        const lastMessageId =
+          messageBox.messageIds[messageBox.messageIds.length - 1];
+        console.log(messageBox.messageIds);
+        let readedId = [];
+        let readStatus = false;
         if (lastMessageId) {
           const lastMessage = await Message.findById(lastMessageId);
           if (lastMessage) {
+            readedId = lastMessage.readedId;
             readStatus = lastMessage.readedId.includes(userId);
           }
         }
-
         return {
           _id: messageBox._id,
           senderId: messageBox.senderId,
@@ -913,7 +930,8 @@ export async function fetchBoxGroup(userId: string) {
           groupAva: messageBox.groupAva || "",
           flag: messageBox.flag || false,
           pin: messageBox.pin || false,
-          readStatus
+          readStatus,
+          readedId
         };
       })
     );
@@ -994,6 +1012,36 @@ export async function reactMessage(userId: string, messageId: string) {
   } catch (error) {
     console.error("Error react message: ", error);
     throw error;
+  }
+}
+
+export async function deleteMessageBox(boxId: string) {
+  try {
+    // Tìm và xóa MessageBox bằng chuỗi boxId
+    const messageBox = await MessageBox.findOneAndDelete({ _id: boxId });
+    if (!messageBox) {
+      throw new Error("MessageBox not found");
+    }
+
+    // Tìm các tin nhắn liên quan và xóa chúng
+    const messages = await Message.find({ boxId: boxId });
+    if (messages.length > 0) {
+      // Lấy tất cả contentId từ các tin nhắn
+      const contentIds = messages.flatMap((message) => message.contentId);
+
+      // Xóa các file liên quan nếu có
+      if (contentIds.length > 0) {
+        await File.deleteMany({ _id: { $in: contentIds } });
+      }
+
+      // Xóa các tin nhắn
+      await Message.deleteMany({ boxId: boxId });
+    }
+
+    return { success: true, message: "Delete successfully!" };
+  } catch (error) {
+    console.error("Error deleting message box:", error);
+    throw new Error(error instanceof Error ? error.message : "Unknown error");
   }
 }
 
