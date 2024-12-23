@@ -1,20 +1,20 @@
-export interface LocationDTO{
-    latitude:string;                 // Vĩ độ
-    longitude:       string;     // Kinh độ
-    altitude:               string;   // Độ cao so với mực nước biển (nếu có)
-    accuracy: string;                 // Độ chính xác của vĩ độ và kinh độ (mét)
-    altitudeAccuracy: string;        // Độ chính xác của độ cao (mét, nếu có)
-    heading: string;                 // Hướng di chuyển của thiết bị (độ)
-    speed: string;
+export interface LocationDTO {
+  latitude: number; // Vĩ độ
+  longitude: number; // Kinh độ
+  altitude: number; // Độ cao so với mực nước biển (nếu có)
+  accuracy: number; // Độ chính xác của vĩ độ và kinh độ (mét)
+  altitudeAccuracy: number; // Độ chính xác của độ cao (mét, nếu có)
+  heading: number; // Hướng di chuyển của thiết bị (độ)
+  speed: number;
 }
 
-export interface PusherLocationDTO{
-    userId:string;
-    latitude:string;                 // Vĩ độ
-    longitude:       string;     // Kinh độ
-    altitude:               string;   // Độ cao so với mực nước biển (nếu có)
-    accuracy: string;                 // Độ chính xác của vĩ độ và kinh độ (mét)
-    altitudeAccuracy: string;        // Độ chính xác của độ cao (mét, nếu có)
-    heading: string;                 // Hướng di chuyển của thiết bị (độ)
-    speed: string;
+export interface PusherLocationDTO {
+  userId: string;
+  latitude: number; // Vĩ độ
+  longitude: number; // Kinh độ
+  altitude: number; // Độ cao so với mực nước biển (nếu có)
+  accuracy: number; // Độ chính xác của vĩ độ và kinh độ (mét)
+  altitudeAccuracy: number; // Độ chính xác của độ cao (mét, nếu có)
+  heading: number; // Hướng di chuyển của thiết bị (độ)
+  speed: number;
 }
