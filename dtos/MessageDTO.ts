@@ -39,8 +39,9 @@ export interface MessageBoxDTO {
   groupAva: string;
   flag: boolean;
   pin: boolean;
-  readStatus: boolean;
   stranger: boolean;
+  readStatus: boolean;
+  readedId: string[];
 }
 export interface MessageBoxGroupDTO {
   _id: string;
@@ -51,6 +52,7 @@ export interface MessageBoxGroupDTO {
   flag: boolean;
   pin: boolean;
   readStatus: boolean;
+  readedId: string[];
 }
 
 export interface ResponseMessageDTO {
@@ -103,6 +105,7 @@ export interface DetailMessageBoxDTO {
   createAt: string;
   createBy: string;
   readStatus: boolean;
+  readedId: string[];
 }
 
 export interface PusherRevoke {
@@ -133,4 +136,9 @@ export interface TextingEvent {
   userId: string;
   avatar: string;
   texting: boolean;
+}
+export interface ReadedStatusPusher {
+  success: boolean;
+  readedId: string[];
+  boxId: string;
 }
