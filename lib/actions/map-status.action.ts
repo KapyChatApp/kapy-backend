@@ -2,6 +2,7 @@ import MapStatus from "@/database/map-status.model";
 import { LocationDTO } from "@/dtos/LocationDTO";
 import { Schema } from "mongoose";
 import { locationLiveUpdate } from "./location.action";
+import User from "@/database/user.model";
 
 
 export const initiateMyMapStatus = async (userId: Schema.Types.ObjectId | undefined, location: LocationDTO) => {
@@ -20,4 +21,15 @@ export const initiateMyMapStatus = async (userId: Schema.Types.ObjectId | undefi
         throw error;
     }
 };
+
+export const getMyBestFriendMapStatus = async (userId:Schema.Types.ObjectId| undefined)=>{
+    try{
+        const user = await User.findById(userId);
+        const bffMapStatus = await MapStatus.find({createBy:{$in:user.bestFriendIds}}).populate("content").populate("location");
+        return bffMapStatus;
+    }catch(error){
+        console.log(error);
+        throw error;
+    }
+}
 
