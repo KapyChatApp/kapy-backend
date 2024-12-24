@@ -7,7 +7,7 @@ export interface IMessageBox extends Document, IAudit {
   messageIds: Schema.Types.ObjectId[];
   groupName: string;
   groupAva: string;
-  flag: boolean;
+  flag: string[];
   pin: boolean;
 }
 
@@ -17,7 +17,7 @@ const MessageBoxSchema = new Schema<IMessageBox>({
   messageIds: [{ type: Schema.Types.ObjectId, ref: "Message" }],
   groupName: { type: String, required: false, default: "" },
   groupAva: { type: String, required: false, default: "" },
-  flag: { type: Boolean, required: true, default: true },
+  flag: [{ type: Schema.Types.ObjectId, required: true }],
   pin: { type: Boolean, required: true, default: false }
 });
 

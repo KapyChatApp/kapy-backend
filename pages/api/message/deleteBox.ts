@@ -1,4 +1,4 @@
-import { deleteMessageBox } from "@/lib/actions/message.action";
+import { deleteBox } from "@/lib/actions/message.action";
 import { authenticateToken } from "@/middleware/auth-middleware"; // Authentication middleware
 import cors from "@/middleware/cors-middleware"; // CORS middleware
 import { NextApiRequest, NextApiResponse } from "next/types";
@@ -20,7 +20,14 @@ export default async function handler(
         }
 
         try {
-          const result = await deleteMessageBox(boxId);
+          const userId = req.user?.id;
+          if (!userId) {
+            return res
+              .status(401)
+              .json({ success: false, message: "User is not authenticated" });
+          }
+
+          const result = await deleteBox(userId.toString(), boxId);
 
           return res.status(200).json(result);
         } catch (error) {
