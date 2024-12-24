@@ -134,7 +134,8 @@ export async function createMessage(
           data.boxId,
           {
             $push: { messageIds: message._id },
-            $set: { senderId: userId }
+            $set: { senderId: userId },
+            $addToSet: { flag: userId } // Thêm userId vào mảng flag nếu chưa có
           },
           { new: true }
         );
@@ -186,7 +187,10 @@ export async function createMessage(
           {
             $push: { messageIds: message._id },
             $set: { senderId: userId },
-            $addToSet: { receiverIds: userId }
+            $addToSet: {
+              receiverIds: userId, // Thêm userId vào mảng receiverIds nếu chưa có
+              flag: userId // Thêm userId vào mảng flag nếu chưa có
+            }
           },
           { new: true }
         );
@@ -244,14 +248,26 @@ export async function createGroup(
     throw new Error("One or more member IDs do not exist");
   }
   const allReceiverIds = [leaderId, ...membersIds];
+  // Kiểm tra xem message box đã tồn tại và flag có chứa leaderId
   const existMessageBox = await MessageBox.findOne({
     receiverIds: { $size: allReceiverIds.length, $all: allReceiverIds }
   });
 
   if (existMessageBox) {
+    // Nếu tồn tại box và flag không chứa leaderId, thêm leaderId vào flag
+    if (!existMessageBox.flag.includes(leaderId)) {
+      // Cập nhật mảng flag để thêm leaderId
+      existMessageBox.flag.push(leaderId);
+      await existMessageBox.save();
+      return {
+        success: true,
+        message: "Leader added to the existing box",
+        updatedMessageBox: existMessageBox
+      };
+    }
     return {
       success: false,
-      message: "Box is existed.",
+      message: "Box already exists.",
       existMessageBox
     };
   }
@@ -263,7 +279,7 @@ export async function createGroup(
     messageIds: [],
     groupName: groupName,
     groupAva: groupAva,
-    flag: true,
+    flag: [leaderId, ...membersIds],
     pin: false,
     createBy: userObjectId
   });
@@ -546,6 +562,7 @@ export async function markMessageAsRead(boxId: string, userId: string) {
 
     // Lấy mảng readedId từ lastMessage
     const readedId = lastMessage.readedId;
+    let readedIdUpdated: string[] = readedId;
 
     // Nếu user chưa đọc message cuối cùng, thêm userId vào readedId
     if (!readedId.includes(userId)) {
@@ -554,6 +571,7 @@ export async function markMessageAsRead(boxId: string, userId: string) {
           const message = await Message.findById(messageId);
           if (message && !message.readedId.includes(userId)) {
             message.readedId.push(userId);
+            readedIdUpdated = message.readedId;
             await message.save();
           }
         })
@@ -563,7 +581,7 @@ export async function markMessageAsRead(boxId: string, userId: string) {
     // Gửi trạng thái lên Pusher (bao gồm cả trường hợp user đã đọc)
     const pusherMarkRead: ReadedStatusPusher = {
       success: true,
-      readedId, // Mảng readedId được cập nhật hoặc giữ nguyên
+      readedId: readedIdUpdated, // Mảng readedId được cập nhật hoặc giữ nguyên
       boxId: boxId
     };
 
@@ -756,7 +774,8 @@ export async function fetchBoxChat(userId: string) {
           ]
         },
         { _id: userId } // Hoặc ID của box là userId
-      ]
+      ],
+      flag: { $in: [userId] } // Thêm điều kiện flag chứa userId
     }).populate("receiverIds", "firstName lastName nickName avatar");
 
     if (!messageBoxes.length) {
@@ -894,7 +913,8 @@ export async function fetchBoxGroup(userId: string) {
           $expr: { $gt: [{ $size: "$receiverIds" }, 2] }
         },
         { receiverIds: { $in: [userId] } }
-      ]
+      ],
+      flag: { $in: [userId] } // Thêm điều kiện flag chứa userId
     })
       .populate("receiverIds", "firstName lastName nickName avatar")
       .populate("senderId", "firstName lastName nickName avatar");
@@ -1015,33 +1035,46 @@ export async function reactMessage(userId: string, messageId: string) {
   }
 }
 
-export async function deleteMessageBox(boxId: string) {
+export async function deleteBox(userId: string, boxId: string) {
   try {
-    // Tìm và xóa MessageBox bằng chuỗi boxId
-    const messageBox = await MessageBox.findOneAndDelete({ _id: boxId });
+    // Kết nối database
+    await connectToDatabase();
+
+    // Tìm MessageBox theo boxId
+    const messageBox = await MessageBox.findById(boxId);
+
     if (!messageBox) {
-      throw new Error("MessageBox not found");
+      throw new Error("Message box doesn't exist.");
     }
 
-    // Tìm các tin nhắn liên quan và xóa chúng
-    const messages = await Message.find({ boxId: boxId });
-    if (messages.length > 0) {
-      // Lấy tất cả contentId từ các tin nhắn
-      const contentIds = messages.flatMap((message) => message.contentId);
+    // Lấy danh sách messageIds từ box
+    const { messageIds, flag } = messageBox;
 
-      // Xóa các file liên quan nếu có
-      if (contentIds.length > 0) {
-        await File.deleteMany({ _id: { $in: contentIds } });
-      }
+    // Cập nhật visibility của userId thành false cho tất cả các tin nhắn trong box
+    await Promise.all(
+      messageIds.map(async (messageId: any) => {
+        const message = await Message.findById(messageId);
+        if (message) {
+          message.visibility.set(userId, false);
+          await message.save();
+        }
+      })
+    );
 
-      // Xóa các tin nhắn
-      await Message.deleteMany({ boxId: boxId });
-    }
+    // Xóa userId khỏi mảng flag của message box
+    const updatedFlag = flag.filter((id: any) => id.toString() !== userId);
+    messageBox.flag = updatedFlag;
 
-    return { success: true, message: "Delete successfully!" };
+    // Lưu thay đổi của MessageBox
+    await messageBox.save();
+
+    return {
+      success: true,
+      message: "Delete box chat successfully."
+    };
   } catch (error) {
-    console.error("Error deleting message box:", error);
-    throw new Error(error instanceof Error ? error.message : "Unknown error");
+    console.error("Error delete chat: ", error);
+    throw new Error("Error delete chat.");
   }
 }
 
@@ -1052,7 +1085,8 @@ export async function findBoxChat(userId: string, receiverId: string) {
     const receiverObjectId = new mongoose.Types.ObjectId(receiverId);
 
     const boxChat = await MessageBox.findOne({
-      receiverIds: { $size: 2, $all: [userObjectId, receiverObjectId] }
+      receiverIds: { $size: 2, $all: [userObjectId, receiverObjectId] },
+      flag: { $in: [userId] }
     });
 
     if (boxChat) {
