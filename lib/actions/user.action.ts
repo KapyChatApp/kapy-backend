@@ -150,6 +150,7 @@ export async function findUser(
       userId?.toString()!,
       user._id.toString()
     );
+    console.log("realtionnnn: ", relation);
     const result: FindUserDTO = {
       _id: user._id,
       firstName: user.firstName,
@@ -159,40 +160,6 @@ export async function findUser(
       relation: relation,
       mutualFriends: mutualFriends!
     };
-    const relations = await Relation.find({
-      stUser: userId,
-      ndUSer: result._id
-    });
-    if (relations.length === 0) {
-      result.relation = "stranger";
-    } else {
-      for (const relation of relations) {
-        if (!relation.status) {
-          if (relation.relation === "bff") {
-            if (relation.sender.toString() === user._id.toString()) {
-              result.relation = "sent_bff";
-              break;
-            } else {
-              result.relation = "received_bff";
-              break;
-            }
-          } else {
-            if (relation.sender.toString() === user._id.toString()) {
-              result.relation = "sent_friend";
-            } else {
-              result.relation = "received_friend";
-            }
-          }
-        } else {
-          if (relation.relation === "bff") {
-            result.relation = "bff";
-            break;
-          } else {
-            result.relation = "friend";
-          }
-        }
-      }
-    }
     return result;
   } catch (error) {
     console.log(error);
