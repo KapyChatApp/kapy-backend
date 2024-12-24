@@ -37,7 +37,7 @@ export interface MessageBoxDTO {
   receiverIds: UserInfoBox[];
   groupName: string;
   groupAva: string;
-  flag: boolean;
+  flag: string[];
   pin: boolean;
   stranger: boolean;
   readStatus: boolean;
@@ -49,7 +49,7 @@ export interface MessageBoxGroupDTO {
   receiverIds: UserInfoBox[];
   groupName: string;
   groupAva: string;
-  flag: boolean;
+  flag: string[];
   pin: boolean;
   readStatus: boolean;
   readedId: string[];
@@ -100,7 +100,7 @@ export interface DetailMessageBoxDTO {
   messageIds: string[];
   groupName: string;
   groupAva: string[];
-  flag: boolean;
+  flag: string[];
   pin: boolean;
   createAt: string;
   createBy: string;
