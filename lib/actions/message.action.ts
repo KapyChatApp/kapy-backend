@@ -546,6 +546,7 @@ export async function markMessageAsRead(boxId: string, userId: string) {
 
     // Lấy mảng readedId từ lastMessage
     const readedId = lastMessage.readedId;
+    let readedIdUpdated: string[] = readedId;
 
     // Nếu user chưa đọc message cuối cùng, thêm userId vào readedId
     if (!readedId.includes(userId)) {
@@ -554,6 +555,7 @@ export async function markMessageAsRead(boxId: string, userId: string) {
           const message = await Message.findById(messageId);
           if (message && !message.readedId.includes(userId)) {
             message.readedId.push(userId);
+            readedIdUpdated = message.readedId;
             await message.save();
           }
         })
@@ -563,7 +565,7 @@ export async function markMessageAsRead(boxId: string, userId: string) {
     // Gửi trạng thái lên Pusher (bao gồm cả trường hợp user đã đọc)
     const pusherMarkRead: ReadedStatusPusher = {
       success: true,
-      readedId, // Mảng readedId được cập nhật hoặc giữ nguyên
+      readedId: readedIdUpdated, // Mảng readedId được cập nhật hoặc giữ nguyên
       boxId: boxId
     };
 
