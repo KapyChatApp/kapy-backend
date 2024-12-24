@@ -74,6 +74,33 @@ export const getMyBestFriendMapStatus = async (
   }
 };
 
+export const getMyStatus = async (userId:Schema.Types.ObjectId|undefined)=>{
+    try {
+        const status = await MapStatus.findOne({createBy:userId})
+          .populate("content")
+          .populate("location")
+          .populate("createBy");
+        const statusResponse: MapStatusResponseDTO = {
+          _id: status._id,
+          caption: status.caption,
+          content: status.content,
+          location: status.location,
+          createAt: status.createAt,
+          createBy: {
+            _id: status.createBy._id,
+            firstName: status.createBy.firstName,
+            lastName: status.createBy.lastName,
+            nickName: status.createBy.nickName,
+            avatar: status.createBy.avatar,
+          },
+        };
+        return statusResponse;
+      } catch (error) {
+        console.log(error);
+        throw error;
+      }
+}
+
 export const getAStatus = async (id: string) => {
   try {
     const status = await MapStatus.findById(id)
@@ -107,7 +134,9 @@ export const createStatus = async (
 ) => {
   try {
     const status = await MapStatus.findOne({ createBy: userId });
+    console.log(status);
     if (param.file) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
       const content = await createFile(param.file, userId?.toString()!);
       status.content = content._id;
     }
@@ -143,7 +172,9 @@ export const editStatus = async (
       status.caption = param.caption;
     } else {
       status.caption = param.caption;
-      await deleteFile(userId?.toString()!, status.content);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+      await deleteFile( status.content.toString() ,userId);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
       const newContent = await createFile(param.file!, userId?.toString()!);
       status.content = newContent._id;
     }
@@ -165,10 +196,15 @@ export const deleteStatus = async (
   userId: Schema.Types.ObjectId | undefined
 ) => {
   try {
-    const existStatus = await MapStatus.findOne({ createBy: userId });
+    const existStatus = await MapStatus.findOne({ createBy: userId })
+
+    if(!existStatus){
+      throw new Error('Status not exist');
+    }
     existStatus.caption = "";
     if (existStatus.content) {
-      await deleteFile(userId?.toString()!, existStatus.content.toString());
+      // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+      await deleteFile(existStatus.content.toString(),userId);
     }
     existStatus.content = null;
     await pusherServer.trigger(`private-${userId}`, "map-status", null);

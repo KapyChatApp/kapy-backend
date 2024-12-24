@@ -1,7 +1,6 @@
 import { authenticateToken } from "@/middleware/auth-middleware";
 import { NextApiRequest, NextApiResponse } from "next/types";
 import cors from "@/middleware/cors-middleware";
-import { deletePost } from "@/lib/actions/post.action";
 import { deleteStatus } from "@/lib/actions/map-status.action";
 
 export const config = {
