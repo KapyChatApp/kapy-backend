@@ -382,13 +382,14 @@ export const suggestFriends = async (
     const suggestionResponses: FriendResponseDTO[] = [];
     for (const suggest of suggestions) {
       if((suggest.userDetails._id.toString()!=userId?.toString())&&(!friendIdsString.includes(suggest.userDetails._id.toString()))){
+        const mutualFriend = await getMutualFriends(userId?.toString(),suggest.userDetails._id)
       const suggestionResponse: FriendResponseDTO = {
         _id: suggest.userDetails._id,
         firstName: suggest.userDetails.firstName,
         lastName: suggest.userDetails.lastName,
         nickName: suggest.userDetails.nickName,
         avatar: suggest.userDetails.avatar,
-        mutualFriends: suggest.count,  
+        mutualFriends: mutualFriend!,  
       };
       suggestionResponses.push(suggestionResponse);}
     }
