@@ -80,6 +80,9 @@ export const getMyStatus = async (userId:Schema.Types.ObjectId|undefined)=>{
           .populate("content")
           .populate("location")
           .populate("createBy");
+          if(!status){
+            return; 
+          }
         const statusResponse: MapStatusResponseDTO = {
           _id: status._id,
           caption: status.caption,
@@ -168,6 +171,7 @@ export const editStatus = async (
     if (userId?.toString() != status.createBy.toString()) {
       throw new Error("You cannot edit this Status");
     }
+    console.log("isKeepOldContent:  ",param.keepOldContent);
     if (param.keepOldContent) {
       status.caption = param.caption;
     } else {
@@ -207,6 +211,7 @@ export const deleteStatus = async (
       await deleteFile(existStatus.content.toString(),userId);
     }
     existStatus.content = null;
+    await existStatus.save();
     await pusherServer.trigger(`private-${userId}`, "map-status", null);
     return { message: "Deleted!" };
   } catch (error) {

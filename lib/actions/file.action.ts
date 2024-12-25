@@ -101,6 +101,9 @@ export const deleteFile = async (id:string, userId:Schema.Types.ObjectId | undef
   try{
     const existFile = await File.findById(id);
     const user = await User.findById(userId);
+    if(!existFile){
+      return;
+    }
     if(existFile.createBy.toString()!=userId?.toString() && user.roles.includes("admin")!){
       throw new Error('You cannot delete this file!');
     }
