@@ -1309,6 +1309,39 @@ export const Contract = c.router(
             )
         }),
         summary: "Change the leader of the group by newLeader ID"
+      },
+      addMember: {
+        method: "POST",
+        path: "/api/message/group/addMember",
+        responses: {
+          200: c.type<{
+            success: boolean;
+            message: string;
+          }>(),
+          400: c.type<{
+            success: boolean;
+            message: string;
+          }>(),
+          401: c.type<{
+            success: boolean;
+            message: string;
+          }>(),
+          500: c.type<{
+            success: boolean;
+            message: string;
+            error?: string;
+          }>()
+        },
+        body: z.object({
+          boxId: z.string(),
+          newMember: z.array(z.string())
+        }),
+        headers: z.object({
+          auth: z.string().regex(
+            /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/ // Regex cho token xác thực
+          )
+        }),
+        summary: "Add new members to the group by their IDs"
       }
     }),
     media: c.router({
