@@ -283,6 +283,14 @@ export async function createGroup(
     pin: false,
     createBy: userObjectId
   });
+  const pusherCreateGroup = messageBox;
+
+  for (const memId of allReceiverIds) {
+    await pusherServer
+      .trigger(`private-${memId}`, "new-box", pusherCreateGroup)
+      .then(() => console.log("Message sent successfully: ", pusherCreateGroup))
+      .catch((error) => console.error("Failed to send message:", error));
+  }
   // return { success: true, messageBoxId: messageBox._id, messageBox };
   return {
     success: true,
@@ -1098,6 +1106,12 @@ export async function findBoxChat(userId: string, receiverId: string) {
     console.error("Error sending message: ", error);
     throw error;
   }
+}
+
+export async function disbandGroup(userId: string, boxId: string) {
+  try {
+    await connectToDatabase();
+  } catch {}
 }
 //MANAGEMENT
 export async function getAllMessage() {
