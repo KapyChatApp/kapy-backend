@@ -377,7 +377,7 @@ export async function deleteOrRevokeMessage(
     }
 
     if (action === "revoke") {
-      if (message.createBy !== userId) {
+      if (message.createBy.toString() !== userId) {
         throw new Error("Unauthorized to delete or recall this message");
       }
       message.flag = false;

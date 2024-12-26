@@ -28,6 +28,7 @@ export default async function handler(
               .json({ success: false, message: "User is not authenticated" });
           }
 
+          console.log(newMember);
           // Gọi action addMember để thêm thành viên vào nhóm
           const result = await addMember(userId.toString(), newMember, boxId);
 
