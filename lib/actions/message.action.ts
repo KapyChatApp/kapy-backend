@@ -1108,11 +1108,119 @@ export async function findBoxChat(userId: string, receiverId: string) {
   }
 }
 
+//Mange Group
 export async function disbandGroup(userId: string, boxId: string) {
   try {
     await connectToDatabase();
-  } catch {}
+    // Tìm và xóa MessageBox bằng chuỗi boxId
+    const messageBox = await MessageBox.findById(boxId);
+    if (!messageBox) {
+      throw new Error("MessageBox not found");
+    }
+    if (messageBox.createBy.toString() !== userId) {
+      throw new Error("Only leader can disband group.");
+    }
+
+    // Tìm các tin nhắn liên quan và xóa chúng
+    const messages = await Message.find({ boxId: boxId });
+    if (messages.length > 0) {
+      // Lấy tất cả contentId từ các tin nhắn
+      const contentIds = messages.flatMap((message) => message.contentId);
+
+      // Xóa các file liên quan nếu có
+      if (contentIds.length > 0) {
+        await File.deleteMany({ _id: { $in: contentIds } });
+      }
+
+      // Xóa các tin nhắn
+      await Message.deleteMany({ boxId: boxId });
+    }
+    await messageBox.deleteOne();
+    return { success: true, message: "Delete successfully!" };
+  } catch (error) {
+    console.error("Error disband group:", error);
+    throw new Error(error instanceof Error ? error.message : "Unknown error");
+  }
 }
+
+export async function removeMember(targetedId: string, boxId: string) {
+  try {
+    await connectToDatabase();
+
+    // Tìm MessageBox theo boxId
+    const messageBox = await MessageBox.findById(boxId);
+    if (!messageBox) {
+      throw new Error("MessageBox not found");
+    }
+    if (messageBox.createBy.toString() === targetedId) {
+      throw new Error("Have to change leader of group.");
+    }
+    // Kiểm tra nếu targetedId có trong receiverIds
+    const receiverIndex = messageBox.receiverIds.findIndex(
+      (id: any) => id.toString() === targetedId
+    );
+    if (receiverIndex === -1) {
+      throw new Error("Targeted member is not part of this group.");
+    }
+
+    // Xóa targetedId khỏi receiverIds
+    messageBox.receiverIds.splice(receiverIndex, 1);
+
+    // Xóa targetedId khỏi flag (nếu tồn tại)
+    const flagIndex = messageBox.flag.findIndex(
+      (id: any) => id.toString() === targetedId
+    );
+    if (flagIndex !== -1) {
+      messageBox.flag.splice(flagIndex, 1);
+    }
+
+    // Lưu lại các thay đổi
+    await messageBox.save();
+
+    return { success: true, message: "Member removed successfully!" };
+  } catch (error) {
+    console.error("Error removing member:", error);
+    throw new Error(error instanceof Error ? error.message : "Unknown error");
+  }
+}
+
+export async function changeLeader(
+  userId: string,
+  newLeader: string,
+  boxId: string
+) {
+  try {
+    await connectToDatabase();
+
+    const messageBox = await MessageBox.findById(boxId);
+    if (!messageBox) {
+      throw new Error("MessageBox not found");
+    }
+
+    if (messageBox.senderId.toString() !== userId) {
+      throw new Error("Only the current leader can change the group leader.");
+    }
+
+    const isReceiver = messageBox.receiverIds.some(
+      (id: any) => id.toString() === newLeader
+    );
+    if (!isReceiver) {
+      throw new Error("The new leader must be a member of the group.");
+    }
+
+    // Gán id của newLeader vào senderId (createBy)
+    messageBox.createBy = new mongoose.Types.ObjectId(newLeader);
+
+    // Lưu thay đổi
+    await messageBox.save();
+
+    return { success: true, message: "Leader changed successfully!" };
+  } catch (error) {
+    console.error("Error changing leader:", error);
+    throw new Error(error instanceof Error ? error.message : "Unknown error");
+  }
+}
+
 //MANAGEMENT
 export async function getAllMessage() {
   try {
