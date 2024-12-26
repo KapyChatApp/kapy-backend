@@ -943,6 +943,40 @@ export const Contract = c.router(
         description:
           "Fetches all message box for a specific user using its `userId`."
       },
+      deleteBox: {
+        method: "DELETE",
+        path: "/api/message/deleteBox",
+        responses: {
+          200: c.type<{
+            success: boolean;
+            message: string;
+          }>(),
+          400: c.type<{
+            success: boolean;
+            message: string;
+          }>(),
+          401: c.type<{
+            success: boolean;
+            message: string;
+          }>(),
+          500: c.type<{
+            success: boolean;
+            message: string;
+            error?: string;
+          }>()
+        },
+        query: z.object({
+          boxId: z.string()
+        }),
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        summary: "Delete a message box by boxId"
+      },
       allChat: {
         method: "GET",
         path: "/api/message/all-box-chat",
@@ -1185,50 +1219,141 @@ export const Contract = c.router(
         summary: "Search messages by ID and query",
         metadata: { role: "admin" } as const
       },
-      media: c.router({
-        uploadAvatar: {
-          method: "POST",
-          path: "/api/media/upload-avatar",
-          contentType: "multipart/form-data",
-          description: "Upload an avatar image for the authenticated user",
-          responses: {
-            200: c.type<MediaResponseDTO>(),
-            400: c.type<MediaResponseDTO>(),
-            405: c.type<MediaResponseDTO>(),
-            500: c.type<MediaResponseDTO>()
-          },
-          headers: z.object({
-            auth: z
-              .string()
-              .regex(
-                /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-              )
-          }),
-          body: c.type<{ file: File }>(),
-          summary: "Upload user avatar image"
+      disbandGroup: {
+        method: "DELETE",
+        path: "/api/message/group/disband", // Cập nhật path cho disband group
+        responses: {
+          200: c.type<{
+            success: boolean;
+            message: string;
+          }>(),
+          404: c.type<{
+            success: boolean;
+            message: string;
+          }>(),
+          500: c.type<{
+            success: boolean;
+            message: string;
+            error?: string;
+          }>()
         },
-        uploadBackground: {
-          method: "POST",
-          path: "/api/media/upload-background",
-          description: "Upload a background image for the authenticated user",
-          contentType: "multipart/form-data",
-          responses: {
-            200: c.type<MediaResponseDTO>(),
-            400: c.type<MediaResponseDTO>(),
-            405: c.type<MediaResponseDTO>(),
-            500: c.type<MediaResponseDTO>()
-          },
-          headers: z.object({
-            auth: z
-              .string()
-              .regex(
-                /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-              )
-          }),
-          body: c.type<{ file: File }>(),
-          summary: "Upload user background image"
-        }
-      })
+        query: z.object({
+          boxId: z.string() // boxId là tham số bắt buộc để xác định nhóm cần xóa
+        }),
+        headers: z.object({
+          auth: z.string().regex(
+            /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/ // Kiểm tra token hợp lệ
+          )
+        }),
+        summary: "Disband the group by box ID", // Cập nhật mô tả cho phù hợp
+        metadata: { role: "user" } as const
+      },
+      removeMember: {
+        method: "DELETE",
+        path: "/api/message/group/removeMember",
+        responses: {
+          200: c.type<{
+            success: boolean;
+            message: string;
+          }>(),
+          404: c.type<{
+            success: boolean;
+            message: string;
+          }>(),
+          500: c.type<{
+            success: boolean;
+            message: string;
+            error?: string;
+          }>()
+        },
+        query: z.object({
+          targetedId: z.string().optional(),
+          boxId: z.string()
+        }),
+        headers: z.object({
+          auth: z.string().regex(
+            /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/ // Kiểm tra token hợp lệ
+          )
+        }),
+        summary:
+          "Remove a member from the group by targeted ID or current user ID if not provided"
+      },
+      changeLeader: {
+        method: "PUT",
+        path: "/api/message/group/changeLeader",
+        responses: {
+          200: c.type<{
+            success: boolean;
+            message: string;
+          }>(),
+          404: c.type<{
+            success: boolean;
+            message: string;
+          }>(),
+          500: c.type<{
+            success: boolean;
+            message: string;
+            error?: string;
+          }>()
+        },
+        query: z.object({
+          newLeader: z.string(),
+          boxId: z.string()
+        }),
+        body: z.undefined(),
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        summary: "Change the leader of the group by newLeader ID"
+      }
+    }),
+    media: c.router({
+      uploadAvatar: {
+        method: "POST",
+        path: "/api/media/upload-avatar",
+        contentType: "multipart/form-data",
+        description: "Upload an avatar image for the authenticated user",
+        responses: {
+          200: c.type<MediaResponseDTO>(),
+          400: c.type<MediaResponseDTO>(),
+          405: c.type<MediaResponseDTO>(),
+          500: c.type<MediaResponseDTO>()
+        },
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        body: c.type<{ file: File }>(),
+        summary: "Upload user avatar image"
+      },
+      uploadBackground: {
+        method: "POST",
+        path: "/api/media/upload-background",
+        description: "Upload a background image for the authenticated user",
+        contentType: "multipart/form-data",
+        responses: {
+          200: c.type<MediaResponseDTO>(),
+          400: c.type<MediaResponseDTO>(),
+          405: c.type<MediaResponseDTO>(),
+          500: c.type<MediaResponseDTO>()
+        },
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            )
+        }),
+        body: c.type<{ file: File }>(),
+        summary: "Upload user background image"
+      }
     }),
     point: c.router({
       plus: {
