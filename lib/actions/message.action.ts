@@ -288,8 +288,8 @@ export async function createGroup(
   for (const memId of allReceiverIds) {
     await pusherServer
       .trigger(`private-${memId}`, "new-box", pusherCreateGroup)
-      .then(() => console.log("Message sent successfully: ", pusherCreateGroup))
-      .catch((error) => console.error("Failed to send message:", error));
+      .then(() => console.log("Create group successfully: ", pusherCreateGroup))
+      .catch((error) => console.error("Failed to create group:", error));
   }
   // return { success: true, messageBoxId: messageBox._id, messageBox };
   return {
@@ -1217,6 +1217,61 @@ export async function changeLeader(
     return { success: true, message: "Leader changed successfully!" };
   } catch (error) {
     console.error("Error changing leader:", error);
+    throw new Error(error instanceof Error ? error.message : "Unknown error");
+  }
+}
+
+export async function addMember(
+  userId: string,
+  newMember: string[],
+  boxId: string
+) {
+  try {
+    await connectToDatabase();
+
+    // Tìm MessageBox theo boxId
+    const messageBox = await MessageBox.findById(boxId);
+    if (!messageBox) {
+      throw new Error("MessageBox not found");
+    }
+    if (messageBox.createBy.toString() !== userId) {
+      throw new Error("Only leader can add new members");
+    }
+    const users = await User.find({ _id: { $in: newMember } });
+    if (users.length !== newMember.length) {
+      throw new Error("One or more members are not valid users");
+    }
+
+    newMember.forEach((memberId) => {
+      if (!messageBox.receiverIds.includes(memberId)) {
+        messageBox.receiverIds.push(memberId);
+      }
+      if (!messageBox.flag.includes(memberId)) {
+        messageBox.flag.push(memberId);
+      }
+    });
+
+    await messageBox.save();
+
+    for (const memberId of newMember) {
+      await Message.updateMany(
+        { boxId: messageBox._id },
+        { $set: { [`visibility.${memberId}`]: true } }
+      );
+    }
+
+    const pusherCreateGroup = messageBox;
+
+    for (const memId of messageBox.receiverIds) {
+      await pusherServer
+        .trigger(`private-${memId}`, "new-box", pusherCreateGroup)
+        .then(() => console.log("Add member successfully: ", pusherCreateGroup))
+        .catch((error) => console.error("Failed to add member:", error));
+    }
+
+    return { success: true, message: "Members added successfully!" };
+  } catch (error) {
+    console.error("Error adding members:", error);
     throw new Error(error instanceof Error ? error.message : "Unknown error");
   }
 }
