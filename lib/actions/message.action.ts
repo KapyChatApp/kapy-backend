@@ -829,7 +829,8 @@ export async function fetchBoxChat(userId: string) {
           pin: messageBox.pin || false,
           stranger: relationStranger ? true : false,
           readStatus,
-          readedId
+          readedId,
+          createBy: messageBox.createBy
         };
       })
     );
@@ -959,7 +960,8 @@ export async function fetchBoxGroup(userId: string) {
           flag: messageBox.flag || false,
           pin: messageBox.pin || false,
           readStatus,
-          readedId
+          readedId,
+          createBy: messageBox.createBy
         };
       })
     );
@@ -1197,7 +1199,7 @@ export async function changeLeader(
       throw new Error("MessageBox not found");
     }
 
-    if (messageBox.senderId.toString() !== userId) {
+    if (messageBox.createBy.toString() !== userId) {
       throw new Error("Only the current leader can change the group leader.");
     }
 
