@@ -1,4 +1,4 @@
-import { countAuthHistory } from "@/lib/actions/authentication.action";
+import { countTotalSystems } from "@/lib/actions/analyse.action";
 import { authenticateToken, authorizeRole } from "@/middleware/auth-middleware";
 import cors from "@/middleware/cors-middleware";
 import { NextApiRequest, NextApiResponse } from "next/types";
@@ -12,7 +12,7 @@ export default async function handler(
         authorizeRole(["admin"])(req, res, async()=>{
           if (req.method === "GET") {
             try {
-              const count = await countAuthHistory();
+              const count = await countTotalSystems();
               res.status(200).json(count);
             } catch (error) {
               console.error(error);

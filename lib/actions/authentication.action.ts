@@ -3,7 +3,6 @@ import { connectToDatabase } from "../mongoose";
 import jwt from "jsonwebtoken";
 import {
   AuthResponsDTO,
-  CountAuthHistoryReponseDTO,
   CreateAuthDTO,
 } from "@/dtos/AuthDTO";
 import mongoose, { Schema } from "mongoose";
@@ -151,26 +150,6 @@ export async function getMyAuthHistoryOfUser(userId: string) {
     return await AuthHistory.find({
       createBy: new mongoose.Types.ObjectId(userId),
     });
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
-}
-
-export async function countAuthHistory() {
-  try {
-    const totalMobile = await AuthHistory.countDocuments({
-      deviceType: "PHONE",
-      isActive: true,
-    });
-    const totalBrowser = await AuthHistory.countDocuments({
-      deviceType: "DESKTOP",
-    });
-    const result: CountAuthHistoryReponseDTO = {
-      totalMobile: totalMobile,
-      totalBrowser: totalBrowser,
-    };
-    return result;
   } catch (error) {
     console.log(error);
     throw error;

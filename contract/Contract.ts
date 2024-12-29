@@ -107,21 +107,8 @@ export const Contract = c.router(
               /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
             ),
         }),
-        query:z.object({
-          id:z.string()
-        }),
-        metadata: { role: "admin" } as const,
-      },
-      countAuthHistory: {
-        method: "GET",
-        path: "/api/auth/manage/count",
-        responses: {},
-        headers: z.object({
-          auth: z
-            .string()
-            .regex(
-              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
-            ),
+        query: z.object({
+          id: z.string(),
         }),
         metadata: { role: "admin" } as const,
       },
@@ -1840,6 +1827,21 @@ export const Contract = c.router(
         query: z.object({
           userId: z.string(),
         }),
+      },
+    }),
+    analyse: c.router({
+      count: {
+        method: "GET",
+        path: "/api/analyse/count",
+        responses: {},
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            ),
+        }),
+        metadata: { role: "admin" } as const,
       },
     }),
   },

@@ -28,8 +28,8 @@ export default async function hanlder(
         .status(401)
         .json({ message: "Invalid phone number or password!" });
     }
-    if (!existedUser) {
-      throw new Error("Invalid phone number or password!");
+    if(!existedUser.flag){
+      return res.status(601).json({message: "Your account has been locked!"})
     }
 
     const isPasswordValid = await bcrypt.compare(
