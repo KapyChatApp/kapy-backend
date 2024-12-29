@@ -14,6 +14,14 @@ export interface UserRegisterDTO {
 export interface UserLoginDTO {
   phoneNumber: string;
   password: string;
+  deviceName: string;
+  deviceType: string;
+  brand?: string;
+  modelName?: string;
+  osName?: string;
+  osVersion?: string;
+  region: string;
+  isSafe: boolean;
 }
 export interface AuthenticationDTO {
   message: string;
@@ -86,7 +94,7 @@ export interface FindUserDTO {
   nickName: string;
   avatar: string;
   relation: string;
-  mutualFriends:ShortUserResponseDTO[];
+  mutualFriends: ShortUserResponseDTO[];
 }
 
 export interface ShortUserResponseDTO {
@@ -100,5 +108,5 @@ export interface ShortUserResponseDTO {
 export interface OnlineEvent {
   userId: string;
   online: boolean;
-  updateTime:Date;
+  updateTime: Date;
 }
