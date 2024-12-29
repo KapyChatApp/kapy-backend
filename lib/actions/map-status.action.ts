@@ -181,6 +181,7 @@ export const editStatus = async (
         // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
       }
       if (param.file) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
         const newContent = await createFile(param.file!, userId?.toString()!);
         status.content = newContent._id;
       }

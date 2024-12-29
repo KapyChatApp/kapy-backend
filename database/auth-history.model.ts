@@ -2,19 +2,27 @@ import { Schema, models, model, Document } from "mongoose";
 import { IAudit, AuditSchema } from "./audit.model";
 
 export interface IAuthHistory extends Document, IAudit{
-    logTime:Date;
     deviceName:string;
+    deviceType:string;
+    brand:string;
+    modelName:string;
+    osName:string;
+    osVersion:string; 
     region:string;
     isSafe:boolean;
-    userId:Schema.Types.ObjectId;
+    isActive:boolean;
 }
 
 const AuthHistorySchema = new Schema<IAuthHistory>({
-    logTime: { type: Date, required: true, default: Date.now },
     deviceName: { type: String, required: true },
+    deviceType:{type:String, required:true},
+    brand:{type:String},
+    modelName:{type:String},
+    osName:{type:String},
+    osVersion:{type:String},
     region: { type: String, required: true },
-    isSafe: { type: Boolean, required: true, default: true },
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    isSafe: { type: Boolean, default: true },
+    isActive:{type:Boolean, default:true}
   });
 
 AuthHistorySchema.add(AuditSchema);
