@@ -74,35 +74,37 @@ export const getMyBestFriendMapStatus = async (
   }
 };
 
-export const getMyStatus = async (userId:Schema.Types.ObjectId|undefined)=>{
-    try {
-        const status = await MapStatus.findOne({createBy:userId})
-          .populate("content")
-          .populate("location")
-          .populate("createBy");
-          if(!status){
-            return; 
-          }
-        const statusResponse: MapStatusResponseDTO = {
-          _id: status._id,
-          caption: status.caption,
-          content: status.content,
-          location: status.location,
-          createAt: status.createAt,
-          createBy: {
-            _id: status.createBy._id,
-            firstName: status.createBy.firstName,
-            lastName: status.createBy.lastName,
-            nickName: status.createBy.nickName,
-            avatar: status.createBy.avatar,
-          },
-        };
-        return statusResponse;
-      } catch (error) {
-        console.log(error);
-        throw error;
-      }
-}
+export const getMyStatus = async (
+  userId: Schema.Types.ObjectId | undefined
+) => {
+  try {
+    const status = await MapStatus.findOne({ createBy: userId })
+      .populate("content")
+      .populate("location")
+      .populate("createBy");
+    if (!status) {
+      return;
+    }
+    const statusResponse: MapStatusResponseDTO = {
+      _id: status._id,
+      caption: status.caption,
+      content: status.content,
+      location: status.location,
+      createAt: status.createAt,
+      createBy: {
+        _id: status.createBy._id,
+        firstName: status.createBy.firstName,
+        lastName: status.createBy.lastName,
+        nickName: status.createBy.nickName,
+        avatar: status.createBy.avatar,
+      },
+    };
+    return statusResponse;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
 
 export const getAStatus = async (id: string) => {
   try {
@@ -145,10 +147,7 @@ export const createStatus = async (
     }
     status.caption = param.caption;
     await status.save();
-    const createdMapStatus = await MapStatus.findById(status._id)
-      .populate("content")
-      .populate("location")
-      .populate("createBy");
+    const createdMapStatus = await getAStatus(status._id);
     await pusherServer.trigger(
       `private-${userId}`,
       "map-status",
@@ -171,16 +170,20 @@ export const editStatus = async (
     if (userId?.toString() != status.createBy.toString()) {
       throw new Error("You cannot edit this Status");
     }
-    console.log("isKeepOldContent:  ",param.keepOldContent);
+    console.log("isKeepOldContent:  ", param.keepOldContent);
     if (param.keepOldContent) {
       status.caption = param.caption;
     } else {
       status.caption = param.caption;
       // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
-      await deleteFile( status.content.toString() ,userId);
-      // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
-      const newContent = await createFile(param.file!, userId?.toString()!);
-      status.content = newContent._id;
+      if (status.content) {
+        await deleteFile(status.content.toString(), userId);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+      }
+      if (param.file) {
+        const newContent = await createFile(param.file!, userId?.toString()!);
+        status.content = newContent._id;
+      }
     }
     await status.save();
     const updatedStatus = await getAStatus(status._id);
@@ -200,15 +203,15 @@ export const deleteStatus = async (
   userId: Schema.Types.ObjectId | undefined
 ) => {
   try {
-    const existStatus = await MapStatus.findOne({ createBy: userId })
+    const existStatus = await MapStatus.findOne({ createBy: userId });
 
-    if(!existStatus){
-      throw new Error('Status not exist');
+    if (!existStatus) {
+      throw new Error("Status not exist");
     }
     existStatus.caption = "";
     if (existStatus.content) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
-      await deleteFile(existStatus.content.toString(),userId);
+      await deleteFile(existStatus.content.toString(), userId);
     }
     existStatus.content = null;
     await existStatus.save();

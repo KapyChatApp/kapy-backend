@@ -79,7 +79,8 @@ export const createSticker = async (
   userId: Schema.Types.ObjectId | undefined
 ) => {
   try {
-    const stickerFile = await createFile(file, userId);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+    const stickerFile = await createFile(file, userId?.toString()!);
     const sticker = await Sticker.create({
       name: name,
       file: stickerFile._id,
@@ -110,7 +111,8 @@ export const updateSticker = async (
 
     if (file) {
       await deleteFile(existSticker.file._id, userId);
-      const stickerFile = await createFile(file, userId);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+      const stickerFile = await createFile(file, userId?.toString()!);
       existSticker.name = name;
       existSticker.file = stickerFile._id;
       await existSticker.save();
