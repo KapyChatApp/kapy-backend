@@ -423,3 +423,50 @@ export const checkRelation = async (
     throw error;
   }
 };
+
+//Management
+export const countUsers = async () => {
+  try {
+    const count = await User.countDocuments();
+    return count;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    throw new Error("Error counting users: " + error.message);
+  }
+};
+
+export const countUsersByAttendDate = async () => {
+  try {
+    const currentDate = new Date().setHours(0, 0, 0, 0);
+    const nextDay = new Date(currentDate).setDate(
+      new Date(currentDate).getDate() + 1
+    );
+
+    const count = await User.countDocuments({
+      attendDate: { $gte: currentDate, $lt: nextDay }
+    });
+
+    return count;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    throw new Error("Error counting users by attendDate: " + error.message);
+  }
+};
+
+export async function deactiveUser(id: string | undefined) {
+  try {
+    connectToDatabase();
+
+    const existingUser = await User.findById(id);
+    if (!existingUser) {
+      throw new Error("User not found!");
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(id, { flag: false });
+
+    return { flag: false, deactiveProfile: updatedUser };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
