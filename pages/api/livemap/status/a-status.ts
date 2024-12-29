@@ -12,6 +12,7 @@ export default async function handler(
     authenticateToken(req, res, async () => {
       if (req.method === "GET") {
         try {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
           const aStatus = await getAStatus(statusId?.toString()!);
           return res.status(200).json(aStatus);
         } catch (error) {

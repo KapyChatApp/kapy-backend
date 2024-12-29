@@ -26,6 +26,7 @@ export default async function handler(
               return res.status(500).json({ error: err.message });
             }
             const file = Array.isArray(files.file) ? files.file[0] : files.file;
+            console.log("file: ",file);
             const param: EditMapStatusDTO = {
               caption: fields.caption?.toString(),
               file: file,
