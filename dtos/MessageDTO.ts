@@ -42,6 +42,7 @@ export interface MessageBoxDTO {
   stranger: boolean;
   readStatus: boolean;
   readedId: string[];
+  createBy: string;
 }
 export interface MessageBoxGroupDTO {
   _id: string;
@@ -53,6 +54,7 @@ export interface MessageBoxGroupDTO {
   pin: boolean;
   readStatus: boolean;
   readedId: string[];
+  createBy: string;
 }
 
 export interface ResponseMessageDTO {

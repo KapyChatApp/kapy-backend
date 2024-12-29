@@ -829,7 +829,8 @@ export async function fetchBoxChat(userId: string) {
           pin: messageBox.pin || false,
           stranger: relationStranger ? true : false,
           readStatus,
-          readedId
+          readedId,
+          createBy: messageBox.createBy
         };
       })
     );
@@ -959,7 +960,8 @@ export async function fetchBoxGroup(userId: string) {
           flag: messageBox.flag || false,
           pin: messageBox.pin || false,
           readStatus,
-          readedId
+          readedId,
+          createBy: messageBox.createBy
         };
       })
     );
@@ -1197,7 +1199,7 @@ export async function changeLeader(
       throw new Error("MessageBox not found");
     }
 
-    if (messageBox.senderId.toString() !== userId) {
+    if (messageBox.createBy.toString() !== userId) {
       throw new Error("Only the current leader can change the group leader.");
     }
 
@@ -1310,9 +1312,11 @@ export async function removeMessage(messageId: string) {
       throw new Error("Message not found");
     }
 
-    await Message.findByIdAndDelete(messageId);
+    message.flag = false;
 
-    return { success: true, message: "Message removed from database" };
+    await message.save();
+
+    return { success: true, message: "Message was hidden" };
   } catch (error) {
     console.error("Error remove messages from database: ", error);
     throw error;
@@ -1393,6 +1397,45 @@ export async function searchMessages(id?: string, query?: string) {
     return { success: true, populatedMessages };
   } catch (error) {
     console.error("Error searching messages: ", error);
+    throw error;
+  }
+}
+
+export async function updateMessage(messageId: string, newContent: string) {
+  try {
+    await connectToDatabase();
+
+    const message = await Message.findOne({ _id: messageId });
+
+    if (!message) {
+      throw new Error("Message not found");
+    }
+    if (message.text !== "" && message.contentId.length === 0) {
+      message.text.push(newContent);
+      message.updatedAt = new Date();
+      await message.save();
+      const updatedMessage = await Message.findById(message._id).populate(
+        "contentId"
+      );
+      const editedMessage: ResponseMessageDTO = {
+        id: updatedMessage._id.toString(),
+        flag: true,
+        isReact: [],
+        readedId: updatedMessage.readedId.map((id: any) => id.toString()),
+        contentId:
+          updatedMessage.contentId[updatedMessage.contentId.length - 1],
+        text: newContent,
+        boxId: updatedMessage.boxId.toString(),
+        // Chuyển ObjectId sang chuỗi
+        createAt: updatedMessage.createAt,
+        createBy: updatedMessage.createBy.toString()
+      };
+      return { success: true, editedMessage };
+    } else {
+      throw new Error("Only text can be edited");
+    }
+  } catch (error) {
+    console.error("Error editing message: ", error);
     throw error;
   }
 }
