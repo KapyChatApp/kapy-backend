@@ -162,7 +162,7 @@ export async function createMessage(
           .then(() => console.log("Message sent successfully: ", pusherMessage))
           .catch((error) => console.error("Failed to send message:", error));
         //return { success: true, populatedMessage, detailBox };
-        return { success: true, message: "Send successfully" };
+        return { success: true, message: "Send successfully", sendMessage:pusherMessage };
       }
       //Message private
       else if (receiverIdsArray.length === 2) {
@@ -221,7 +221,7 @@ export async function createMessage(
           .catch((error) => console.error("Failed to send message:", error));
 
         // return { success: true, populatedMessage, detailBox };
-        return { success: true, message: "Send successfully" };
+        return { success: true, message: "Send successfully", sendMessage:pusherMessage };
       }
     }
   } catch (error) {
@@ -1176,6 +1176,8 @@ export async function removeMember(targetedId: string, boxId: string) {
 
     // Lưu lại các thay đổi
     await messageBox.save();
+
+    await pusherServer.trigger(`private-${messageBox._id}`,"kick",{targetId:targetedId, boxId:messageBox._id});
 
     return { success: true, message: "Member removed successfully!" };
   } catch (error) {
