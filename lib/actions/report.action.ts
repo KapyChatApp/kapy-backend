@@ -8,7 +8,10 @@ import {
 } from "@/dtos/ReportDTO";
 import { Schema } from "mongoose";
 import { connectToDatabase } from "../mongoose";
-import { ShortUserResponseDTO } from "@/dtos/UserDTO";
+import {
+  ShortUserResponseDTO,
+  ShortUserResponseManageDTO
+} from "@/dtos/UserDTO";
 
 export async function allReport() {
   try {
@@ -38,11 +41,49 @@ export async function allReport() {
       };
       reportResponses.push(reportResponse);
     }
-
+    console.log(reportResponses, "check");
     return reportResponses;
   } catch (error) {
     console.log(error);
     throw error;
+  }
+}
+
+export async function getDetailReport(reportId: string) {
+  try {
+    connectToDatabase();
+    const report = await Report.findById(reportId).populate("createBy");
+
+    if (!report) {
+      throw new Error("Report not found");
+    }
+
+    await report.populateTarget();
+
+    const createByInfo: ShortUserResponseManageDTO = {
+      _id: report.createBy._id,
+      firstName: report.createBy.firstName,
+      lastName: report.createBy.lastName,
+      nickName: report.createBy.nickName,
+      avatar: report.createBy.avatar,
+      flag: report.createBy.flag
+    };
+
+    const reportResponse: ReportResponseManageDTO = {
+      _id: report._id,
+      content: report.content,
+      flag: report.flag,
+      status: report.status,
+      userId: createByInfo,
+      target: report.target,
+      targetType: report.targetType,
+      createAt: report.createAt
+    };
+
+    return reportResponse;
+  } catch (error) {
+    console.log(error);
+    throw error; // Quản lý lỗi nếu có
   }
 }
 

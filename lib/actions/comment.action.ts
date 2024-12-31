@@ -260,3 +260,22 @@ export const hiddenComment = async (id: string) => {
     throw error;
   }
 };
+
+export const displayComment = async (id: string) => {
+  try {
+    connectToDatabase();
+    const comment = await Comment.findById(id);
+    if (!comment) {
+      throw new Error("Comment not found");
+    }
+
+    comment.flag = true;
+
+    await comment.save();
+
+    return { message: `Display ${id} successfully!` };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};

@@ -347,6 +347,25 @@ export const hiddenPost = async (postId: string) => {
   }
 };
 
+export const displayPost = async (postId: string) => {
+  try {
+    connectToDatabase();
+    const post = await Post.findById(postId);
+    if (!post) {
+      throw new Error("Post not found");
+    }
+
+    post.flag = true;
+
+    await post.save();
+
+    return { message: `Display ${postId} successfully!` };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
 export const editPost = async (
   id: string,
   userId: Schema.Types.ObjectId | undefined,

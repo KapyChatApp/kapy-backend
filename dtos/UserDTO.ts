@@ -105,6 +105,15 @@ export interface ShortUserResponseDTO {
   avatar: string;
 }
 
+export interface ShortUserResponseManageDTO {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  nickName: string;
+  avatar: string;
+  flag?: boolean;
+}
+
 export interface OnlineEvent {
   userId: string;
   online: boolean;
