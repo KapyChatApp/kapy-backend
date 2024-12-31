@@ -328,6 +328,25 @@ export const deletePost = async (
   }
 };
 
+export const hiddenPost = async (postId: string) => {
+  try {
+    connectToDatabase();
+    const post = await Post.findById(postId);
+    if (!post) {
+      throw new Error("Post not found");
+    }
+
+    post.flag = false;
+
+    await post.save();
+
+    return { message: `Hide ${postId} successfully!` };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
 export const editPost = async (
   id: string,
   userId: Schema.Types.ObjectId | undefined,

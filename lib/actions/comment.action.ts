@@ -1,7 +1,7 @@
 import {
   CommentResponseDTO,
   CreateCommentDTO,
-  EditCommentDTO,
+  EditCommentDTO
 } from "@/dtos/CommentDTO";
 import { createFile, getAFile } from "./file.action";
 import Post from "@/database/post.model";
@@ -37,7 +37,7 @@ export const getAComment = async (commentId: string) => {
         caption: comment.caption,
         createAt: comment.createAt,
         createBy: comment.createBy,
-        content: fileResponse,
+        content: fileResponse
       };
       return commentResponse;
     } else {
@@ -52,7 +52,7 @@ export const getAComment = async (commentId: string) => {
         replieds: repliedComments,
         caption: comment.caption,
         createAt: comment.createAt,
-        createBy: comment.createBy,
+        createBy: comment.createBy
       };
       return commentResponse;
     }
@@ -66,7 +66,11 @@ export const createComment = async (param: CreateCommentDTO) => {
     connectToDatabase();
     if (param.filesToUpload) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
-      const file = await createFile(param.filesToUpload, param.userId?.toString()!);
+      const file = await createFile(
+        param.filesToUpload,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+        param.userId?.toString()!
+      );
 
       const fileResponse: FileResponseDTO = {
         _id: file._id,
@@ -76,14 +80,14 @@ export const createComment = async (param: CreateCommentDTO) => {
         width: file.width,
         height: file.height,
         format: file.format,
-        type: file.type,
+        type: file.type
       };
       const comment = await Comment.create({
         userId: param.userId,
         replyId: param.replyId,
         caption: param.caption,
         contentId: file._id,
-        createBy: param.userId,
+        createBy: param.userId
       });
 
       if (param.targetType === "post") {
@@ -110,7 +114,7 @@ export const createComment = async (param: CreateCommentDTO) => {
         caption: comment.caption,
         createAt: comment.createAt,
         content: fileResponse,
-        createBy: comment.createBy,
+        createBy: comment.createBy
       };
       return commentResponse;
     } else {
@@ -119,7 +123,7 @@ export const createComment = async (param: CreateCommentDTO) => {
         replyId: param.replyId,
         caption: param.caption?.toString(),
         contentId: null,
-        createBy: param.userId,
+        createBy: param.userId
       });
 
       if (param.targetType === "post") {
@@ -145,7 +149,7 @@ export const createComment = async (param: CreateCommentDTO) => {
         replieds: comment.repliedIds,
         caption: comment.caption,
         createAt: comment.createAt,
-        createBy: comment.createBy,
+        createBy: comment.createBy
       };
       return commentResponse;
     }
@@ -232,6 +236,25 @@ export const deleteComment = async (
     }
     await Comment.findOneAndDelete({ _id: id });
     return { message: "Deleted!" };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+export const hiddenComment = async (id: string) => {
+  try {
+    connectToDatabase();
+    const comment = await Comment.findById(id);
+    if (!comment) {
+      throw new Error("Post not found");
+    }
+
+    comment.flag = false;
+
+    await comment.save();
+
+    return { message: `Hide ${id} successfully!` };
   } catch (error) {
     console.log(error);
     throw error;
