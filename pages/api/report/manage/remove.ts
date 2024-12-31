@@ -1,7 +1,6 @@
-import { deleteMyRate } from "@/lib/actions/community.action";
+import { removeReport } from "@/lib/actions/report.action";
 import { authenticateToken, authorizeRole } from "@/middleware/auth-middleware";
 import cors from "@/middleware/cors-middleware";
-import mongoose, { Schema } from "mongoose";
 import { NextApiRequest, NextApiResponse } from "next";
 
 export default async function hanlder(
@@ -13,26 +12,15 @@ export default async function hanlder(
       authorizeRole(["admin"])(req, res, async () => {
         if (req.method === "DELETE") {
           try {
-            const pointId = Array.isArray(req.query.pointId)
-              ? req.query.pointId[0]
-              : req.query.pointId;
-            if (!pointId) {
+            const reportId = Array.isArray(req.query.reportId)
+              ? req.query.reportId[0]
+              : req.query.reportId;
+            if (!reportId) {
               return res
                 .status(400)
-                .json({ message: "Missing or invalid pointId." });
+                .json({ message: "Missing or invalid reportId." });
             }
-            const { userId } = req.query;
-            if (!userId || typeof userId !== "string") {
-              return res
-                .status(400)
-                .json({ message: "Invalid or missing userId" });
-            }
-
-            // Chuyển userId sang ObjectId
-            const userIdRequest = new mongoose.Types.ObjectId(
-              userId
-            ) as unknown as Schema.Types.ObjectId;
-            const result = await deleteMyRate(pointId, userIdRequest);
+            const result = await removeReport(reportId);
             return res.status(200).json(result);
           } catch (error) {
             console.error(error);

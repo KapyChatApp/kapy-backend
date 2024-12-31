@@ -2,7 +2,7 @@ import { UpdateUserDTO } from "@/dtos/UserDTO";
 import { updateUser } from "@/lib/actions/user.action";
 import { authenticateToken, authorizeRole } from "@/middleware/auth-middleware";
 import cors from "@/middleware/cors-middleware";
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 export default async function handler(
@@ -22,7 +22,9 @@ export default async function handler(
             }
 
             // Chuyển userId sang ObjectId
-            const userIdRequest = new mongoose.Schema.Types.ObjectId(userId);
+            const userIdRequest = new mongoose.Types.ObjectId(
+              userId
+            ) as unknown as Schema.Types.ObjectId;
             const params: UpdateUserDTO = req.body;
             const updatedUser = await updateUser(userIdRequest, params);
 

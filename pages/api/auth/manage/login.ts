@@ -39,7 +39,6 @@ export default async function hanlder(
 
     const roles = existedUser.roles;
     const flag = existedUser.flag;
-
     const token =
       "Bearer " +
       jwt.sign(

@@ -1,6 +1,10 @@
 import User from "@/database/user.model";
 import { connectToDatabase } from "../mongoose";
-import { FriendResponseDTO, RequestedResponseDTO } from "@/dtos/FriendDTO";
+import {
+  FriendManageResponseDTO,
+  FriendResponseDTO,
+  RequestedResponseDTO
+} from "@/dtos/FriendDTO";
 import Relation from "@/database/relation.model";
 import { Schema } from "mongoose";
 import { getMutualFriends } from "./friend.action";
@@ -15,7 +19,7 @@ export async function getMyFriends(myId: Schema.Types.ObjectId | undefined) {
       console.log("You dont have any friend");
     }
     const friends = await User.find({
-      _id: { $in: friendIds },
+      _id: { $in: friendIds }
     }).exec();
     const friendResponses: FriendResponseDTO[] = [];
     for (const friend of friends) {
@@ -29,7 +33,7 @@ export async function getMyFriends(myId: Schema.Types.ObjectId | undefined) {
         lastName: friend.lastName,
         nickName: friend.nickName,
         avatar: friend.avatar,
-        mutualFriends: mutualFriends!,
+        mutualFriends: mutualFriends!
       };
       friendResponses.push(friendResponse);
     }
@@ -40,6 +44,48 @@ export async function getMyFriends(myId: Schema.Types.ObjectId | undefined) {
   }
 }
 
+export async function getManageFriends(
+  myId: Schema.Types.ObjectId | undefined
+) {
+  try {
+    connectToDatabase();
+    const user = await User.findById(myId);
+    const friendIds = user.friendIds;
+    if (friendIds.length == 0) {
+      console.log("You dont have any friend");
+    }
+    const friends = await User.find({
+      _id: { $in: friendIds }
+    }).exec();
+    const friendResponses: FriendResponseDTO[] = [];
+    for (const friend of friends) {
+      const mutualFriends = await getMutualFriends(
+        myId?.toString(),
+        friend._id
+      );
+      const myRelations = await Relation.find({
+        $or: [{ sender: myId }, { receiver: friend._id }],
+        status: true
+      });
+
+      const friendResponse: FriendManageResponseDTO = {
+        _id: friend._id,
+        firstName: friend.firstName,
+        lastName: friend.lastName,
+        nickName: friend.nickName,
+        avatar: friend.avatar,
+        mutualFriends: mutualFriends!,
+        createAt: myRelations[0].createAt,
+        relation: myRelations[0].relation
+      };
+      friendResponses.push(friendResponse);
+    }
+    return friendResponses;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
 export async function getMyBFFs(myId: Schema.Types.ObjectId | undefined) {
   try {
     connectToDatabase();
@@ -49,7 +95,7 @@ export async function getMyBFFs(myId: Schema.Types.ObjectId | undefined) {
       console.log("You dont have any bestfriend");
     }
     const bestfriends = await User.find({
-      _id: { $in: bestFriendIds },
+      _id: { $in: bestFriendIds }
     }).exec();
     const bffResponses: FriendResponseDTO[] = [];
     for (const friend of bestfriends) {
@@ -63,7 +109,7 @@ export async function getMyBFFs(myId: Schema.Types.ObjectId | undefined) {
         lastName: friend.lastName,
         nickName: friend.nickName,
         avatar: friend.avatar,
-        mutualFriends: mutualFriends!,
+        mutualFriends: mutualFriends!
       };
       bffResponses.push(bffResponse);
     }
@@ -83,7 +129,7 @@ export async function getMyBlocks(myId: Schema.Types.ObjectId | undefined) {
       console.log("You dont have any block");
     }
     const blocks = await User.find({
-      _id: { $in: blockedIds },
+      _id: { $in: blockedIds }
     }).exec();
     const blocksResponses: FriendResponseDTO[] = [];
     for (const friend of blocks) {
@@ -97,7 +143,7 @@ export async function getMyBlocks(myId: Schema.Types.ObjectId | undefined) {
         lastName: friend.lastName,
         nickName: friend.nickName,
         avatar: friend.avatar,
-        mutualFriends: mutualFriends!,
+        mutualFriends: mutualFriends!
       };
       blocksResponses.push(blocksResponse);
     }
@@ -112,26 +158,30 @@ export async function getMyRequested(myId: Schema.Types.ObjectId | undefined) {
   try {
     connectToDatabase();
     const myPendingRelations = await Relation.find({
-      $or:[
-        {sender:myId},
-        {receiver:myId}
-      ],
-      status:false
+      $or: [{ sender: myId }, { receiver: myId }],
+      status: false
     });
-    const myRequestResponses: RequestedResponseDTO[]=[];
-    for(const relation of myPendingRelations){
-      const otherUserId = relation.sender.toString()===myId?.toString()? relation.receiver : relation.sender;
+    const myRequestResponses: RequestedResponseDTO[] = [];
+    for (const relation of myPendingRelations) {
+      const otherUserId =
+        relation.sender.toString() === myId?.toString()
+          ? relation.receiver
+          : relation.sender;
       const user = await User.findById(otherUserId);
       // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
-      const relationOfUs = await getRelationFromTo(myId?.toString()!, otherUserId.toString());
-      const requestUser:RequestedResponseDTO={
+      const relationOfUs = await getRelationFromTo(
+        // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+        myId?.toString()!,
+        otherUserId.toString()
+      );
+      const requestUser: RequestedResponseDTO = {
         _id: user.id,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            avatar: user.avatar,
-            relation: relationOfUs,
-            createAt: user.createAt,
-      }
+        firstName: user.firstName,
+        lastName: user.lastName,
+        avatar: user.avatar,
+        relation: relationOfUs,
+        createAt: user.createAt
+      };
       myRequestResponses.push(requestUser);
     }
     return myRequestResponses;
@@ -144,7 +194,7 @@ export async function getMyRequested(myId: Schema.Types.ObjectId | undefined) {
     // const myPendingFriends = await Relation.find({
     //   $or:[
     //     {receiver:myId},
-    //    {receiver: myId}, 
+    //    {receiver: myId},
     //   ],
     //   status: false,
     //   relation: "friend",
