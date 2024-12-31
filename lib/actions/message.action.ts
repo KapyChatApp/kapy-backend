@@ -2,7 +2,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "user server";
 
-import Message, { IMessage } from "@/database/message.model";
+import Message from "@/database/message.model";
+import Report from "@/database/report.model";
 import { connectToDatabase } from "../mongoose";
 import {
   FileContent,
@@ -10,7 +11,6 @@ import {
   MessageBoxGroupDTO,
   RequestSendMessageDTO,
   ResponseAMessageBoxDTO,
-  DetailMessageBoxDTO,
   ResponseMessageDTO,
   ResponseMessageManageDTO,
   PusherDelete,
@@ -19,16 +19,13 @@ import {
   ResponseReactMessageDTO,
   ReadedStatusPusher
 } from "@/dtos/MessageDTO";
-import mongoose, { Schema, Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import User from "@/database/user.model";
 import MessageBox from "@/database/message-box.model";
 import formidable from "formidable";
-import cloudinary from "@/cloudinary";
 import File from "@/database/file.model";
 import { pusherServer } from "../pusher";
 import Relation from "@/database/relation.model";
-import { boolean } from "zod";
-import swaggerJSDoc from "swagger-jsdoc";
 import { createFile } from "./file.action";
 
 const generateRandomString = (length = 20) => {
@@ -1282,29 +1279,105 @@ export async function addMember(
 export async function getAllMessage() {
   try {
     await connectToDatabase();
-    const allMessages = await Message.find();
+    const allMessages = await Message.find().populate("contentId createBy");
 
-    const messagesWithContent: ResponseMessageManageDTO[] = await Promise.all(
-      allMessages.map(async (message) => {
-        const populatedContent = await mongoose
-          .model("File")
-          .find({ _id: { $in: message.contentId } });
+    const allReports = await Report.find({ targetType: "Message" });
+    // Map dữ liệu Message và kiểm tra xem Message có bị báo cáo hay không
+    const responseMessage: ResponseMessageManageDTO[] = allMessages.map(
+      (item) => {
+        const isReported = allReports.some(
+          (report) => report.targetId.toString() === item._id.toString()
+        );
 
         return {
-          ...message.toObject(),
-          content: populatedContent
+          _id: item._id.toString(),
+          flag: item.flag,
+          readedId: item.readedId,
+          contentId: item.contentId,
+          text: item.text,
+          boxId: item.boxId,
+          createAt: item.createAt,
+          createBy: {
+            _id: item.createBy._id,
+            firstName: item.createBy.firstName,
+            lastName: item.createBy.lastName,
+            nickName: item.createBy.nickName,
+            avatar: item.createBy.avatar
+          },
+          isReact: item.isReact,
+          isReported: isReported
         };
-      })
+      }
     );
 
-    return { success: true, messages: messagesWithContent };
+    console.log(responseMessage);
+    return responseMessage;
   } catch (error) {
     console.error("Error fetching all messages: ", error);
     throw error;
   }
 }
 
+export async function getDetailMessage(id: string) {
+  try {
+    await connectToDatabase();
+
+    const message = await Message.findById(id).populate("contentId createBy");
+
+    if (!message) {
+      throw new Error("Message not found");
+    }
+
+    const allReports = await Report.find({
+      targetType: "Message",
+      targetId: id
+    });
+    const isReported = allReports.length > 0;
+
+    const responseMessage: ResponseMessageManageDTO = {
+      _id: message._id,
+      flag: message.flag,
+      readedId: message.readedId,
+      contentId: message.contentId,
+      text: message.text,
+      boxId: message.boxId,
+      createAt: message.createAt,
+      createBy: {
+        _id: message.createBy._id,
+        firstName: message.createBy.firstName,
+        lastName: message.createBy.lastName,
+        nickName: message.createBy.nickName,
+        avatar: message.createBy.avatar
+      },
+      isReact: message.isReact,
+      isReported: isReported
+    };
+
+    return responseMessage;
+  } catch (error) {
+    console.error("Error fetching message detail: ", error);
+    throw error;
+  }
+}
+
 export async function removeMessage(messageId: string) {
+  try {
+    await connectToDatabase();
+    if (!mongoose.Types.ObjectId.isValid(messageId)) {
+      throw new Error("Invalid message ID");
+    }
+    const message = await Message.findByIdAndDelete(messageId);
+    if (!message) {
+      throw new Error("Message not found");
+    }
+    return { message: "Message was successfully deleted" };
+  } catch (error) {
+    console.error("Error removing message from database: ", error);
+    throw error;
+  }
+}
+
+export async function hiddenMessage(messageId: string) {
   try {
     await connectToDatabase();
     const message = await Message.findById(messageId);
@@ -1319,6 +1392,25 @@ export async function removeMessage(messageId: string) {
     return { success: true, message: "Message was hidden" };
   } catch (error) {
     console.error("Error remove messages from database: ", error);
+    throw error;
+  }
+}
+
+export async function displayMessage(messageId: string) {
+  try {
+    await connectToDatabase();
+    const message = await Message.findById(messageId);
+    if (!message) {
+      throw new Error("Message not found");
+    }
+
+    message.flag = true;
+
+    await message.save();
+
+    return { success: true, message: "Message was displayed" };
+  } catch (error) {
+    console.error("Error displayed messages: ", error);
     throw error;
   }
 }

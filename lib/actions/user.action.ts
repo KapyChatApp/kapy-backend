@@ -497,7 +497,7 @@ export async function reactiveUser(id: string | undefined) {
 
     const updatedUser = await User.findByIdAndUpdate(id, { flag: true });
 
-    return { flag: false, deactiveProfile: updatedUser };
+    return { flag: true, deactiveProfile: updatedUser };
   } catch (error) {
     console.log(error);
     throw error;

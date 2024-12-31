@@ -1,3 +1,5 @@
+import { ShortUserResponseDTO } from "./UserDTO";
+
 export interface FileContent {
   _id: string;
   fileName: string;
@@ -76,15 +78,16 @@ export interface ResponseReactMessageDTO {
 }
 
 export interface ResponseMessageManageDTO {
-  id: string;
+  _id: string;
   flag: boolean;
   readedId: string[];
   contentId: FileContent[] | GPSContent[];
   text: string[];
   boxId: string;
   createAt: string;
-  createBy: string;
+  createBy: ShortUserResponseDTO;
   isReact: string[];
+  isReported: boolean;
 }
 
 export interface ResponseAMessageBoxDTO {
