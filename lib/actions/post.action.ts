@@ -1,4 +1,9 @@
-import { CreatePostDTO, EditPostDTO, PostResponseDTO } from "@/dtos/PostDTO";
+import {
+  CreatePostDTO,
+  EditPostDTO,
+  PostResponseDTO,
+  PostResponseManageDTO
+} from "@/dtos/PostDTO";
 import { connectToDatabase } from "../mongoose";
 import mongoose, { Schema } from "mongoose";
 import Post from "@/database/post.model";
@@ -23,14 +28,14 @@ export const getAPost = async (
     const post = await Post.findById(postId);
     const [stUserId, ndUserId] = [
       post.userId.toString(),
-      userId.toString(),
+      userId.toString()
     ].sort();
     if (userId.toString() != post.userId.toString()) {
       const relation = await Relation.findOne({
         stUser: stUserId,
         ndUser: ndUserId,
         relation: "bff",
-        status: true,
+        status: true
       });
       if (!relation) {
         return false;
@@ -38,7 +43,7 @@ export const getAPost = async (
     }
     const user = await User.findById(post.userId);
     const fileOfPost = await File.find({
-      _id: { $in: post.contentIds },
+      _id: { $in: post.contentIds }
     }).exec();
     const filesResponse: FileResponseDTO[] = [];
     for (const file of fileOfPost) {
@@ -50,16 +55,18 @@ export const getAPost = async (
         height: file.height,
         format: file.format,
         bytes: file.bytes,
-        type: file.type,
+        type: file.type
       };
       filesResponse.push(fileResponse);
     }
 
-    const commentResponses:CommentResponseDTO[] = []; 
-      
-    const comments = await Comment.find({_id:{$in:post.comments}});
-    for(const comment of comments){
-      const commentResponse:CommentResponseDTO = await getAComment(comment._id);
+    const commentResponses: CommentResponseDTO[] = [];
+
+    const comments = await Comment.find({ _id: { $in: post.comments } });
+    for (const comment of comments) {
+      const commentResponse: CommentResponseDTO = await getAComment(
+        comment._id
+      );
       commentResponses.push(commentResponse);
     }
 
@@ -75,11 +82,11 @@ export const getAPost = async (
       shares: post.shares,
       caption: post.caption,
       createAt: post.createAt,
-      contents: filesResponse,
+      contents: filesResponse
     };
 
-    for (const c of postResponse.comments){
-      console.log("replys: "+ c.replieds);
+    for (const c of postResponse.comments) {
+      console.log("replys: " + c.replieds);
     }
     return postResponse;
   } catch (error) {
@@ -102,7 +109,7 @@ export const getSingleIdPosts = async (userId: string) => {
     const postsResponse: PostResponseDTO[] = [];
     for (const post of posts) {
       const fileOfPost = await File.find({
-        _id: { $in: post.contentIds },
+        _id: { $in: post.contentIds }
       }).exec();
       const filesResponse: FileResponseDTO[] = [];
       for (const file of fileOfPost) {
@@ -114,16 +121,18 @@ export const getSingleIdPosts = async (userId: string) => {
           height: file.height,
           format: file.format,
           bytes: file.bytes,
-          type: file.type,
+          type: file.type
         };
         filesResponse.push(fileResponse);
       }
-      
-      const commentResponses:CommentResponseDTO[] = []; 
-      
-      const comments = await Comment.find({_id:{$in:post.comments}});
-      for(const comment of comments){
-        const commentResponse:CommentResponseDTO = await getAComment(comment._id);
+
+      const commentResponses: CommentResponseDTO[] = [];
+
+      const comments = await Comment.find({ _id: { $in: post.comments } });
+      for (const comment of comments) {
+        const commentResponse: CommentResponseDTO = await getAComment(
+          comment._id
+        );
         commentResponses.push(commentResponse);
       }
 
@@ -139,7 +148,73 @@ export const getSingleIdPosts = async (userId: string) => {
         shares: post.shares,
         caption: post.caption,
         createAt: post.createAt,
+        contents: filesResponse
+      };
+      postsResponse.push(postResponse);
+    }
+    return postsResponse;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+export const getManagePosts = async (userId: string) => {
+  try {
+    connectToDatabase();
+    if (!userId) {
+      throw new Error("You ara unauthenticated!");
+    }
+    const user = await User.findById(userId);
+
+    const posts = await Post.find({ userId: userId });
+    if (posts.length == 0) {
+      return [];
+    }
+    const postsResponse: PostResponseManageDTO[] = [];
+    for (const post of posts) {
+      const fileOfPost = await File.find({
+        _id: { $in: post.contentIds }
+      }).exec();
+      const filesResponse: FileResponseDTO[] = [];
+      for (const file of fileOfPost) {
+        const fileResponse: FileResponseDTO = {
+          _id: file._id,
+          url: file.url,
+          fileName: file.fileName,
+          width: file.width,
+          height: file.height,
+          format: file.format,
+          bytes: file.bytes,
+          type: file.type
+        };
+        filesResponse.push(fileResponse);
+      }
+
+      const commentResponses: CommentResponseDTO[] = [];
+
+      const comments = await Comment.find({ _id: { $in: post.comments } });
+      for (const comment of comments) {
+        const commentResponse: CommentResponseDTO = await getAComment(
+          comment._id
+        );
+        commentResponses.push(commentResponse);
+      }
+
+      const postResponse: PostResponseManageDTO = {
+        _id: post._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        nickName: user.nickName,
+        avatar: user.avatar,
+        userId: post.userId,
+        likedIds: post.likedIds,
+        comments: commentResponses,
+        shares: post.shares,
+        caption: post.caption,
+        createAt: post.createAt,
         contents: filesResponse,
+        flag: post.flag
       };
       postsResponse.push(postResponse);
     }
@@ -162,7 +237,7 @@ export const getFriendPosts = async (
       stUser: stUserId,
       ndUser: ndUserId,
       relation: "bff",
-      status: true,
+      status: true
     });
     if (!relation) {
       return false;
@@ -182,7 +257,7 @@ export const createPost = async (param: CreatePostDTO) => {
     connectToDatabase();
     const postData = Object.assign(param, {
       createBy: param.userId ? param.userId : new mongoose.Types.ObjectId(),
-      flag: true,
+      flag: true
     });
     const createdPost = await Post.create(postData);
     return createdPost;
@@ -213,10 +288,10 @@ export const addPost = async (
     const postData: CreatePostDTO = {
       userId: userId,
       caption: caption ? caption.toString() : "",
-      contentIds: contendIds,
+      contentIds: contendIds
     };
     const postDataToCreate = await Object.assign(postData, {
-      createBy: userId,
+      createBy: userId
     });
     const createdPost = await Post.create(postDataToCreate);
 
@@ -232,7 +307,6 @@ export const addPost = async (
     throw err;
   }
 };
-
 
 export const deletePost = async (
   postId: string,
@@ -254,35 +328,46 @@ export const deletePost = async (
   }
 };
 
-export const editPost = async (id:string, userId:Schema.Types.ObjectId| undefined,editContent:EditPostDTO )=>{
-  try{
+export const editPost = async (
+  id: string,
+  userId: Schema.Types.ObjectId | undefined,
+  editContent: EditPostDTO
+) => {
+  try {
     console.log("Edit content: ", editContent);
     const post = await Post.findById(id);
-    if(!post){
-      return {message:"Post not exist!"}
+    if (!post) {
+      return { message: "Post not exist!" };
     }
-    if(post.createBy.toString()!=userId?.toString()){
-      return {message:"You cannot edit this post!"}
+    if (post.createBy.toString() != userId?.toString()) {
+      return { message: "You cannot edit this post!" };
     }
-    const contentIds = post.contentIds.map((item:Schema.Types.ObjectId)=>item.toString());
-    const deleteFileIds =  _.difference(contentIds, editContent.remainContentIds);
-    for(const id of deleteFileIds){
+    const contentIds = post.contentIds.map((item: Schema.Types.ObjectId) =>
+      item.toString()
+    );
+    const deleteFileIds = _.difference(
+      contentIds,
+      editContent.remainContentIds
+    );
+    for (const id of deleteFileIds) {
       await File.findByIdAndDelete(id);
-      post.contentIds.filter((item:Schema.Types.ObjectId)=>item.toString()!=id.toString())
+      post.contentIds.filter(
+        (item: Schema.Types.ObjectId) => item.toString() != id.toString()
+      );
     }
-    const createdFileIds:string[] = [];
-    for(const file of editContent.contents){
+    const createdFileIds: string[] = [];
+    for (const file of editContent.contents) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
       const createdFile = await createFile(file, userId?.toString()!);
       createdFileIds.push(createdFile._id);
     }
-    post.caption=editContent.caption;
+    post.caption = editContent.caption;
     post.contentIds.push(...createdFileIds);
     await post.save();
-  
-    return await getAPost(post._id, userId!); 
-  }catch(error){
+
+    return await getAPost(post._id, userId!);
+  } catch (error) {
     console.log(error);
     throw error;
   }
-}
+};

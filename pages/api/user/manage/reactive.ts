@@ -1,8 +1,7 @@
-import { getMyBFFs } from "@/lib/actions/mine.action";
+import { reactiveUser } from "@/lib/actions/user.action";
 import { authenticateToken, authorizeRole } from "@/middleware/auth-middleware";
 import cors from "@/middleware/cors-middleware";
-import mongoose, { Schema } from "mongoose";
-import { NextApiRequest, NextApiResponse } from "next/types";
+import type { NextApiRequest, NextApiResponse } from "next";
 
 export default async function handler(
   req: NextApiRequest,
@@ -19,16 +18,16 @@ export default async function handler(
                 .status(400)
                 .json({ message: "Invalid or missing userId" });
             }
+            const updatedUser = await reactiveUser(userId);
 
-            // Chuyển userId sang ObjectId
-            const userIdRequest = new mongoose.Types.ObjectId(
-              userId
-            ) as unknown as Schema.Types.ObjectId;
-            const myBFFs = await getMyBFFs(userIdRequest);
-            res.status(200).json(myBFFs);
+            if (!updatedUser) {
+              return res.status(404).json({ error: "User not found" });
+            }
+
+            res.status(200).json(updatedUser);
           } catch (error) {
             console.error(error);
-            res.status(500).json({ message: "Internal Server Error" });
+            res.status(500).json({ error: "Internal Server Error" });
           }
         } else {
           res.setHeader("Allow", ["GET"]);

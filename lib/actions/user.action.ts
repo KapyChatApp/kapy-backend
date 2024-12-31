@@ -26,9 +26,25 @@ const SECRET_KEY = process.env.JWT_SECRET!;
 export async function getAllUsers() {
   try {
     connectToDatabase();
-    const result: UserResponseDTO[] = await User.find();
+    const result: UserResponseDTO[] = await User.find({
+      roles: { $ne: "admin" }
+    });
 
     return result;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function removeUsers(userId: string) {
+  try {
+    connectToDatabase();
+    await User.findOneAndDelete({
+      _id: userId
+    });
+
+    return { message: "Delete successfully!" };
   } catch (error) {
     console.log(error);
     throw error;
@@ -465,6 +481,23 @@ export async function deactiveUser(id: string | undefined) {
     const updatedUser = await User.findByIdAndUpdate(id, { flag: false });
 
     return { flag: false, deactiveProfile: updatedUser };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+export async function reactiveUser(id: string | undefined) {
+  try {
+    connectToDatabase();
+
+    const existingUser = await User.findById(id);
+    if (!existingUser) {
+      throw new Error("User not found!");
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(id, { flag: true });
+
+    return { flag: true, deactiveProfile: updatedUser };
   } catch (error) {
     console.log(error);
     throw error;

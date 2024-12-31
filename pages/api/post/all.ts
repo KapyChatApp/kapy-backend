@@ -1,4 +1,4 @@
-import { getManagePosts } from "@/lib/actions/post.action";
+import { getSingleIdPosts } from "@/lib/actions/post.action";
 import { authenticateToken, authorizeRole } from "@/middleware/auth-middleware";
 import cors from "@/middleware/cors-middleware";
 import { NextApiRequest, NextApiResponse } from "next";
@@ -13,8 +13,7 @@ export default async function handler(
         if (req.method === "GET") {
           try {
             const { userId } = req.query;
-            console.log(userId, "check");
-            const myPosts = await getManagePosts(userId as string);
+            const myPosts = await getSingleIdPosts(userId as string);
 
             res.status(200).json(myPosts);
           } catch (error) {

@@ -2,28 +2,39 @@ import Report from "@/database/report.model";
 import {
   CreateReportDTO,
   ReportResponseDTO,
+  ReportResponseManageDTO,
   UpdateReportDTO,
-  VerifyReportDTO,
+  VerifyReportDTO
 } from "@/dtos/ReportDTO";
 import { Schema } from "mongoose";
 import { connectToDatabase } from "../mongoose";
+import { ShortUserResponseDTO } from "@/dtos/UserDTO";
 
 export async function allReport() {
   try {
     connectToDatabase();
-    const reportResponses: ReportResponseDTO[] = [];
+    const reportResponses: ReportResponseManageDTO[] = [];
 
-    const reports = await Report.find();
+    const reports = await Report.find().populate("createBy");
 
     for (const report of reports) {
       await report.populateTarget();
-      const reportResponse: ReportResponseDTO = {
+      const createByInfo: ShortUserResponseDTO = {
+        _id: report.createBy._id,
+        firstName: report.createBy.firstName,
+        lastName: report.createBy.lastName,
+        nickName: report.createBy.nickName,
+        avatar: report.createBy.avatar
+      };
+      const reportResponse: ReportResponseManageDTO = {
         _id: report._id,
         content: report.content,
         flag: report.flag,
         status: report.status,
-        userId: report.userId,
+        userId: createByInfo,
         target: report.target,
+        targetType: report.targetType,
+        createAt: report.createAt
       };
       reportResponses.push(reportResponse);
     }
@@ -43,7 +54,7 @@ export async function createReport(
     connectToDatabase();
     const existReport = await Report.findOne({
       createBy: userId,
-      targetId: param.targetId,
+      targetId: param.targetId
     });
 
     if (existReport) {
@@ -61,7 +72,7 @@ export async function createReport(
       flag: report.flag,
       status: report.status,
       userId: report.userId,
-      target: report.target,
+      target: report.target
     };
 
     return reportResponse;
@@ -115,7 +126,7 @@ export async function myReports(userId: Schema.Types.ObjectId | undefined) {
         userId: report.userId,
         flag: report.flag,
         status: report.status,
-        target: report.target,
+        target: report.target
       };
       reportResponses.push(reportResponse);
     }
@@ -140,6 +151,24 @@ export async function deleteReport(
     }
     if (report.createBy != userId.toString()) {
       return { message: "You cannot delete this report" };
+    }
+    if (!report.status) {
+      return { message: "This report has been closed!" };
+    }
+    await Report.findOneAndDelete({ _id: reportId });
+
+    return { message: "Deleted!" };
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function removeReport(reportId: string) {
+  try {
+    const report = await Report.findById(reportId);
+    if (!report) {
+      return { message: "This report not exist!" };
     }
     if (!report.status) {
       return { message: "This report has been closed!" };
