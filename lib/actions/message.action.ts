@@ -27,6 +27,7 @@ import File from "@/database/file.model";
 import { pusherServer } from "../pusher";
 import Relation from "@/database/relation.model";
 import { createFile } from "./file.action";
+import { sendPushNotification } from "./notification.action";
 
 const generateRandomString = (length = 20) => {
   const characters =
@@ -159,7 +160,7 @@ export async function createMessage(
           .then(() => console.log("Message sent successfully: ", pusherMessage))
           .catch((error) => console.error("Failed to send message:", error));
         //return { success: true, populatedMessage, detailBox };
-        return { success: true, message: "Send successfully", sendMessage:pusherMessage };
+        return { success: true, message: "Send successfully", sendMessage: pusherMessage };
       }
       //Message private
       else if (receiverIdsArray.length === 2) {
@@ -1177,7 +1178,7 @@ export async function removeMember(targetedId: string, boxId: string) {
     await messageBox.save();
 
     await pusherServer.trigger(`private-${messageBox._id}`,"kick",{targetId:targetedId, boxId:messageBox._id});
-
+  
     return { success: true, message: "Member removed successfully!" };
   } catch (error) {
     console.error("Error removing member:", error);

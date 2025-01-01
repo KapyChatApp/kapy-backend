@@ -4,6 +4,7 @@ import { Schema } from "mongoose";
 import { FriendProfileResponseDTO } from "@/dtos/FriendDTO";
 import { getMutualFriends } from "./friend.action";
 import { getRelationFromTo } from "./relation.action";
+import { calculateUserPoint } from "./community.action";
 
 export async function getFriendProfile(
   friendId: string,
@@ -16,7 +17,8 @@ export async function getFriendProfile(
     const  friend = await User.findById(friendId);
     // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
     const relation = await getRelationFromTo(userId?.toString()!,friendId);
-    if(relation==="block") {throw new Error('User not found')}
+    if (relation === "block") { throw new Error('User not found') }
+    const friendPoint = await calculateUserPoint(friend._id, friend.point);
     const friendProfileResponse:FriendProfileResponseDTO={
       _id: friend.id,
       firstName: friend.firstName,
@@ -31,7 +33,7 @@ export async function getFriendProfile(
       job: friend.job,
       hobbies: friend.hobbies,
       bio: friend.bio,
-      point: friend.point,
+      point: friendPoint,
       relationShip: friend.relationShip,
       birthDay: friend.birthDay,
       attendDate: friend.attendDate,
