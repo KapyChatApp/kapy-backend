@@ -32,8 +32,14 @@ export default async function handle(
             ? (targetedId as string)
             : userId.toString();
 
+          const action = targetedId ? "kick" : "leave";
+
           // Gọi action để xóa thành viên
-          const result = await removeMember(idToRemove, boxId as string);
+          const result = await removeMember(
+            idToRemove,
+            boxId as string,
+            action
+          );
 
           return res.status(200).json(result);
         } catch (error) {
