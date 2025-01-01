@@ -48,7 +48,7 @@ export default async function handler(
           const groupName =
             Array.isArray(fields.groupName) && fields.groupName[0]
               ? fields.groupName[0]
-              : "";
+              : "NewGroup";
 
           if (typeof groupName !== "string") {
             return res.status(400).json({

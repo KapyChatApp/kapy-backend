@@ -256,7 +256,8 @@ export async function createGroup(
   const allReceiverIds = [leaderId, ...membersIds];
   // Kiểm tra xem message box đã tồn tại và flag có chứa leaderId
   const existMessageBox = await MessageBox.findOne({
-    receiverIds: { $size: allReceiverIds.length, $all: allReceiverIds }
+    receiverIds: { $size: allReceiverIds.length, $all: allReceiverIds },
+    groupName: { $eq: "" }
   });
 
   if (existMessageBox) {
@@ -784,7 +785,8 @@ export async function fetchBoxChat(userId: string) {
             { receiverIds: { $in: [userId] } },
             {
               $expr: { $lte: [{ $size: "$receiverIds" }, 2] }
-            }
+            },
+            { groupName: { $eq: "" } }
           ]
         },
         { _id: userId } // Hoặc ID của box là userId
@@ -800,7 +802,7 @@ export async function fetchBoxChat(userId: string) {
     }
 
     // Xử lý từng box để trả về nội dung cần thiết
-    const messageBoxesWithDetails = await Promise.all(
+    const messageBoxesWithContent = await Promise.all(
       messageBoxes.map(async (messageBox) => {
         const [stUserId, ndUserId] = messageBox.receiverIds
           .map((user: { _id: any }) => user._id)
@@ -844,12 +846,12 @@ export async function fetchBoxChat(userId: string) {
       })
     );
 
-    messageBoxesWithDetails.sort((a, b) => {
+    messageBoxesWithContent.sort((a, b) => {
       return b.lastMessageTime.getTime() - a.lastMessageTime.getTime();
     });
 
     // Loại bỏ trường `lastMessageTime` trước khi trả về
-    const finalResult: MessageBoxDTO[] = messageBoxesWithDetails.map(
+    const finalResult: MessageBoxDTO[] = messageBoxesWithContent.map(
       ({ lastMessageTime, ...rest }) => rest
     );
     return {
@@ -936,10 +938,11 @@ export async function fetchBoxGroup(userId: string) {
     const messageBoxes = await MessageBox.find({
       $and: [
         {
-          $expr: { $gt: [{ $size: "$receiverIds" }, 2] }
+          $expr: { $gte: [{ $size: "$receiverIds" }, 2] }
         },
         { receiverIds: { $in: [userId] } }
       ],
+      groupName: { $ne: "" },
       flag: { $in: [userId] } // Thêm điều kiện flag chứa userId
     })
       .populate("receiverIds", "firstName lastName nickName avatar")
@@ -953,7 +956,7 @@ export async function fetchBoxGroup(userId: string) {
     }
 
     // Xử lý nội dung từng nhóm
-    const messageBoxesWithContent: MessageBoxGroupDTO[] = await Promise.all(
+    const messageBoxesWithContent = await Promise.all(
       messageBoxes.map(async (messageBox) => {
         // Lấy tin nhắn cuối cùng
         const lastMessageId =
@@ -961,11 +964,13 @@ export async function fetchBoxGroup(userId: string) {
         console.log(messageBox.messageIds);
         let readedId = [];
         let readStatus = false;
+        let lastMessageTime = new Date(0);
         if (lastMessageId) {
           const lastMessage = await Message.findById(lastMessageId);
           if (lastMessage) {
             readedId = lastMessage.readedId;
             readStatus = lastMessage.readedId.includes(userId);
+            lastMessageTime = new Date(lastMessage.createAt);
           }
         }
         return {
@@ -978,12 +983,20 @@ export async function fetchBoxGroup(userId: string) {
           pin: messageBox.pin || false,
           readStatus,
           readedId,
-          createBy: messageBox.createBy
+          createBy: messageBox.createBy,
+          lastMessageTime
         };
       })
     );
+    messageBoxesWithContent.sort((a, b) => {
+      return b.lastMessageTime.getTime() - a.lastMessageTime.getTime();
+    });
 
-    return { success: true, box: messageBoxesWithContent };
+    // Loại bỏ trường `lastMessageTime` trước khi trả về
+    const finalResult: MessageBoxGroupDTO[] = messageBoxesWithContent.map(
+      ({ lastMessageTime, ...rest }) => rest
+    );
+    return { success: true, box: finalResult };
   } catch (error) {
     console.error("Error fetching messages: ", error);
     throw error;
