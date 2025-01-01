@@ -160,7 +160,11 @@ export async function createMessage(
           .then(() => console.log("Message sent successfully: ", pusherMessage))
           .catch((error) => console.error("Failed to send message:", error));
         //return { success: true, populatedMessage, detailBox };
-        return { success: true, message: "Send successfully", sendMessage: pusherMessage };
+        return {
+          success: true,
+          message: "Send successfully",
+          sendMessage: pusherMessage
+        };
       }
       //Message private
       else if (receiverIdsArray.length === 2) {
@@ -219,7 +223,11 @@ export async function createMessage(
           .catch((error) => console.error("Failed to send message:", error));
 
         // return { success: true, populatedMessage, detailBox };
-        return { success: true, message: "Send successfully", sendMessage:pusherMessage };
+        return {
+          success: true,
+          message: "Send successfully",
+          sendMessage: pusherMessage
+        };
       }
     }
   } catch (error) {
@@ -260,13 +268,13 @@ export async function createGroup(
       return {
         success: true,
         message: "Leader added to the existing box",
-        updatedMessageBox: existMessageBox
+        messageBox: existMessageBox
       };
     }
     return {
       success: false,
       message: "Box already exists.",
-      existMessageBox
+      messageBox: existMessageBox
     };
   }
 
@@ -293,7 +301,7 @@ export async function createGroup(
   return {
     success: true,
     message: "Create box chat successfully",
-    newBox: messageBox
+    messageBox: messageBox
   };
 }
 
@@ -792,7 +800,7 @@ export async function fetchBoxChat(userId: string) {
     }
 
     // Xử lý từng box để trả về nội dung cần thiết
-    const messageBoxesWithDetails: MessageBoxDTO[] = await Promise.all(
+    const messageBoxesWithDetails = await Promise.all(
       messageBoxes.map(async (messageBox) => {
         const [stUserId, ndUserId] = messageBox.receiverIds
           .map((user: { _id: any }) => user._id)
@@ -808,12 +816,14 @@ export async function fetchBoxChat(userId: string) {
           messageBox.messageIds[messageBox.messageIds.length - 1];
         let readStatus = false;
         let readedId = [];
+        let lastMessageTime = new Date(0);
 
         if (lastMessageId) {
           const lastMessage = await Message.findById(lastMessageId);
           if (lastMessage) {
             readStatus = lastMessage.readedId.includes(userId);
             readedId = lastMessage.readedId;
+            lastMessageTime = new Date(lastMessage.createAt);
           }
         }
 
@@ -828,14 +838,23 @@ export async function fetchBoxChat(userId: string) {
           stranger: relationStranger ? true : false,
           readStatus,
           readedId,
-          createBy: messageBox.createBy
+          createBy: messageBox.createBy,
+          lastMessageTime
         };
       })
     );
 
+    messageBoxesWithDetails.sort((a, b) => {
+      return b.lastMessageTime.getTime() - a.lastMessageTime.getTime();
+    });
+
+    // Loại bỏ trường `lastMessageTime` trước khi trả về
+    const finalResult: MessageBoxDTO[] = messageBoxesWithDetails.map(
+      ({ lastMessageTime, ...rest }) => rest
+    );
     return {
       success: true,
-      box: messageBoxesWithDetails
+      box: finalResult
     };
   } catch (error) {
     console.error("Error fetching messages: ", error);
@@ -1177,8 +1196,11 @@ export async function removeMember(targetedId: string, boxId: string) {
     // Lưu lại các thay đổi
     await messageBox.save();
 
-    await pusherServer.trigger(`private-${messageBox._id}`,"kick",{targetId:targetedId, boxId:messageBox._id});
-  
+    await pusherServer.trigger(`private-${messageBox._id}`, "kick", {
+      targetId: targetedId,
+      boxId: messageBox._id
+    });
+
     return { success: true, message: "Member removed successfully!" };
   } catch (error) {
     console.error("Error removing member:", error);
