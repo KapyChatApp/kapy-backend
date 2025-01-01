@@ -168,7 +168,10 @@ export async function createMessage(
       }
       //Message private
       else if (receiverIdsArray.length === 2) {
-        const [stUserId, ndUserId] = [receiverIdsArray[0], userId].sort();
+        const otherId = receiverIdsArray.filter(
+          (item: any) => item._id !== userId
+        );
+        const [stUserId, ndUserId] = [otherId[0], userId].sort();
         const relationBlock = await Relation.findOne({
           stUser: stUserId,
           ndUser: ndUserId,
