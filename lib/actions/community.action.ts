@@ -113,10 +113,12 @@ export async function getRatesOfUser(id: string) {
   }
 }
 
-export const reCalculateUserPoint = async (userId:Schema.Types.ObjectId, basePoint:number) => {
-  try { 
-    const ratesOfUser = await getRatesOfUser(userId.toString());
-    const newPoint = (ratesOfUser.reduce((sum, item) => sum + item.point, 0) + basePoint) / (ratesOfUser.length + 1);
+export const calculateUserPoint = async (userId:Schema.Types.ObjectId| undefined, basePoint:number) => {
+  try {
+    const ratesOfUser = await getRatesOfUser(userId?.toString()!);
+    const sum = ratesOfUser.reduce((sum, item) => sum + item.point, 0) + basePoint;
+    const total = ratesOfUser.length + 1;
+    return sum / total;
   } catch (error) {
     console.log(error);
     throw error;
@@ -147,9 +149,7 @@ export async function rateUser(
     const createData = Object.assign(param, { createBy: userId });
 
     const point = await Point.create(createData);
-    
-    user.point = await reCalculateUserPoint(userId, user.point);
-    
+
     user.rateIds.addToSet(point._id);
     await user.save();
 
@@ -168,17 +168,11 @@ export async function editRateUser(
   try {
     connectToDatabase();
 
-    const user = await User.findById(userId);
-  
-    await Point.findOneAndUpdate(
+
+    const point = await Point.findOneAndUpdate(
       { _id: pointId, createBy: userId },
       { point: param.point, message: param.message }
     );
-
-    user.point = await reCalculateUserPoint(user._id, user.point);
-
-    await user.save();
-  
     return { message: "Update successfully!" };
   } catch (error) {
     console.log(error);
@@ -193,14 +187,11 @@ export async function deleteMyRate(
   try {
     connectToDatabase();
 
-    const user = await User.findById(userId);
-    await Point.findOneAndDelete({ _id: pointId, createBy: userId });
+    const point = await Point.findOneAndDelete({ _id: pointId, createBy: userId });
 
-    await User.findByIdAndUpdate(userId, {
+    const user = await User.findByIdAndUpdate(point.userId, {
       $pull: { rateIds: pointId },
     });
-
-    user.point = await reCalculateUserPoint(user._id, user.point);
 
     await user.save();
 
@@ -214,7 +205,15 @@ export async function deleteMyRate(
 export async function deleteRate(pointId: string) {
   try {
     connectToDatabase();
-    await Point.findOneAndDelete({ _id: pointId });
+    
+    const point = await Point.findOneAndDelete({ _id: pointId });
+
+    const user = await User.findByIdAndUpdate(point.userId, {
+      $pull: { rateIds: pointId },
+    });
+
+
+    await user.save();
     return { message: "Deleted!" };
   } catch (error) {
     console.log(error);
