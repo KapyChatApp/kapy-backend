@@ -77,32 +77,42 @@ export const Contract = c.router(
         summary: "Logout",
         metadata: { role: "user" } as const,
       },
+      changePassword: {
+        method: "PATCH",
+        path: "/api/auth/change-password", 
+        headers: z.object({
+          auth: z
+            .string()
+            .regex(
+              /^Bearer\s[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/
+            ),
+        }),
+        responses:{},
+        body: z.object({
+          oldPassword: z.string(),
+          newPassword:z.string()
+        }),
+      },
       sendOTP: {
         method: "POST",
         path: "/api/auth/send-otp",
-        responses: {
-          200: c.type<OTPResponseDTO>(),
-        },
-        headers: z.object({}),
-        body: z.object({
-          phonenumber: z.string(),
-        }),
-        summary: "Get otp",
-        metadata: { role: "guest" } as const,
+        responses: {},
+        body: z.object({}),
+        query: z.object({
+          phoneNumber: z.string(),
+        })
       },
-      verifyOTP: {
-        method: "POST",
-        path: "/api/auth/verify-otp",
-        responses: {
-          200: c.type<SingleMessageResponseDTO>(),
-        },
-        headers: z.object({}),
+      verifyForgotPassword: {
+        method: "PATCH",
+        path: "/api/auth/verify-forgot-password",
+        responses: {},
         body: z.object({
-          phonenumber: z.string(),
-        }),
-        summary: "Verify otp",
-        metadata: { role: "guest" } as const,
-      },
+          otp: z.string(),
+          phoneNumber: z.string(),
+          newPassword:z.string()
+        })
+      }
+      ,
       manageAllOfUser: {
         method: "GET",
         path: "/api/auth/manage/user",
@@ -119,6 +129,7 @@ export const Contract = c.router(
         }),
         metadata: { role: "admin" } as const,
       },
+    
     }),
     user: c.router({
       createAdmin: {

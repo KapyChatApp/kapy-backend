@@ -8,6 +8,9 @@ import {
 import mongoose, { Schema } from "mongoose";
 import User from "@/database/user.model";
 import AuthHistory from "@/database/auth-history.model";
+import bcrypt from "bcrypt";
+import { retryInterval } from "stream-chat/dist/types/utils";
+import { optimizeImage } from "next/dist/server/image-optimizer";
 
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString(); // 6 digit OTP
@@ -17,10 +20,10 @@ export async function sendSMS(phoneNumber: string) {
   try {
     const otp = generateOTP();
     const myHeaders = new Headers();
+    console.log("key: ", process.env.INFOBIP_API_KEY);
     myHeaders.append("Authorization", `App ${process.env.INFOBIP_APIKEY}`);
     myHeaders.append("Content-Type", "application/json");
     myHeaders.append("Accept", "application/json");
-
     const raw = JSON.stringify({
       messages: [
         {
@@ -121,7 +124,7 @@ export async function inActiveDeviceInfo(
   id: string
 ) {
   try {
-    const authHistory = await AuthHistory.findOne({_id:id});
+    const authHistory = await AuthHistory.findOne({ _id: id });
     if (authHistory.createBy.toString() !== userId?.toString()) {
       throw new Error("You are not authorize");
     }
@@ -150,6 +153,66 @@ export async function getMyAuthHistoryOfUser(userId: string) {
     return await AuthHistory.find({
       createBy: new mongoose.Types.ObjectId(userId),
     });
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+
+export const changePassword = async (oldPassword: string, newPassword: string, userId: Schema.Types.ObjectId | undefined) => {
+  try {
+    const user = await User.findById(userId);
+    await bcrypt.compare(oldPassword, user.password,async (err, result) => {
+      if (err) {
+        console.error(err);
+      } else {
+        if (result) {
+          const saltRounds = 10;
+
+          await bcrypt.hash(newPassword, saltRounds, async(err, hashedPassword) => {
+            if (err) {
+              console.error(err);
+            } else {
+              user.password = hashedPassword;
+              await user.save();
+              return { message: "Update password successfully!" }
+            }
+          });
+        } else {
+
+          return { message: "Your old password is incorrect!" }
+        }
+      }
+    });
+
+
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export const forgotPassword = async ( otp: string,phoneNumber:string ,newPassword: string) => {
+  try {
+    const existOtp = await OTP.findOne({ code: otp, receiver:phoneNumber});
+    if (!existOtp) {
+      return {message:"Your otp is expired or not exist!"}
+    }
+    const user = await User.findOne({ phoneNumber: phoneNumber });
+    if (!user) {
+      return {message:"Your account is not exist!"}
+    }
+    await bcrypt.hash(newPassword, 10,async (err, hashedPassword) => {
+      if (err) {
+        console.error(err);
+      } else {
+        user.password = hashedPassword;
+        await user.save();
+        return { message: "Update password successfully!" }
+      }
+    });
+    
   } catch (error) {
     console.log(error);
     throw error;
