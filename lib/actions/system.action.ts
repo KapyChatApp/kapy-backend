@@ -6,10 +6,13 @@ import mongoose from "mongoose";
 export const initiateSystem = async () => {
     try {
         const users = await User.find();
+        console.log("uers: ", users);
         if (users.length !== 0) {
             return {message:"Your system has been run!"}
         }
-        const initiateAdminData:UserRegisterDTO = {    
+        
+    } catch (error) {
+        const initiateAdminData: UserRegisterDTO = {
             firstName: "Kapy",
             lastName: "Admin",
             nickName: "kapyadmin",
@@ -18,12 +21,9 @@ export const initiateSystem = async () => {
             password: "admin",
             rePassword: "admin",
             gender: true,
-            birthDay: new Date(), 
+            birthDay: new Date(),
         }
         const initiateAdmin = createAdmin(initiateAdminData, "507f1f77bcf86cd799439011");
         return initiateAdmin;
-    } catch (error) {
-        console.log(error);
-        throw error;
     }
 }
