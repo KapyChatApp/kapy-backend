@@ -7,17 +7,15 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  const { phoneNumber } = req.query;
   cors(req, res, async () => {
-    authenticateToken(req, res, async () => {
       if (req.method === "POST") {
-        const { phoneNumber } = req.body;
-
         if (!phoneNumber) {
           return res.status(400).json({ error: "Phone number is required" });
         }
 
         try {
-          const sendedOTP = await sendSMS(phoneNumber);
+          const sendedOTP = await sendSMS(phoneNumber.toString());
           console.log(sendedOTP);
 
           res.status(200).json(sendedOTP);
@@ -30,5 +28,4 @@ export default async function handler(
         res.status(405).end(`Method ${req.method} Not Allowed`);
       }
     });
-  });
 }
