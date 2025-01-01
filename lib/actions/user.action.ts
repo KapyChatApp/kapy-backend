@@ -79,7 +79,7 @@ export async function createUser(
 
 export async function createAdmin(
   params: UserRegisterDTO,
-  createBy: Schema.Types.ObjectId | undefined
+  createBy: Schema.Types.ObjectId | undefined|string
 ) {
   try {
     connectToDatabase();
