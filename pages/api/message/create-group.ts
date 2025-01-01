@@ -48,6 +48,8 @@ export default async function handler(
           const groupName =
             Array.isArray(fields.groupName) && fields.groupName[0]
               ? fields.groupName[0]
+              : membersIds.length < 2
+              ? ""
               : "NewGroup";
 
           if (typeof groupName !== "string") {
