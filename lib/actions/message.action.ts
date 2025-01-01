@@ -168,7 +168,10 @@ export async function createMessage(
       }
       //Message private
       else if (receiverIdsArray.length === 2) {
-        const [stUserId, ndUserId] = [receiverIdsArray[0], userId].sort();
+        const otherId = receiverIdsArray.filter(
+          (item: any) => item._id !== userId
+        );
+        const [stUserId, ndUserId] = [otherId[0], userId].sort();
         const relationBlock = await Relation.findOne({
           stUser: stUserId,
           ndUser: ndUserId,
@@ -1175,7 +1178,11 @@ export async function disbandGroup(userId: string, boxId: string) {
   }
 }
 
-export async function removeMember(targetedId: string, boxId: string) {
+export async function removeMember(
+  targetedId: string,
+  boxId: string,
+  action: string
+) {
   try {
     await connectToDatabase();
 
@@ -1208,6 +1215,31 @@ export async function removeMember(targetedId: string, boxId: string) {
 
     // Lưu lại các thay đổi
     await messageBox.save();
+
+    if (action === "leave") {
+      // Tạo tin nhắn
+      const visibilityMap = new Map<string, boolean>();
+      const receiverIds: string[] = messageBox.receiverIds;
+
+      // Cập nhật visibilityMap
+      receiverIds.forEach((receiverId) => {
+        visibilityMap.set(receiverId, true);
+      });
+      const message = await Message.create({
+        flag: true,
+        visibility: visibilityMap,
+        readedId: receiverIds,
+        text: ["%!@#{left group}#@!%"],
+        boxId: new Types.ObjectId(boxId),
+        createAt: Date.now(),
+        updatedAt: Date.now(),
+        createBy: new Types.ObjectId(targetedId)
+      });
+      await pusherServer
+        .trigger(`private-${boxId}`, "new-message", message)
+        .then(() => console.log("Add member successfully: ", message))
+        .catch((error) => console.error("Failed to add member:", error));
+    }
 
     await pusherServer.trigger(`private-${messageBox._id}`, "kick", {
       targetId: targetedId,
@@ -1297,11 +1329,33 @@ export async function addMember(
       );
     }
 
+    // Tạo tin nhắn
+    const visibilityMap = new Map<string, boolean>();
+    const receiverIds: string[] = messageBox.receiverIds;
+
+    // Cập nhật visibilityMap
+    receiverIds.forEach((receiverId) => {
+      visibilityMap.set(receiverId, true);
+    });
+    const message = await Message.create({
+      flag: true,
+      visibility: visibilityMap,
+      readedId: receiverIds,
+      text: ["%!@#{is added to group}#@!%"],
+      boxId: new Types.ObjectId(boxId),
+      createAt: Date.now(),
+      createBy: new Types.ObjectId(userId)
+    });
+
     const pusherCreateGroup = messageBox;
 
     for (const memId of messageBox.receiverIds) {
       await pusherServer
         .trigger(`private-${memId}`, "new-box", pusherCreateGroup)
+        .then(() => console.log("Add member successfully: ", pusherCreateGroup))
+        .catch((error) => console.error("Failed to add member:", error));
+      await pusherServer
+        .trigger(`private-${boxId}`, "new-message", message)
         .then(() => console.log("Add member successfully: ", pusherCreateGroup))
         .catch((error) => console.error("Failed to add member:", error));
     }
