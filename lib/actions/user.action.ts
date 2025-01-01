@@ -20,6 +20,7 @@ import { pusherServer } from "../pusher";
 import { getMutualFriends } from "./friend.action";
 import Realtime from "@/database/realtime.model";
 import { getRelationFromTo } from "./relation.action";
+import { calculateUserPoint } from "./community.action";
 const saltRounds = 10;
 const SECRET_KEY = process.env.JWT_SECRET!;
 
@@ -94,7 +95,7 @@ export async function createUser(
 
 export async function createAdmin(
   params: UserRegisterDTO,
-  createBy: Schema.Types.ObjectId | undefined
+  createBy: Schema.Types.ObjectId | undefined|string
 ) {
   try {
     connectToDatabase();
@@ -305,11 +306,13 @@ export async function disableUser(userId: string) {
 export async function getMyProfile(id: Schema.Types.ObjectId | undefined) {
   try {
     connectToDatabase();
-    const myProfile: UserResponseDTO | null = await User.findById(id);
+    const myProfile = await User.findById(id);
     if (!myProfile) {
       console.log(`Cannot get ${id} profile now`);
       throw new Error(`Cannot get ${id} profile now`);
     }
+    const myPoint = await calculateUserPoint(myProfile._id, myProfile.point);
+    myProfile.point = myPoint;
     return myProfile;
   } catch (error) {
     console.log(error);

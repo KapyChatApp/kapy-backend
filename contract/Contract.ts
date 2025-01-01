@@ -28,6 +28,13 @@ const c = initContract();
 
 export const Contract = c.router(
   {
+    system: c.router({
+      initiate: {
+        method: "GET",
+        path: "/api/system/initiate",
+        responses:{},
+      }
+    }),
     auth: c.router({
       login: {
         method: "POST",

@@ -112,6 +112,19 @@ export async function getRatesOfUser(id: string) {
     throw error;
   }
 }
+
+export const calculateUserPoint = async (userId:Schema.Types.ObjectId| undefined, basePoint:number) => {
+  try {
+    const ratesOfUser = await getRatesOfUser(userId?.toString()!);
+    const sum = ratesOfUser.reduce((sum, item) => sum + item.point, 0) + basePoint;
+    const total = ratesOfUser.length + 1;
+    return sum / total;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
 export async function rateUser(
   param: CreatePointDTO,
   userId: Schema.Types.ObjectId
@@ -154,7 +167,9 @@ export async function editRateUser(
 ) {
   try {
     connectToDatabase();
-    await Point.findOneAndUpdate(
+
+
+    const point = await Point.findOneAndUpdate(
       { _id: pointId, createBy: userId },
       { point: param.point, message: param.message }
     );
@@ -171,11 +186,14 @@ export async function deleteMyRate(
 ) {
   try {
     connectToDatabase();
-    await Point.findOneAndDelete({ _id: pointId, createBy: userId });
 
-    await User.findByIdAndUpdate(userId, {
+    const point = await Point.findOneAndDelete({ _id: pointId, createBy: userId });
+
+    const user = await User.findByIdAndUpdate(point.userId, {
       $pull: { rateIds: pointId },
     });
+
+    await user.save();
 
     return { message: "Deleted!" };
   } catch (error) {
@@ -187,7 +205,15 @@ export async function deleteMyRate(
 export async function deleteRate(pointId: string) {
   try {
     connectToDatabase();
-    await Point.findOneAndDelete({ _id: pointId });
+    
+    const point = await Point.findOneAndDelete({ _id: pointId });
+
+    const user = await User.findByIdAndUpdate(point.userId, {
+      $pull: { rateIds: pointId },
+    });
+
+
+    await user.save();
     return { message: "Deleted!" };
   } catch (error) {
     console.log(error);
