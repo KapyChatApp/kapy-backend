@@ -1235,6 +1235,15 @@ export async function removeMember(
         updatedAt: Date.now(),
         createBy: new Types.ObjectId(targetedId)
       });
+
+      await MessageBox.findByIdAndUpdate(
+        boxId,
+        {
+          $push: { messageIds: message._id },
+          $set: { senderId: targetedId }
+        },
+        { new: true }
+      );
       await pusherServer
         .trigger(`private-${boxId}`, "new-message", message)
         .then(() => console.log("Add member successfully: ", message))
@@ -1346,6 +1355,15 @@ export async function addMember(
       createAt: Date.now(),
       createBy: new Types.ObjectId(userId)
     });
+
+    await MessageBox.findByIdAndUpdate(
+      boxId,
+      {
+        $push: { messageIds: message._id },
+        $set: { senderId: userId }
+      },
+      { new: true }
+    );
 
     const pusherCreateGroup = messageBox;
 
