@@ -12,6 +12,12 @@ import {
   ShortUserResponseDTO,
   ShortUserResponseManageDTO
 } from "@/dtos/UserDTO";
+import User from "@/database/user.model";
+import Post from "@/database/post.model";
+import Message from "@/database/message.model";
+import Comment from "@/database/comment.model";
+import File from "@/database/file.model";
+import { FileContent } from "@/dtos/MessageDTO";
 
 export async function allReport() {
   try {
@@ -51,15 +57,60 @@ export async function allReport() {
 
 export async function getDetailReport(reportId: string) {
   try {
+    // Kết nối cơ sở dữ liệu
     connectToDatabase();
+
+    // Tìm báo cáo theo `reportId`
     const report = await Report.findById(reportId).populate("createBy");
 
     if (!report) {
       throw new Error("Report not found");
     }
 
-    await report.populateTarget();
+    // Lấy chi tiết của target dựa trên targetType
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let targetDetail: any;
+    // eslint-disable-next-line prefer-const
+    let filesResponse: FileContent[] = [];
+    switch (report.targetType) {
+      case "User":
+        targetDetail = await User.findById(report.targetId);
+        break;
+      case "Post":
+        targetDetail = await Post.findById(report.targetId);
+        const fileOfPost = await File.find({
+          _id: { $in: targetDetail.contentIds }
+        }).exec();
+        for (const file of fileOfPost) {
+          const fileResponse: FileContent = {
+            _id: file._id,
+            url: file.url,
+            publicId: file.publicId,
+            fileName: file.fileName,
+            width: file.width,
+            height: file.height,
+            format: file.format,
+            bytes: file.bytes,
+            type: file.type
+          };
+          filesResponse.push(fileResponse);
+        }
+        break;
+      case "Comment":
+        targetDetail = await Comment.findById(report.targetId);
+        break;
+      case "Message":
+        targetDetail = await Message.findById(report.targetId);
+        break;
+      default:
+        throw new Error("Invalid targetType");
+    }
 
+    if (!targetDetail) {
+      throw new Error(`Target not found for type: ${report.targetType}`);
+    }
+
+    // Tạo đối tượng ShortUserResponseManageDTO
     const createByInfo: ShortUserResponseManageDTO = {
       _id: report.createBy._id,
       firstName: report.createBy.firstName,
@@ -69,15 +120,17 @@ export async function getDetailReport(reportId: string) {
       flag: report.createBy.flag
     };
 
+    // Tạo đối tượng ReportResponseManageDTO
     const reportResponse: ReportResponseManageDTO = {
       _id: report._id,
       content: report.content,
       flag: report.flag,
       status: report.status,
       userId: createByInfo,
-      target: report.target,
+      target: targetDetail,
       targetType: report.targetType,
-      createAt: report.createAt
+      createAt: report.createAt,
+      postDetail: filesResponse
     };
 
     return reportResponse;

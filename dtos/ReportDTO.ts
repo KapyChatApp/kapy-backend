@@ -3,6 +3,7 @@ import { IPost } from "@/database/post.model";
 import { IComment } from "@/database/comment.model";
 import { IUser } from "@/database/user.model";
 import { ShortUserResponseDTO } from "./UserDTO";
+import { FileContent } from "./MessageDTO";
 
 export interface ReportResponseDTO {
   _id: string;
@@ -21,6 +22,7 @@ export interface ReportResponseManageDTO {
   userId: ShortUserResponseDTO;
   targetType: string;
   target: IPost | IComment | IUser;
+  postDetail?: FileContent[];
 }
 
 export interface CreateReportDTO {
