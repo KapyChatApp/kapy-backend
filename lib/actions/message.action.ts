@@ -1253,7 +1253,7 @@ export async function removeMember(
         flag: true,
         visibility: visibilityMap,
         readedId: receiverIds,
-        text: [`%!@#{${user.firstName + " " + user.lastName}left group}#@!%`],
+        text: [`%!@#{${user.firstName + " " + user.lastName} left group}#@!%`],
         boxId: new Types.ObjectId(boxId),
         createAt: Date.now(),
         updatedAt: Date.now(),
