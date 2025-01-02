@@ -10,8 +10,6 @@ export const initiateSystem = async () => {
         if (users.length !== 0) {
             return {message:"Your system has been run!"}
         }
-        
-    } catch (error) {
         const initiateAdminData: UserRegisterDTO = {
             firstName: "Kapy",
             lastName: "Admin",
@@ -25,5 +23,9 @@ export const initiateSystem = async () => {
         }
         const initiateAdmin = createAdmin(initiateAdminData, "507f1f77bcf86cd799439011");
         return initiateAdmin;
+        
+    } catch (error) {
+        console.log(error);
+       
     }
 }
