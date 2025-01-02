@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 
 export const initiateSystem = async () => {
     try {
-        const users = await User.find();
+        const users = await User.find({ roles: { $in: ["admin"] } });
         console.log("uers: ", users);
         if (users.length !== 0) {
             return {message:"Your system has been run!"}
