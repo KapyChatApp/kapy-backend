@@ -17,7 +17,8 @@ import {
   PusherRevoke,
   TextingEvent,
   ResponseReactMessageDTO,
-  ReadedStatusPusher
+  ReadedStatusPusher,
+  UserInfoBox
 } from "@/dtos/MessageDTO";
 import mongoose, { Types } from "mongoose";
 import User from "@/database/user.model";
@@ -283,7 +284,7 @@ export async function createGroup(
   }
 
   const userObjectId = new Types.ObjectId(leaderId);
-  const messageBox: MessageBoxDTO = await MessageBox.create({
+  const messageBox = await MessageBox.create({
     senderId: leaderId,
     receiverIds: [leaderId, ...membersIds],
     messageIds: [],
@@ -293,7 +294,27 @@ export async function createGroup(
     pin: false,
     createBy: userObjectId
   });
-  const pusherCreateGroup = messageBox;
+  let messageBoxResponse: MessageBoxDTO|null = null;
+    const receiverIds: UserInfoBox[] = [];
+    for (const id of messageBox.receiverIds) {
+      const user = await User.findById(id);
+      console.log("ReceiverData: ", user);
+      const receiver: UserInfoBox = {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        avatar: user.avatar,
+        nickName: user.nickName,
+        phone:user.phoneNumber
+      }
+      receiverIds.push(receiver);
+    }
+    messageBoxResponse = {
+      ...messageBox.toObject(),
+      receiverIds: receiverIds
+    }
+  
+  const pusherCreateGroup = messageBoxResponse;
 
   for (const memId of allReceiverIds) {
     await pusherServer
@@ -305,7 +326,7 @@ export async function createGroup(
   return {
     success: true,
     message: "Create box chat successfully",
-    messageBox: messageBox
+    messageBox: messageBoxResponse
   };
 }
 
@@ -1225,11 +1246,14 @@ export async function removeMember(
       receiverIds.forEach((receiverId) => {
         visibilityMap.set(receiverId, true);
       });
+
+      const user = await User.findById(targetedId);
+
       const message = await Message.create({
         flag: true,
         visibility: visibilityMap,
         readedId: receiverIds,
-        text: ["%!@#{left group}#@!%"],
+        text: [`%!@#{${user.firstName + " " + user.lastName}left group}#@!%`],
         boxId: new Types.ObjectId(boxId),
         createAt: Date.now(),
         updatedAt: Date.now(),
@@ -1331,6 +1355,12 @@ export async function addMember(
 
     await messageBox.save();
 
+    let newUserInfo = "";
+    for (const id of newMember) {
+      const user = await User.findById(id);
+      newUserInfo = user.firstName +" "+user.lastName +" "
+    }
+
     for (const memberId of newMember) {
       await Message.updateMany(
         { boxId: messageBox._id },
@@ -1350,7 +1380,7 @@ export async function addMember(
       flag: true,
       visibility: visibilityMap,
       readedId: receiverIds,
-      text: ["%!@#{is added to group}#@!%"],
+      text: [`%!@#{${newUserInfo} is added to group}#@!%`],
       boxId: new Types.ObjectId(boxId),
       createAt: Date.now(),
       createBy: new Types.ObjectId(userId)
@@ -1372,11 +1402,12 @@ export async function addMember(
         .trigger(`private-${memId}`, "new-box", pusherCreateGroup)
         .then(() => console.log("Add member successfully: ", pusherCreateGroup))
         .catch((error) => console.error("Failed to add member:", error));
-      await pusherServer
-        .trigger(`private-${boxId}`, "new-message", message)
-        .then(() => console.log("Add member successfully: ", pusherCreateGroup))
-        .catch((error) => console.error("Failed to add member:", error));
+     
     }
+    await pusherServer
+      .trigger(`private-${boxId}`, "new-message", message)
+      .then(() => console.log("Add member successfully: ", message))
+      .catch((error) => console.error("Failed to add member:", error));
 
     return { success: true, message: "Members added successfully!" };
   } catch (error) {
