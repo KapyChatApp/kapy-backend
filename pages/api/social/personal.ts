@@ -1,4 +1,5 @@
-import { getAPost } from "@/lib/actions/post.action";
+
+import { getAllBFFSocialPost } from "@/lib/actions/social.action";
 import { authenticateToken } from "@/middleware/auth-middleware";
 import cors from "@/middleware/cors-middleware";
 import { NextApiRequest, NextApiResponse } from "next";
@@ -7,24 +8,17 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const { postId } = req.query;
+    const {page, limit} = req.query;
   cors(req, res, () =>
     authenticateToken(req, res, async () => {
       if (req.method === "GET") {
         try {
-          if (typeof postId !== "string") {
-            return res.status(400).json({ error: "Invalid user ID" });
-          }
-          if (!req.user || !req.user.id) {
-            throw new Error("You are unauthenticated!");
-          }
-          const post = await getAPost(postId, req.user?.id);
-
+          const post = await getAllBFFSocialPost(req.user?.id,parseInt(page!.toString()),parseInt(limit!.toString()));
           if (!post) {
             return res
               .status(404)
               .json({
-                message: "You must be their bestfriend to see this content!",
+                message: "Not found!",
               });
           }
           res.status(200).json(post);
