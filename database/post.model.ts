@@ -8,6 +8,11 @@ export interface IPost extends Document, IAudit {
   comments: Schema.Types.ObjectId[];
   caption: string;
   contentIds: Schema.Types.ObjectId[];
+  tagIds: Schema.Types.ObjectId[];
+  musicName:string;
+  musicURL:string;
+  musicAuthor:string;
+  musicImageURL:string;
   flag: boolean;
 }
 
@@ -21,6 +26,11 @@ const PostSchema = new Schema<IPost>({
     type: [Schema.Types.ObjectId],
     required: false,
   },
+  tagIds: {type:[Schema.Types.ObjectId], ref:"User"},
+  musicName:{type:String},
+  musicURL:{type:String},
+  musicAuthor:{type:String},
+  musicImageURL:{type:String},
   flag: { type: Boolean, required: true, default: true },
 });
 

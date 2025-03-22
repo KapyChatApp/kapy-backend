@@ -2,21 +2,32 @@ import { Schema } from "mongoose";
 import { FileResponseDTO } from "./FileDTO";
 import { CommentResponseDTO } from "./CommentDTO";
 import formidable from "formidable";
+import { ShortUserResponseDTO } from "./UserDTO";
 
 export interface CreatePostDTO {
   userId: Schema.Types.ObjectId | undefined;
   caption: string;
   contentIds: Schema.Types.ObjectId[];
+  tagIds:Schema.Types.ObjectId[];
+  musicName:string;
+  musicURL:string;
+  musicAuthor:string;
+  musicImageURL:string;
 }
 
 export interface EditPostDTO {
   caption: string;
   remainContentIds: string[];
   contents: formidable.File[];
+  tagIds:string[];
+  musicName:string;
+  musicURL:string;
+  musicAuthor:string;
+  musicImageURL:string;
 }
 
 export interface PostResponseDTO {
-  _id: Schema.Types.ObjectId;
+  _id: string;
   firstName: string;
   lastName: string;
   nickName: string;
@@ -28,6 +39,11 @@ export interface PostResponseDTO {
   caption: string;
   createAt: string;
   contents: FileResponseDTO[];
+  tags:ShortUserResponseDTO[];
+  musicName:string;
+  musicURL:string;
+  musicAuthor:string;
+  musicImageURL:string;
 }
 
 export interface PostResponseManageDTO {

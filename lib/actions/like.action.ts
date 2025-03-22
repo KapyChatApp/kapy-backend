@@ -2,6 +2,7 @@ import Post from "@/database/post.model";
 import User from "@/database/user.model";
 import { Schema } from "mongoose";
 import { connectToDatabase } from "../mongoose";
+import { ShortUserResponseDTO } from "@/dtos/UserDTO";
 
 export const like = async (
   postId: string | undefined,
@@ -47,3 +48,25 @@ export const disLike = async (
     throw error;
   }
 };
+
+export const getDetailLikeOfPost = async(postId:string)=>{
+  try{
+    const post = await Post.findById(postId);
+    const likedUsers = await User.find({_id:{$in:post.likedIds}});
+    const likedUserResponses: ShortUserResponseDTO[]=[];
+    for(const user of likedUsers){
+      const likedUserResponse: ShortUserResponseDTO ={
+        _id:user._id,
+        firstName:user.firstName,
+        lastName:user.lastName,
+        nickName:user.nickName,
+        avatar:user.avatar,
+      }
+      likedUserResponses.push(likedUserResponse);
+    }
+    return likedUserResponses;
+  }catch(error){
+    console.log(error);
+    throw error;
+  }
+}

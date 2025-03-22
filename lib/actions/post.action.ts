@@ -2,7 +2,7 @@ import {
   CreatePostDTO,
   EditPostDTO,
   PostResponseDTO,
-  PostResponseManageDTO
+  PostResponseManageDTO,
 } from "@/dtos/PostDTO";
 import { connectToDatabase } from "../mongoose";
 import mongoose, { Schema } from "mongoose";
@@ -18,6 +18,7 @@ import { CommentResponseDTO } from "@/dtos/CommentDTO";
 import Comment from "@/database/comment.model";
 import { getAComment } from "./comment.action";
 import _ from "lodash";
+import { ShortUserResponseDTO } from "@/dtos/UserDTO";
 
 export const getAPost = async (
   postId: string,
@@ -28,14 +29,14 @@ export const getAPost = async (
     const post = await Post.findById(postId);
     const [stUserId, ndUserId] = [
       post.userId.toString(),
-      userId.toString()
+      userId.toString(),
     ].sort();
     if (userId.toString() != post.userId.toString()) {
       const relation = await Relation.findOne({
         stUser: stUserId,
         ndUser: ndUserId,
         relation: "bff",
-        status: true
+        status: true,
       });
       if (!relation) {
         return false;
@@ -43,7 +44,7 @@ export const getAPost = async (
     }
     const user = await User.findById(post.userId);
     const fileOfPost = await File.find({
-      _id: { $in: post.contentIds }
+      _id: { $in: post.contentIds },
     }).exec();
     const filesResponse: FileResponseDTO[] = [];
     for (const file of fileOfPost) {
@@ -55,7 +56,7 @@ export const getAPost = async (
         height: file.height,
         format: file.format,
         bytes: file.bytes,
-        type: file.type
+        type: file.type,
       };
       filesResponse.push(fileResponse);
     }
@@ -70,6 +71,19 @@ export const getAPost = async (
       commentResponses.push(commentResponse);
     }
 
+    const tags: ShortUserResponseDTO[] = [];
+    const tagUsers = await User.find({ _id: { $in: post.tagIds } });
+    for (const user of tagUsers) {
+      const tag: ShortUserResponseDTO = {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        nickName: user.nickName,
+        avatar: user.avatar,
+      };
+      tags.push(tag);
+    }
+
     const postResponse: PostResponseDTO = {
       _id: post._id,
       firstName: user.firstName,
@@ -82,7 +96,12 @@ export const getAPost = async (
       shares: post.shares,
       caption: post.caption,
       createAt: post.createAt,
-      contents: filesResponse
+      contents: filesResponse,
+      tags: tags,
+      musicName: post.musicName,
+      musicURL: post.musicURL,
+      musicAuthor: post.musicAuthor,
+      musicImageURL: post.musicImageURL,
     };
 
     for (const c of postResponse.comments) {
@@ -109,7 +128,7 @@ export const getSingleIdPosts = async (userId: string) => {
     const postsResponse: PostResponseDTO[] = [];
     for (const post of posts) {
       const fileOfPost = await File.find({
-        _id: { $in: post.contentIds }
+        _id: { $in: post.contentIds },
       }).exec();
       const filesResponse: FileResponseDTO[] = [];
       for (const file of fileOfPost) {
@@ -121,7 +140,7 @@ export const getSingleIdPosts = async (userId: string) => {
           height: file.height,
           format: file.format,
           bytes: file.bytes,
-          type: file.type
+          type: file.type,
         };
         filesResponse.push(fileResponse);
       }
@@ -136,6 +155,19 @@ export const getSingleIdPosts = async (userId: string) => {
         commentResponses.push(commentResponse);
       }
 
+      const tags: ShortUserResponseDTO[] = [];
+      const tagUsers = await User.find({ _id: { $in: post.tagIds } });
+      for (const user of tagUsers) {
+        const tag: ShortUserResponseDTO = {
+          _id: user._id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          nickName: user.nickName,
+          avatar: user.avatar,
+        };
+        tags.push(tag);
+      }
+
       const postResponse: PostResponseDTO = {
         _id: post._id,
         firstName: user.firstName,
@@ -148,7 +180,12 @@ export const getSingleIdPosts = async (userId: string) => {
         shares: post.shares,
         caption: post.caption,
         createAt: post.createAt,
-        contents: filesResponse
+        contents: filesResponse,
+        tags: tags,
+        musicName: post.musicName,
+        musicURL: post.musicURL,
+        musicAuthor: post.musicAuthor,
+        musicImageURL: post.musicImageURL,
       };
       postsResponse.push(postResponse);
     }
@@ -174,7 +211,7 @@ export const getManagePosts = async (userId: string) => {
     const postsResponse: PostResponseManageDTO[] = [];
     for (const post of posts) {
       const fileOfPost = await File.find({
-        _id: { $in: post.contentIds }
+        _id: { $in: post.contentIds },
       }).exec();
       const filesResponse: FileResponseDTO[] = [];
       for (const file of fileOfPost) {
@@ -186,7 +223,7 @@ export const getManagePosts = async (userId: string) => {
           height: file.height,
           format: file.format,
           bytes: file.bytes,
-          type: file.type
+          type: file.type,
         };
         filesResponse.push(fileResponse);
       }
@@ -214,7 +251,7 @@ export const getManagePosts = async (userId: string) => {
         caption: post.caption,
         createAt: post.createAt,
         contents: filesResponse,
-        flag: post.flag
+        flag: post.flag,
       };
       postsResponse.push(postResponse);
     }
@@ -237,7 +274,7 @@ export const getFriendPosts = async (
       stUser: stUserId,
       ndUser: ndUserId,
       relation: "bff",
-      status: true
+      status: true,
     });
     if (!relation) {
       return false;
@@ -257,7 +294,7 @@ export const createPost = async (param: CreatePostDTO) => {
     connectToDatabase();
     const postData = Object.assign(param, {
       createBy: param.userId ? param.userId : new mongoose.Types.ObjectId(),
-      flag: true
+      flag: true,
     });
     const createdPost = await Post.create(postData);
     return createdPost;
@@ -270,7 +307,12 @@ export const createPost = async (param: CreatePostDTO) => {
 export const addPost = async (
   filesToUpload: formidable.File[],
   caption: string[] | undefined,
-  userId: Schema.Types.ObjectId | undefined
+  userId: Schema.Types.ObjectId | undefined,
+  tagIds: string[],
+  musicName: string,
+  musicURL: string,
+  musicAuthor: string,
+  musicImageURL: string
 ) => {
   try {
     const contendIds: Schema.Types.ObjectId[] = [];
@@ -285,13 +327,23 @@ export const addPost = async (
         throw new Error("Creating file failed!");
       }
     }
+
+    const tags = await User.find({ _id: { $in: tagIds } });
+
+    const tagObjectIds = tags.map((tag) => tag._id);
+
     const postData: CreatePostDTO = {
       userId: userId,
       caption: caption ? caption.toString() : "",
-      contentIds: contendIds
+      contentIds: contendIds,
+      tagIds: tagObjectIds,
+      musicName: musicName,
+      musicURL: musicURL,
+      musicAuthor: musicAuthor,
+      musicImageURL: musicImageURL,
     };
     const postDataToCreate = await Object.assign(postData, {
-      createBy: userId
+      createBy: userId,
     });
     const createdPost = await Post.create(postDataToCreate);
 
@@ -374,6 +426,8 @@ export const editPost = async (
   try {
     console.log("Edit content: ", editContent);
     const post = await Post.findById(id);
+    const users = await User.find({ _id: { $in: editContent.tagIds } });
+    const tagObjectIds = users.filter((item) => item._id);
     if (!post) {
       return { message: "Post not exist!" };
     }
@@ -401,6 +455,11 @@ export const editPost = async (
     }
     post.caption = editContent.caption;
     post.contentIds.push(...createdFileIds);
+    post.tagIds = tagObjectIds;
+    post.musicName = editContent.musicName;
+    post.musicURL = editContent.musicURL;
+    post.musicAuthor = editContent.musicAuthor;
+    post.musicImageURL = editContent.musicImageURL;
     await post.save();
 
     return await getAPost(post._id, userId!);
