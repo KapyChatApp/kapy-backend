@@ -1,4 +1,3 @@
-
 import { disLike } from "@/lib/actions/like.action";
 import { authenticateToken } from "@/middleware/auth-middleware";
 import cors from "@/middleware/cors-middleware";
@@ -8,10 +7,10 @@ export default async function hanlder(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method === "POST") {
-    const { postId } = req.query;
-    cors(req, res, () => {
-      authenticateToken(req, res, async () => {
+  const { postId } = req.query;
+  cors(req, res, () => {
+    authenticateToken(req, res, async () => {
+      if (req.method === "POST") {
         try {
           if (typeof postId !== "string") {
             return res.status(400).json({ error: "Invalid user ID" });
@@ -21,9 +20,9 @@ export default async function hanlder(
         } catch (error) {
           console.error(error);
         }
-      });
+      } else {
+        return res.status(405).json({ message: "Method Not Allowed" });
+      }
     });
-  } else {
-    return res.status(405).json({ message: "Method Not Allowed" });
-  }
+  });
 }
