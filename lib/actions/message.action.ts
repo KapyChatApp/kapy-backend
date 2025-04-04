@@ -294,26 +294,26 @@ export async function createGroup(
     pin: false,
     createBy: userObjectId
   });
-  let messageBoxResponse: MessageBoxDTO|null = null;
-    const receiverIds: UserInfoBox[] = [];
-    for (const id of messageBox.receiverIds) {
-      const user = await User.findById(id);
-      console.log("ReceiverData: ", user);
-      const receiver: UserInfoBox = {
-        _id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        avatar: user.avatar,
-        nickName: user.nickName,
-        phone:user.phoneNumber
-      }
-      receiverIds.push(receiver);
-    }
-    messageBoxResponse = {
-      ...messageBox.toObject(),
-      receiverIds: receiverIds
-    }
-  
+  let messageBoxResponse: MessageBoxDTO | null = null;
+  const receiverIds: UserInfoBox[] = [];
+  for (const id of messageBox.receiverIds) {
+    const user = await User.findById(id);
+    console.log("ReceiverData: ", user);
+    const receiver: UserInfoBox = {
+      _id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      avatar: user.avatar,
+      nickName: user.nickName,
+      phone: user.phoneNumber
+    };
+    receiverIds.push(receiver);
+  }
+  messageBoxResponse = {
+    ...messageBox.toObject(),
+    receiverIds: receiverIds
+  };
+
   const pusherCreateGroup = messageBoxResponse;
 
   for (const memId of allReceiverIds) {
@@ -482,7 +482,6 @@ export async function fetchMessage(boxId: string, userId: string) {
           _id: messageId,
           [`visibility.${userId}`]: true // Kiểm tra visibility của userId
         });
-        console.log("message: ", message);
         if (!message) {
           // Nếu không tìm thấy tin nhắn có visibility đúng, bỏ qua
           return null;
@@ -571,7 +570,6 @@ export async function checkMarkMessageAsRead(boxIds: string[], userId: string) {
         }
       })
     );
-    console.log(results);
     return results;
   } catch (error) {
     console.error("Error checking message read status: ", error);
@@ -1358,7 +1356,7 @@ export async function addMember(
     let newUserInfo = "";
     for (const id of newMember) {
       const user = await User.findById(id);
-      newUserInfo = user.firstName +" "+user.lastName +" "
+      newUserInfo = user.firstName + " " + user.lastName + " ";
     }
 
     for (const memberId of newMember) {
@@ -1402,7 +1400,6 @@ export async function addMember(
         .trigger(`private-${memId}`, "new-box", pusherCreateGroup)
         .then(() => console.log("Add member successfully: ", pusherCreateGroup))
         .catch((error) => console.error("Failed to add member:", error));
-     
     }
     await pusherServer
       .trigger(`private-${boxId}`, "new-message", message)
@@ -1450,8 +1447,6 @@ export async function getAllMessage() {
         };
       }
     );
-
-    console.log(responseMessage);
     return responseMessage;
   } catch (error) {
     console.error("Error fetching all messages: ", error);
