@@ -4,6 +4,7 @@ import cors from "cors";
 import { Server } from "socket.io";
 import next from "next";
 import onCall from "./socket-events/onCall.js";
+import onWebrtcSignal from "./socket-events/onWebrtcSignal.js";
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
@@ -92,6 +93,7 @@ app.prepare().then(() => {
 
     // Calls
     socket.on("call", onCall);
+    socket.on("webrtcSignal", onWebrtcSignal);
   });
 
   // Next.js API routes và Pages sẽ chạy sau khi cấu hình Express
