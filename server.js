@@ -6,6 +6,9 @@ import next from "next";
 import onCall from "./socket-events/onCall.js";
 import onWebrtcSignal from "./socket-events/onWebrtcSignal.js";
 import onHangup from "./socket-events/onHangup.js";
+import onGroupCall from "./socket-events/onGroupCall.js";
+import onGroupWebrtcSignal from "./socket-events/onGroupWebrtcSignal.js";
+import onGroupHangup from "./socket-events/onGroupHangup.js";
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
@@ -62,7 +65,7 @@ app.prepare().then(() => {
 
   io.on("connection", (socket) => {
     console.log("Client connected...");
-
+    console.log(`🔌 Client connected: ${socket.id}`);
     // New user event
     socket.on("addNewUsers", (clerkUser) => {
       if (clerkUser) {
@@ -96,6 +99,11 @@ app.prepare().then(() => {
     socket.on("call", onCall);
     socket.on("webrtcSignal", onWebrtcSignal);
     socket.on("hangup", onHangup);
+
+    // Group call events
+    socket.on("groupCall", onGroupCall);
+    socket.on("groupWebrtcSignal", onGroupWebrtcSignal);
+    socket.on("groupHangup", onGroupHangup);
   });
 
   // Next.js API routes và Pages sẽ chạy sau khi cấu hình Express
