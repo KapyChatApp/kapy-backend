@@ -35,8 +35,12 @@ app.prepare().then(() => {
           callback(new Error("Not allowed by CORS"));
         }
       },
-      methods: ["GET", "POST"],
-      allowedHeaders: ["Authorization", "Content-Type"],
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+      allowedHeaders: [
+        "Authorization",
+        "Content-Type",
+        "Access-Control-Allow-Headers"
+      ],
       credentials: true
     })
   );
@@ -55,8 +59,12 @@ app.prepare().then(() => {
           callback(new Error("Not allowed by CORS"));
         }
       },
-      methods: ["GET", "POST"],
-      allowedHeaders: ["Authorization", "Content-Type"],
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+      allowedHeaders: [
+        "Authorization",
+        "Content-Type",
+        "Access-Control-Allow-Headers"
+      ],
       credentials: true
     }
   });
