@@ -1,4 +1,7 @@
-import { getAllMessage, hiddenMessage } from "@/lib/actions/message.action";
+import {
+  getAllMessageToCheck,
+  hiddenMessage
+} from "@/lib/actions/message.action";
 import { minusPoint } from "@/lib/actions/community.action";
 import fetch from "node-fetch";
 import { NextApiRequest, NextApiResponse } from "next/types";
@@ -14,7 +17,7 @@ export default async function handler(
       authorizeRole(["admin"])(req, res, async () => {
         if (req.method === "POST") {
           try {
-            const messages = await getAllMessage();
+            const messages = await getAllMessageToCheck();
 
             // Chỉ giữ lại những message cần kiểm duyệt
             const messagesToCheck = messages.filter(
@@ -48,8 +51,6 @@ export default async function handler(
                 return null;
               })
             );
-
-            // Lọc ra những message thực sự bị xoá
             const checkedMessages = results
               .filter((r) => r.status === "fulfilled" && r.value !== null)
               // eslint-disable-next-line @typescript-eslint/no-explicit-any

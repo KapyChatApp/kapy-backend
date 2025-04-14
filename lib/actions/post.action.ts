@@ -1,8 +1,9 @@
 import {
+  CheckedPostReponse,
   CreatePostDTO,
   EditPostDTO,
   PostResponseDTO,
-  PostResponseManageDTO,
+  PostResponseManageDTO
 } from "@/dtos/PostDTO";
 import { connectToDatabase } from "../mongoose";
 import mongoose, { Schema } from "mongoose";
@@ -29,14 +30,14 @@ export const getAPost = async (
     const post = await Post.findById(postId);
     const [stUserId, ndUserId] = [
       post.userId.toString(),
-      userId.toString(),
+      userId.toString()
     ].sort();
     if (userId.toString() != post.userId.toString()) {
       const relation = await Relation.findOne({
         stUser: stUserId,
         ndUser: ndUserId,
         relation: "bff",
-        status: true,
+        status: true
       });
       if (!relation) {
         return false;
@@ -44,7 +45,7 @@ export const getAPost = async (
     }
     const user = await User.findById(post.userId);
     const fileOfPost = await File.find({
-      _id: { $in: post.contentIds },
+      _id: { $in: post.contentIds }
     }).exec();
     const filesResponse: FileResponseDTO[] = [];
     for (const file of fileOfPost) {
@@ -56,7 +57,7 @@ export const getAPost = async (
         height: file.height,
         format: file.format,
         bytes: file.bytes,
-        type: file.type,
+        type: file.type
       };
       filesResponse.push(fileResponse);
     }
@@ -79,7 +80,7 @@ export const getAPost = async (
         firstName: user.firstName,
         lastName: user.lastName,
         nickName: user.nickName,
-        avatar: user.avatar,
+        avatar: user.avatar
       };
       tags.push(tag);
     }
@@ -101,7 +102,7 @@ export const getAPost = async (
       musicName: post.musicName,
       musicURL: post.musicURL,
       musicAuthor: post.musicAuthor,
-      musicImageURL: post.musicImageURL,
+      musicImageURL: post.musicImageURL
     };
 
     for (const c of postResponse.comments) {
@@ -128,7 +129,7 @@ export const getSingleIdPosts = async (userId: string) => {
     const postsResponse: PostResponseDTO[] = [];
     for (const post of posts) {
       const fileOfPost = await File.find({
-        _id: { $in: post.contentIds },
+        _id: { $in: post.contentIds }
       }).exec();
       const filesResponse: FileResponseDTO[] = [];
       for (const file of fileOfPost) {
@@ -140,7 +141,7 @@ export const getSingleIdPosts = async (userId: string) => {
           height: file.height,
           format: file.format,
           bytes: file.bytes,
-          type: file.type,
+          type: file.type
         };
         filesResponse.push(fileResponse);
       }
@@ -163,7 +164,7 @@ export const getSingleIdPosts = async (userId: string) => {
           firstName: user.firstName,
           lastName: user.lastName,
           nickName: user.nickName,
-          avatar: user.avatar,
+          avatar: user.avatar
         };
         tags.push(tag);
       }
@@ -185,7 +186,7 @@ export const getSingleIdPosts = async (userId: string) => {
         musicName: post.musicName,
         musicURL: post.musicURL,
         musicAuthor: post.musicAuthor,
-        musicImageURL: post.musicImageURL,
+        musicImageURL: post.musicImageURL
       };
       postsResponse.push(postResponse);
     }
@@ -211,7 +212,7 @@ export const getManagePosts = async (userId: string) => {
     const postsResponse: PostResponseManageDTO[] = [];
     for (const post of posts) {
       const fileOfPost = await File.find({
-        _id: { $in: post.contentIds },
+        _id: { $in: post.contentIds }
       }).exec();
       const filesResponse: FileResponseDTO[] = [];
       for (const file of fileOfPost) {
@@ -223,7 +224,7 @@ export const getManagePosts = async (userId: string) => {
           height: file.height,
           format: file.format,
           bytes: file.bytes,
-          type: file.type,
+          type: file.type
         };
         filesResponse.push(fileResponse);
       }
@@ -251,7 +252,7 @@ export const getManagePosts = async (userId: string) => {
         caption: post.caption,
         createAt: post.createAt,
         contents: filesResponse,
-        flag: post.flag,
+        flag: post.flag
       };
       postsResponse.push(postResponse);
     }
@@ -274,7 +275,7 @@ export const getFriendPosts = async (
       stUser: stUserId,
       ndUser: ndUserId,
       relation: "bff",
-      status: true,
+      status: true
     });
     if (!relation) {
       return false;
@@ -294,7 +295,7 @@ export const createPost = async (param: CreatePostDTO) => {
     connectToDatabase();
     const postData = Object.assign(param, {
       createBy: param.userId ? param.userId : new mongoose.Types.ObjectId(),
-      flag: true,
+      flag: true
     });
     const createdPost = await Post.create(postData);
     return createdPost;
@@ -340,10 +341,10 @@ export const addPost = async (
       musicName: musicName,
       musicURL: musicURL,
       musicAuthor: musicAuthor,
-      musicImageURL: musicImageURL,
+      musicImageURL: musicImageURL
     };
     const postDataToCreate = await Object.assign(postData, {
-      createBy: userId,
+      createBy: userId
     });
     const createdPost = await Post.create(postDataToCreate);
 
@@ -465,6 +466,32 @@ export const editPost = async (
     return await getAPost(post._id, userId!);
   } catch (error) {
     console.log(error);
+    throw error;
+  }
+};
+
+export const getAllPostsToCheck = async () => {
+  try {
+    await connectToDatabase();
+    const allPosts = await Post.find().populate("contentIds createBy");
+
+    const responsePost: CheckedPostReponse[] = allPosts.map((item) => ({
+      _id: item._id.toString(),
+      flag: item.flag,
+      firstName: item?.createBy?.firstName || "",
+      lastName: item?.createBy?.lastName || "",
+      userId: item?.userId.toString() || "",
+      likedIds: item.likedIds?.length || 0,
+      shares: item.shares?.length || 0,
+      comments: item.comments?.length || 0,
+      caption: item.caption || "",
+      createAt: item.createAt,
+      contents: item.contentId || [] // nếu populate contentId là một mảng hoặc object
+    }));
+
+    return responsePost;
+  } catch (error) {
+    console.error("Error fetching all posts: ", error);
     throw error;
   }
 };
