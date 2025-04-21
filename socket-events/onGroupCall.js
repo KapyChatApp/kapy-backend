@@ -1,6 +1,7 @@
 import { io } from "../server.js";
 
 const onGroupCall = async (participantsGroup) => {
+  // participantsGroup: ParticipantsGroup
   console.log(
     `📞 Group call initiated by host: ${participantsGroup.caller.userId}, groupId: ${participantsGroup.groupDetails._id}, groupName: ${participantsGroup.groupDetails.name}`
   );

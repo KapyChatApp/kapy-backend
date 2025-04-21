@@ -1,6 +1,10 @@
 import { io } from "../server.js";
 
 const onGroupHangup = async (data) => {
+  // data: {
+  //     ongoingGroupCall: OngoingGroupCall ;
+  //     userHangingupId: string;
+  //   }
   const { userHangingupId, ongoingGroupCall } = data;
   const { caller, receivers } = ongoingGroupCall.participantsGroup;
 
