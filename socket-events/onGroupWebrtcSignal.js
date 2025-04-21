@@ -1,6 +1,11 @@
 import { io } from "../server.js";
 
 const onGroupWebrtcSignal = async (data) => {
+  // data : {
+  //   sdp: SignalData;
+  //   ongoingGroupCall: OngoingGroupCall;
+  //   isCaller: boolean;
+  // }
   if (data.isCaller) {
     const receivers = data.ongoingGroupCall?.participantsGroup?.receivers || [];
 

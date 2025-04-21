@@ -1,6 +1,11 @@
 import { io } from "../server.js";
 
 const onHangup = async (data) => {
+  // data: {
+  //   ongoingCall: OngoingCall,
+  //   userHangingupId: string
+  // }
+
   let socketIdEmitTo;
 
   if (data?.ongoingCall.participants.caller.userId === data.userHangingupId)
