@@ -27,6 +27,9 @@ export default async function handler(
             // Xử lý song song bằng Promise.allSettled
             const results = await Promise.allSettled(
               messagesToCheck.map(async (message) => {
+                if (message.text.length === 0) {
+                  return null;
+                }
                 const lastText = message.text[message.text.length - 1];
                 const encodedText = encodeURIComponent(lastText);
 
