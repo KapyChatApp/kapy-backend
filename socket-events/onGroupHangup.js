@@ -32,7 +32,7 @@ const onGroupHangup = async (data) => {
 
     otherParticipants.forEach((participant) => {
       if (participant.socketId && leaver) {
-        io.to(participant.socketId).emit("groupPeerLeave", {
+        io.to(participant.socketId).emit("leavingRoom", {
           leaverUserId: userHangingupId,
           participantsGroup: {
             caller,
