@@ -24,6 +24,9 @@ export default async function handler(
             const results = await Promise.allSettled(
               postsToCheck.map(async (post) => {
                 const caption = post.caption;
+                if (!caption || caption.trim() === "") {
+                  return null;
+                }
                 const encodedText = encodeURIComponent(caption);
 
                 const response = await fetch(
