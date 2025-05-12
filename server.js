@@ -9,6 +9,9 @@ import onHangup from "./socket-events/onHangup.js";
 import onGroupCall from "./socket-events/onGroupCall.js";
 import onGroupWebrtcSignal from "./socket-events/onGroupWebrtcSignal.js";
 import onGroupHangup from "./socket-events/onGroupHangup.js";
+import onRejoinGroupCall from "./socket-events/onRejoinGroupCall.js";
+import onRequestGroupCallData from "./socket-events/onRequestGroupData.js";
+import onProvideGroupCallData from "./socket-events/onProvideGroupData.js";
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
@@ -55,8 +58,13 @@ app.prepare().then(() => {
           callback(new Error("Not allowed by CORS"));
         }
       },
-      methods: ["GET", "POST"],
-      allowedHeaders: ["Authorization", "Content-Type"],
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      allowedHeaders: [
+        "Access-Control-Allow-Headers",
+        "Access-Control-Allow-Methods",
+        "Authorization",
+        "Content-Type"
+      ],
       credentials: true
     }
   });
@@ -104,6 +112,9 @@ app.prepare().then(() => {
     socket.on("groupCall", onGroupCall);
     socket.on("groupWebrtcSignal", onGroupWebrtcSignal);
     socket.on("groupHangup", onGroupHangup);
+    socket.on("rejoinGroupCall", onRejoinGroupCall);
+    socket.on("requestGroupCallData", onRequestGroupCallData(onlineUsers));
+    socket.on("provideGroupCallData", onProvideGroupCallData);
   });
 
   // Next.js API routes và Pages sẽ chạy sau khi cấu hình Express

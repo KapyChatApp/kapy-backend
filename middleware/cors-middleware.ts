@@ -4,7 +4,7 @@ export default function cors(
   res: NextApiResponse,
   next: () => void
 ) {
-  res.setHeader("Access-Control-Allow-Origin", "*"); 
+  res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
     "Access-Control-Allow-Methods",
     "GET,HEAD,PUT,PATCH,POST,DELETE"
