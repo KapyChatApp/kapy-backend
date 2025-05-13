@@ -10,8 +10,8 @@ import onGroupCall from "./socket-events/onGroupCall.js";
 import onGroupWebrtcSignal from "./socket-events/onGroupWebrtcSignal.js";
 import onGroupHangup from "./socket-events/onGroupHangup.js";
 import onRejoinGroupCall from "./socket-events/onRejoinGroupCall.js";
-import onRequestGroupCallData from "./socket-events/onRequestGroupData.js";
 import onProvideGroupCallData from "./socket-events/onProvideGroupData.js";
+import onRequestGroupCallData from "./socket-events/onRequestGroupData.js";
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
@@ -23,7 +23,9 @@ const handler = app.getRequestHandler();
 console.log("Running...");
 
 export let io;
+export let onlineUsers = [];
 export const userSocketMap = {}; // Lưu trữ userId -> socketId
+export const ongoingGroupCalls = new Map(); // Server memory: groupId -> ongoingGroupCall
 
 app.prepare().then(() => {
   const expressApp = express(); // Dùng Express để chạy API routes
@@ -69,8 +71,6 @@ app.prepare().then(() => {
     }
   });
 
-  let onlineUsers = [];
-
   io.on("connection", (socket) => {
     console.log("Client connected...");
     console.log(`🔌 Client connected: ${socket.id}`);
@@ -112,9 +112,9 @@ app.prepare().then(() => {
     socket.on("groupCall", onGroupCall);
     socket.on("groupWebrtcSignal", onGroupWebrtcSignal);
     socket.on("groupHangup", onGroupHangup);
+    socket.on("requestOngoingCall", onRequestGroupCallData);
+    socket.on("provideOngoingGroupCall", onProvideGroupCallData);
     socket.on("rejoinGroupCall", onRejoinGroupCall);
-    socket.on("requestGroupCallData", onRequestGroupCallData(onlineUsers));
-    socket.on("provideGroupCallData", onProvideGroupCallData);
   });
 
   // Next.js API routes và Pages sẽ chạy sau khi cấu hình Express

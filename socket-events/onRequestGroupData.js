@@ -1,4 +1,4 @@
-import { io } from "../server.js";
+import { io, onlineUsers } from "../server.js";
 
 // data: {
 //   groupInfo: {
@@ -11,13 +11,14 @@ import { io } from "../server.js";
 //   socketId: string // socket hiện tại
 // }
 
-const onRequestGroupCallData = (onlineUsers) => (data) => {
-  const { groupInfo, userId, socketId } = data;
+const onRequestGroupCallData = (data) => {
+  const { groupInfo, fromUser } = data;
+  const { members } = groupInfo;
 
-  const memberIds = groupInfo.members.map((m) => m._id);
+  const memberIds = members.map((m) => m._id);
 
   const onlineGroupMembers = onlineUsers.filter(
-    (user) => memberIds.includes(user.userId) && user.userId !== userId
+    (user) => memberIds.includes(user.userId) && user.userId !== fromUser.userId
   );
 
   console.log(
@@ -25,9 +26,9 @@ const onRequestGroupCallData = (onlineUsers) => (data) => {
   );
 
   onlineGroupMembers.forEach((user) => {
-    io.to(user.socketId).emit("needGroupCallData", {
+    io.to(user.socketId).emit("needOngoingGroupCall", {
       groupId: groupInfo._id,
-      toSocketId: socketId
+      fromUser: fromUser
     });
   });
 };

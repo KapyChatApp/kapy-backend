@@ -1,25 +1,38 @@
 import { io } from "../server.js";
 
 const onGroupWebrtcSignal = async (data) => {
-  // data : {
-  //   sdp: SignalData;
-  //   ongoingGroupCall: OngoingGroupCall;
-  //   isCaller: boolean;
-  // }
-  if (data.isCaller) {
-    const receivers = data.ongoingGroupCall?.participantsGroup?.receivers || [];
+  const { sdp, ongoingGroupCall, isCaller, fromUser } = data;
 
+  const { caller, receivers } = ongoingGroupCall.participantsGroup;
+
+  const otherCallees = [caller, ...receivers].filter(
+    (user) => user.userId !== fromUser.userId
+  );
+
+  if (isCaller) {
+    // Caller gửi offer cho các callee
     receivers.forEach((receiver) => {
-      if (receiver?.socketId) {
-        io.to(receiver.socketId).emit("groupWebrtcSignal", data);
+      if (receiver.socketId) {
+        io.to(receiver.socketId).emit("groupWebrtcSignal", {
+          sdp,
+          ongoingGroupCall,
+          isCaller,
+          fromUser
+        });
       }
     });
   } else {
-    const callerSocketId =
-      data.ongoingGroupCall?.participantsGroup?.caller?.socketId;
-    if (callerSocketId) {
-      io.to(callerSocketId).emit("groupWebrtcSignal", data);
-    }
+    // Callee gửi offer cho caller
+    otherCallees.forEach((other) => {
+      if (other.socketId) {
+        io.to(other.socketId).emit("groupWebrtcSignal", {
+          sdp,
+          ongoingGroupCall,
+          isCaller,
+          fromUser
+        });
+      }
+    });
   }
 };
 

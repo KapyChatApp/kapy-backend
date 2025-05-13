@@ -1,4 +1,4 @@
-import { io } from "../server.js";
+import { io, ongoingGroupCalls } from "../server.js";
 
 const onGroupHangup = async (data) => {
   const { userHangingupId, ongoingGroupCall, isEmitHangup } = data;
@@ -20,6 +20,7 @@ const onGroupHangup = async (data) => {
         io.to(participant.socketId).emit("groupHangup"); // gửi sự kiện kết thúc
       }
     });
+    ongoingGroupCalls.delete(groupDetails._id);
   } else {
     // 👉 TH này là rời khỏi cuộc gọi
     const updatedReceivers = receivers.filter(
