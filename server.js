@@ -25,48 +25,35 @@ export const userSocketMap = {}; // Lưu trữ userId -> socketId
 app.prepare().then(() => {
   const expressApp = express(); // Dùng Express để chạy API routes
 
-  // Cấu hình CORS cho Express
+  // Cấu hình CORS cho Express (cho phép tất cả các nguồn)
   expressApp.use(
     cors({
-      origin: (origin, callback) => {
-        if (!origin || origin.startsWith("http://localhost:3001")) {
-          callback(null, true);
-        } else {
-          callback(new Error("Not allowed by CORS"));
-        }
-      },
+      origin: true, // Cho phép tất cả các nguồn
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
       allowedHeaders: [
         "Authorization",
         "Content-Type",
-        "Access-Control-Allow-Headers"
+        "Access-Control-Allow-Headers",
       ],
-      credentials: true
+      credentials: true,
     })
   );
 
   // Tạo HTTP server
   const httpServer = createServer(expressApp);
 
-  // Cấu hình Socket.IO với CORS
+  // Cấu hình Socket.IO với CORS (cho phép tất cả các nguồn)
   io = new Server(httpServer, {
     cors: {
-      origin: (origin, callback) => {
-        if (!origin || origin.startsWith("http://localhost:3001")) {
-          callback(null, true);
-        } else {
-          console.error("CORS error: Not allowed by CORS");
-          callback(new Error("Not allowed by CORS"));
-        }
-      },
+      origin: true, // Cho phép tất cả các nguồn
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
       allowedHeaders: [
         "Authorization",
         "Content-Type",
-        "Access-Control-Allow-Headers"
+        "Access-Control-Allow-Headers",
       ],
-      credentials: true
-    }
+      credentials: true,
+    },
   });
 
   let onlineUsers = [];
@@ -87,7 +74,7 @@ app.prepare().then(() => {
           onlineUsers.push({
             userId: clerkUser._id,
             socketId: socket.id,
-            profile: clerkUser
+            profile: clerkUser,
           });
         }
 
