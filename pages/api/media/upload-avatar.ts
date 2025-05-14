@@ -4,6 +4,8 @@ import { authenticateToken } from "@/middleware/auth-middleware";
 import cloudinary from "@/cloudinary";
 import { IncomingForm } from "formidable";
 import cors from "@/middleware/cors-middleware";
+import { addPost } from "@/lib/actions/post.action";
+import { findUserById } from "@/lib/actions/user.action";
 
 export const config = {
   api: {
@@ -37,6 +39,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
                 result.secure_url,
                 result.public_id
               );
+              // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+              const user = await findUserById(req.user?.id?.toString()!);
+              await addPost([file], [`${user.firstName + " "+ user.lastName} Update a new avatar`], req.user?.id,[],"","","","");
               return res
                 .status(200)
                 .json({ status: true, message: "Update successfully!" });
