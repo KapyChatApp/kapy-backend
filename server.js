@@ -9,9 +9,9 @@ import onHangup from "./socket-events/onHangup.js";
 import onGroupCall from "./socket-events/onGroupCall.js";
 import onGroupWebrtcSignal from "./socket-events/onGroupWebrtcSignal.js";
 import onGroupHangup from "./socket-events/onGroupHangup.js";
-import onRejoinGroupCall from "./socket-events/onRejoinGroupCall.js";
 import onProvideGroupCallData from "./socket-events/onProvideGroupData.js";
 import onRequestGroupCallData from "./socket-events/onRequestGroupData.js";
+import onNewGroupParticipant from "./socket-events/onNewGroupParticipant.js";
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
@@ -114,7 +114,7 @@ app.prepare().then(() => {
     socket.on("groupHangup", onGroupHangup);
     socket.on("requestOngoingCall", onRequestGroupCallData);
     socket.on("provideOngoingGroupCall", onProvideGroupCallData);
-    socket.on("rejoinGroupCall", onRejoinGroupCall);
+    socket.on("newGroupParticipant", onNewGroupParticipant);
   });
 
   // Next.js API routes và Pages sẽ chạy sau khi cấu hình Express
