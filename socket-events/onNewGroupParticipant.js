@@ -2,16 +2,16 @@ import { io } from "../server.js";
 
 const onNewGroupParticipant = (data) => {
   const { newCallee, updatedOngoing } = data;
-
+  console.log("New participant: ", data);
   if (!updatedOngoing || !updatedOngoing.participantsGroup) {
     console.error("Missing updatedOngoing in newGroupParticipant data");
     return;
   }
 
-  const { callees } = updatedOngoing.participantsGroup;
+  const { currentJoiners } = updatedOngoing.participantsGroup;
 
   // All participants except the new one
-  const existingParticipants = callees.filter(
+  const existingParticipants = currentJoiners.filter(
     (user) => user.userId !== newCallee.userId
   );
 
