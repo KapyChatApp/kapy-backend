@@ -8,10 +8,10 @@ const onNewGroupParticipant = (data) => {
     return;
   }
 
-  const { receivers } = updatedOngoing.participantsGroup;
+  const { callees } = updatedOngoing.participantsGroup;
 
   // All participants except the new one
-  const existingParticipants = receivers.filter(
+  const existingParticipants = callees.filter(
     (user) => user.userId !== newCallee.userId
   );
 

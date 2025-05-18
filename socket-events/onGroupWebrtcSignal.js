@@ -1,69 +1,23 @@
-import { io } from "../server.js";
+import { io, onlineUsers } from "../server.js";
 
-const onGroupWebrtcSignal = async (data) => {
-  const { sdp, ongoingGroupCall, isCaller, fromUser } = data;
+const onGroupWebrtcSignal = (data) => {
+  const { sdp, fromUserId, toUserId, ongoingGroupCall } = data;
 
-  if (!ongoingGroupCall || !ongoingGroupCall.participantsGroup) {
-    console.error("Missing ongoingGroupCall in signal data");
+  if (!fromUserId || !toUserId || !sdp) {
+    console.warn("⚠️ Thiếu dữ liệu cần thiết trong WebRTC signal");
     return;
   }
 
-  const { caller, receivers } = ongoingGroupCall.participantsGroup;
-
-  if (isCaller) {
-    // Caller is sending signals
-    // Forward to all receivers except the sender
-    console.error("Check isCaller");
-    receivers.forEach((receiver) => {
-      if (receiver.socketId && receiver.userId !== fromUser.userId) {
-        io.to(receiver.socketId).emit("groupWebrtcSignal", {
-          sdp,
-          ongoingGroupCall,
-          isCaller,
-          fromUser
-        });
-      }
+  const target = onlineUsers.find((user) => user.userId === toUserId);
+  if (target?.socketId) {
+    io.to(target.socketId).emit("groupWebrtcSignal", {
+      sdp,
+      fromUserId,
+      ongoingGroupCall
     });
+    console.log(`✅ [WebRTC] Sending SDP from ${fromUserId} to ${toUserId}`);
   } else {
-    // Not the caller, decide where to send
-    if (caller.userId === fromUser.userId) {
-      console.error("Check caller being fromUser");
-      // Caller is sending to all receivers
-      receivers.forEach((receiver) => {
-        if (receiver.socketId && receiver.userId !== fromUser.userId) {
-          io.to(receiver.socketId).emit("groupWebrtcSignal", {
-            sdp,
-            ongoingGroupCall,
-            isCaller: false,
-            fromUser
-          });
-        }
-      });
-    } else {
-      // Receiver is sending to caller and other receivers
-      // Send to caller
-      console.error("Check !isCaller");
-      if (caller.socketId) {
-        io.to(caller.socketId).emit("groupWebrtcSignal", {
-          sdp,
-          ongoingGroupCall,
-          isCaller: false,
-          fromUser
-        });
-      }
-
-      // Send to other receivers
-      receivers.forEach((receiver) => {
-        if (receiver.socketId && receiver.userId !== fromUser.userId) {
-          io.to(receiver.socketId).emit("groupWebrtcSignal", {
-            sdp,
-            ongoingGroupCall,
-            isCaller: false,
-            fromUser
-          });
-        }
-      });
-    }
+    console.warn(`⚠️ [WebRTC] No find socket of user ${toUserId}`);
   }
 };
 
