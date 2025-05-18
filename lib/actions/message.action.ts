@@ -46,12 +46,12 @@ const generateRandomString = (length = 20) => {
 
 async function createContent(
   data: RequestSendMessageDTO,
-  files: formidable.Files,
   userId: string,
-  membersIds: string[]
+  membersIds: string[],
+  files?: formidable.Files
 ) {
   let contentIds: mongoose.Types.ObjectId[] = [];
-  const userObjectId = new Types.ObjectId(userId);
+  const userObjectId = new Types.ObjectId(data.caller ? data.caller : userId);
   let text: string[] = [];
 
   if (typeof data.content === "string") {
@@ -62,7 +62,7 @@ async function createContent(
     data.content.format &&
     data.content.type
   ) {
-    if (files.file) {
+    if (files && files.file) {
       const file = Array.isArray(files.file) ? files.file[0] : files.file;
       const createdFile = await createFile(file, userId);
       contentIds = [createdFile._id];
@@ -82,7 +82,7 @@ async function createContent(
   const message = await Message.create({
     flag: true,
     visibility: visibilityMap,
-    readedId: [userId],
+    readedId: data.caller ? [data.caller] : [userId],
     contentId: contentIds,
     text: text,
     boxId: new Types.ObjectId(data.boxId),
@@ -96,8 +96,8 @@ async function createContent(
 
 export async function createMessage(
   data: RequestSendMessageDTO,
-  files: formidable.Files,
-  userId: string
+  userId: string,
+  files?: formidable.Files
 ) {
   try {
     await connectToDatabase();
@@ -123,7 +123,7 @@ export async function createMessage(
           throw new Error("UserId must be in MembersId list");
         }
 
-        const message = await createContent(data, files, userId, membersIds);
+        const message = await createContent(data, userId, membersIds, files);
         const populatedMessage = await Message.findById(message._id).populate({
           path: "contentId",
           model: "File",
@@ -188,7 +188,7 @@ export async function createMessage(
           ),
           detailBox.senderId.toString()
         ];
-        const message = await createContent(data, files, userId, membersIds);
+        const message = await createContent(data, userId, membersIds, files);
         detailBox = await MessageBox.findByIdAndUpdate(
           detailBox._id,
           {
@@ -348,7 +348,8 @@ export async function recieveMessage(messageId: string) {
 export async function editMessage(
   messageId: string,
   newContent: string,
-  userId: string
+  userId: string,
+  userHangup?: string
 ) {
   try {
     await connectToDatabase();
@@ -359,37 +360,41 @@ export async function editMessage(
       flag: true
     });
 
-    if (!message) {
-      throw new Error("Message not found");
+    if (!message) throw new Error("Message not found");
+    const isTextOnly = message.text !== "" && message.contentId.length === 0;
+    const isOwner = message.createBy.toString() === userId;
+
+    const canEdit = userHangup ? isTextOnly : isTextOnly && isOwner;
+
+    if (!canEdit) {
+      throw new Error(
+        userHangup
+          ? "Only text can be edited"
+          : "Unauthorized to edit this message"
+      );
     }
-    if (message.createBy.toString() === userId) {
-      if (message.text !== "" && message.contentId.length === 0) {
-        message.text.push(newContent);
-        message.updatedAt = new Date();
-        await message.save();
-        const updatedMessage = await Message.findById(message._id).populate(
-          "contentId"
-        );
-        const editedMessage: ResponseMessageDTO = {
-          id: updatedMessage._id.toString(),
-          flag: true,
-          isReact: [],
-          readedId: updatedMessage.readedId.map((id: any) => id.toString()),
-          contentId:
-            updatedMessage.contentId[updatedMessage.contentId.length - 1],
-          text: newContent,
-          boxId: updatedMessage.boxId.toString(),
-          // Chuyển ObjectId sang chuỗi
-          createAt: updatedMessage.createAt,
-          createBy: updatedMessage.createBy.toString()
-        };
-        return { success: true, editedMessage };
-      } else {
-        throw new Error("Only text can be edited");
-      }
-    } else {
-      throw new Error("Unauthorized to edit this message");
-    }
+
+    message.text.push(newContent);
+    message.updatedAt = new Date();
+    await message.save();
+
+    const updatedMessage = await Message.findById(message._id).populate(
+      "contentId"
+    );
+
+    const editedMessage: ResponseMessageDTO = {
+      id: updatedMessage._id.toString(),
+      flag: true,
+      isReact: [],
+      readedId: updatedMessage.readedId.map((id: any) => id.toString()),
+      contentId: updatedMessage.contentId[updatedMessage.contentId.length - 1],
+      text: newContent,
+      boxId: updatedMessage.boxId.toString(),
+      createAt: updatedMessage.createAt,
+      createBy: updatedMessage.createBy.toString()
+    };
+
+    return { success: true, editedMessage };
   } catch (error) {
     console.error("Error editing message: ", error);
     throw error;

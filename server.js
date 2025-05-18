@@ -9,6 +9,9 @@ import onHangup from "./socket-events/onHangup.js";
 import onGroupCall from "./socket-events/onGroupCall.js";
 import onGroupWebrtcSignal from "./socket-events/onGroupWebrtcSignal.js";
 import onGroupHangup from "./socket-events/onGroupHangup.js";
+import onProvideGroupCallData from "./socket-events/onProvideGroupData.js";
+import onRequestGroupCallData from "./socket-events/onRequestGroupData.js";
+import onNewGroupParticipant from "./socket-events/onNewGroupParticipant.js";
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
@@ -20,7 +23,9 @@ const handler = app.getRequestHandler();
 console.log("Running...");
 
 export let io;
+export let onlineUsers = [];
 export const userSocketMap = {}; // Lưu trữ userId -> socketId
+export const ongoingGroupCalls = new Map(); // Server memory: groupId -> ongoingGroupCall
 
 app.prepare().then(() => {
   const expressApp = express(); // Dùng Express để chạy API routes
@@ -33,9 +38,9 @@ app.prepare().then(() => {
       allowedHeaders: [
         "Authorization",
         "Content-Type",
-        "Access-Control-Allow-Headers",
+        "Access-Control-Allow-Headers"
       ],
-      credentials: true,
+      credentials: true
     })
   );
 
@@ -46,17 +51,28 @@ app.prepare().then(() => {
   io = new Server(httpServer, {
     cors: {
       origin: true, // Cho phép tất cả các nguồn
-      methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-      allowedHeaders: [
-        "Authorization",
-        "Content-Type",
-        "Access-Control-Allow-Headers",
+      methods: [
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE",
+        "PUT",
+        "PATCH",
+        "DELETE",
+        "OPTIONS"
       ],
-      credentials: true,
-    },
-  });
+      allowedHeaders: [
+        "Access-Control-Allow-Headers",
+        "Access-Control-Allow-Methods",
+        "Authorization",
 
-  let onlineUsers = [];
+        "Content-Type",
+        "Access-Control-Allow-Headers"
+      ],
+      credentials: true
+    }
+  });
 
   io.on("connection", (socket) => {
     console.log("Client connected...");
@@ -74,7 +90,7 @@ app.prepare().then(() => {
           onlineUsers.push({
             userId: clerkUser._id,
             socketId: socket.id,
-            profile: clerkUser,
+            profile: clerkUser
           });
         }
 
@@ -99,6 +115,9 @@ app.prepare().then(() => {
     socket.on("groupCall", onGroupCall);
     socket.on("groupWebrtcSignal", onGroupWebrtcSignal);
     socket.on("groupHangup", onGroupHangup);
+    socket.on("requestOngoingCall", onRequestGroupCallData);
+    socket.on("provideOngoingGroupCall", onProvideGroupCallData);
+    socket.on("newGroupParticipant", onNewGroupParticipant);
   });
 
   // Next.js API routes và Pages sẽ chạy sau khi cấu hình Express

@@ -47,14 +47,18 @@ export default async function handler(
               //   : [];
               const data: RequestSendMessageDTO = {
                 boxId: Array.isArray(fields.boxId) ? fields.boxId[0] : "",
-                content: JSON.parse(fields.content as unknown as string)
+                content: JSON.parse(fields.content as unknown as string),
+                caller:
+                  fields.caller && Array.isArray(fields.caller)
+                    ? fields.caller[0]
+                    : ""
                 //time: new Date()
                 //recipientId: receiverIdsArray
               };
               console.log("Parsed data:", data);
 
               // Gọi hàm createMessage và truyền các trường đã xử lý
-              const result = await createMessage(data, files, userId);
+              const result = await createMessage(data, userId, files);
 
               return res.status(200).json(result);
             }

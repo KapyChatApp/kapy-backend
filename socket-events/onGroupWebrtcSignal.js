@@ -1,25 +1,42 @@
-import { io } from "../server.js";
+import { io, onlineUsers } from "../server.js";
 
-const onGroupWebrtcSignal = async (data) => {
-  // data : {
-  //   sdp: SignalData;
-  //   ongoingGroupCall: OngoingGroupCall;
-  //   isCaller: boolean;
-  // }
-  if (data.isCaller) {
-    const receivers = data.ongoingGroupCall?.participantsGroup?.receivers || [];
+const onGroupWebrtcSignal = (data) => {
+  const { sdp, fromUserId, toUserId, ongoingGroupCall } = data;
 
-    receivers.forEach((receiver) => {
-      if (receiver?.socketId) {
-        io.to(receiver.socketId).emit("groupWebrtcSignal", data);
-      }
+  if (!fromUserId || !toUserId || !sdp) {
+    console.warn(
+      "⚠️ Missing required fields: fromUserId, toUserId, or sdp:",
+      data
+    );
+    return;
+  }
+
+  if (fromUserId === toUserId) {
+    console.warn("⚠️ Ignored SDP sent to self.");
+    return;
+  }
+
+  if (typeof sdp !== "object" || (!sdp.type && !sdp.candidate)) {
+    console.warn("⚠️ Invalid SDP format:", sdp);
+    return;
+  }
+
+  const recipient = onlineUsers.find((user) => user.userId === toUserId);
+
+  if (recipient?.socketId) {
+    io.to(recipient.socketId).emit("groupWebrtcSignal", {
+      sdp,
+      fromUserId,
+      ongoingGroupCall
     });
+
+    console.log(
+      `✅ [WebRTC Signal] SDP sent from ${fromUserId} to ${toUserId}`
+    );
   } else {
-    const callerSocketId =
-      data.ongoingGroupCall?.participantsGroup?.caller?.socketId;
-    if (callerSocketId) {
-      io.to(callerSocketId).emit("groupWebrtcSignal", data);
-    }
+    console.warn(
+      `⚠️ [WebRTC Signal] Target socket for user ${toUserId} not found`
+    );
   }
 };
 
