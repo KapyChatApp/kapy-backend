@@ -2,42 +2,42 @@ import { io, ongoingGroupCalls } from "../server.js";
 
 const onGroupHangup = async (data) => {
   const { userHangingupId, ongoingGroupCall, isEmitHangup } = data;
-  const { caller, receivers, groupDetails } =
+  const { caller, callees, currentJoiners, groupDetails } =
     ongoingGroupCall.participantsGroup;
 
-  if (!caller || !receivers) return;
+  if (!caller || !callees || !currentJoiners) return;
 
-  const totalParticipants = [...receivers, caller].length;
+  const totalParticipants = currentJoiners.length;
   const isCaller = caller.userId === userHangingupId;
 
   if (isEmitHangup || isCaller || totalParticipants <= 2) {
     // 👉 TH thật sự là hangup: caller kết thúc hoặc chỉ còn 1 người
     console.log("🛑 Cuộc gọi kết thúc hoàn toàn");
 
-    const allParticipants = [...receivers, caller];
-    allParticipants.forEach((participant) => {
+    currentJoiners.forEach((participant) => {
       if (participant.socketId) {
-        io.to(participant.socketId).emit("groupHangup"); // gửi sự kiện kết thúc
+        io.to(participant.socketId).emit("groupHangup");
       }
     });
     ongoingGroupCalls.delete(groupDetails._id);
   } else {
     // 👉 TH này là rời khỏi cuộc gọi
-    const updatedReceivers = receivers.filter(
+    const updatedJoiners = currentJoiners.filter(
       (r) => r.userId !== userHangingupId
     );
-    const leaver = receivers.find((r) => r.userId === userHangingupId);
-    const otherParticipants = [...updatedReceivers, caller];
+    const updatedCallees = callees.filter((r) => r.userId !== userHangingupId);
+    const leaver = callees.find((c) => c.userId === userHangingupId);
 
     console.log(`👤 User ${userHangingupId} đã rời khỏi cuộc gọi`);
 
-    otherParticipants.forEach((participant) => {
+    updatedJoiners.forEach((participant) => {
       if (participant.socketId && leaver) {
         io.to(participant.socketId).emit("leavingRoom", {
           leaverUserId: userHangingupId,
           participantsGroup: {
             caller,
-            receivers: updatedReceivers,
+            currentJoiners: updatedJoiners,
+            callees: updatedCallees,
             groupDetails
           }
         });
