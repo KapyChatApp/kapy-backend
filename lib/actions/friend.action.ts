@@ -341,35 +341,35 @@ export const suggestFriends = async (
     const friendIds = user.friendIds.flat();
     const friendIdsString = friendIds.map((item: Schema.Types.ObjectId) =>
       item.toString()
-    );
-    console.log(friendIdsString);
+    )
 
     const suggestions = await User.aggregate([
       { $match: { _id: { $in: friendIds } } }, 
-
-      { $unwind: "$friendIds" }, 
-
+    
+      { $unwind: "$friendIds" },    // ✅ Sửa: thêm dòng này
+      { $unwind: "$friendIds" },    // ✅ Sửa: unwind thêm lần nữa để xử lý mảng lồng
+    
       {
         $group: {
           _id: "$friendIds", 
           count: { $sum: 1 }, 
         },
       },
-
+    
       {
         $match: {
           $and: [
             { _id: { $ne: userId } }, 
-            { _id: { $nin: user.friendIds } }, 
+            { _id: { $nin: user.friendIds.flat() } }, 
             { count: { $gte: 3 } }, 
           ],
         },
       },
-
+    
       { $sort: { count: -1 } }, 
-
+    
       { $limit: 10 }, 
-
+    
       {
         $lookup: {
           from: "users",
@@ -378,9 +378,13 @@ export const suggestFriends = async (
           as: "userDetails",
         },
       },
-
+    
       { $unwind: "$userDetails" }, 
     ]);
+
+    console.log("User friendIds", user.friendIds);
+console.log("Suggestions result:", suggestions);
+
 
     const suggestionResponses: FriendResponseDTO[] = [];
     for (const suggest of suggestions) {

@@ -1,18 +1,25 @@
-import { NextApiRequest, NextApiResponse } from "next";
-export default function cors(
-  req: NextApiRequest,
-  res: NextApiResponse,
-  next: () => void
-) {
+// middleware/cors-middleware.ts
+import type { NextApiRequest, NextApiResponse } from "next";
+
+const cors = (req: NextApiRequest, res: NextApiResponse, next: () => void) => {
+  res.setHeader("Access-Control-Allow-Credentials", "true");
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
     "Access-Control-Allow-Methods",
-    "GET,HEAD,PUT,PATCH,POST,DELETE"
+    "GET,OPTIONS,PATCH,DELETE,POST,PUT"
   );
-  res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "X-CSRF-Token, X-Requested-With, Accept, Content-Type, Authorization"
+  );
 
+  // Nếu là preflight request, kết thúc sớm
   if (req.method === "OPTIONS") {
-    return res.status(204).end();
+    res.status(200).end();
+    return;
   }
+
   next();
-}
+};
+
+export default cors;

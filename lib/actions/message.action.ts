@@ -18,7 +18,8 @@ import {
   TextingEvent,
   ResponseReactMessageDTO,
   ReadedStatusPusher,
-  UserInfoBox
+  UserInfoBox,
+  CheckedMessageReponse
 } from "@/dtos/MessageDTO";
 import mongoose, { Types } from "mongoose";
 import User from "@/database/user.model";
@@ -1433,7 +1434,7 @@ export async function getAllMessage() {
         );
 
         return {
-          _id: item._id.toString(),
+          _id: (item._id as mongoose.Types.ObjectId).toString(),
           flag: item.flag,
           readedId: item.readedId,
           contentId: item.contentId,
@@ -1669,6 +1670,38 @@ export async function updateMessage(messageId: string, newContent: string) {
     }
   } catch (error) {
     console.error("Error editing message: ", error);
+    throw error;
+  }
+}
+
+export async function getAllMessageToCheck() {
+  try {
+    await connectToDatabase();
+    const allMessages = await Message.find()
+      .populate("createBy", "firstName lastName nickName avatar")
+      .lean(); // Tối ưu hiệu suất
+
+    const responseMessage: CheckedMessageReponse[] = allMessages.map(
+      (item: any) => ({
+        _id: item._id.toString(),
+        flag: item.flag,
+        contentId: item.contentId,
+        text: item.text,
+        boxId: item.boxId,
+        createAt: item.createAt,
+        createBy: {
+          _id: item.createBy._id.toString(),
+          firstName: item.createBy.firstName,
+          lastName: item.createBy.lastName,
+          nickName: item.createBy.nickName,
+          avatar: item.createBy.avatar
+        }
+      })
+    );
+
+    return responseMessage;
+  } catch (error) {
+    console.error("Error fetching all messages: ", error);
     throw error;
   }
 }

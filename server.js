@@ -30,18 +30,16 @@ export const ongoingGroupCalls = new Map(); // Server memory: groupId -> ongoing
 app.prepare().then(() => {
   const expressApp = express(); // Dùng Express để chạy API routes
 
-  // Cấu hình CORS cho Express
+  // Cấu hình CORS cho Express (cho phép tất cả các nguồn)
   expressApp.use(
     cors({
-      origin: (origin, callback) => {
-        if (!origin || origin.startsWith("http://localhost:3001")) {
-          callback(null, true);
-        } else {
-          callback(new Error("Not allowed by CORS"));
-        }
-      },
-      methods: ["GET", "POST"],
-      allowedHeaders: ["Authorization", "Content-Type"],
+      origin: true, // Cho phép tất cả các nguồn
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+      allowedHeaders: [
+        "Authorization",
+        "Content-Type",
+        "Access-Control-Allow-Headers"
+      ],
       credentials: true
     })
   );
@@ -49,23 +47,28 @@ app.prepare().then(() => {
   // Tạo HTTP server
   const httpServer = createServer(expressApp);
 
-  // Cấu hình Socket.IO với CORS
+  // Cấu hình Socket.IO với CORS (cho phép tất cả các nguồn)
   io = new Server(httpServer, {
     cors: {
-      origin: (origin, callback) => {
-        if (!origin || origin.startsWith("http://localhost:3001")) {
-          callback(null, true);
-        } else {
-          console.error("CORS error: Not allowed by CORS");
-          callback(new Error("Not allowed by CORS"));
-        }
-      },
-      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      origin: true, // Cho phép tất cả các nguồn
+      methods: [
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE",
+        "PUT",
+        "PATCH",
+        "DELETE",
+        "OPTIONS"
+      ],
       allowedHeaders: [
         "Access-Control-Allow-Headers",
         "Access-Control-Allow-Methods",
         "Authorization",
-        "Content-Type"
+
+        "Content-Type",
+        "Access-Control-Allow-Headers"
       ],
       credentials: true
     }

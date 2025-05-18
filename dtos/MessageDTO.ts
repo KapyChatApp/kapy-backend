@@ -148,3 +148,26 @@ export interface ReadedStatusPusher {
   readedId: string[];
   boxId: string;
 }
+
+export interface ResponseMessageManageDTO {
+  _id: string;
+  flag: boolean;
+  readedId: string[];
+  contentId: FileContent[] | GPSContent[];
+  text: string[];
+  boxId: string;
+  createAt: string;
+  createBy: ShortUserResponseDTO;
+  isReact: string[];
+  isReported: boolean;
+}
+
+export interface CheckedMessageReponse {
+  _id: string;
+  flag: boolean;
+  contentId: FileContent[] | GPSContent[];
+  text: string[];
+  boxId: string;
+  createAt: string;
+  createBy: ShortUserResponseDTO;
+}
