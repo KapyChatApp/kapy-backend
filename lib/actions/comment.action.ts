@@ -210,11 +210,13 @@ export const editComment = async (
       await comment.save();
       return await getAComment(id);
     } else {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
-      const file = await createFile(editContent.content!, userId?.toString()!);
-      comment.contentId = file._id;
-      await comment.save();
-      return await getAComment(id);
+      if (editContent.content) {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+        const file = await createFile(editContent.content, userId?.toString()!);
+        comment.contentId = file._id;
+        await comment.save();
+        return await getAComment(id);
+      }
     }
   } catch (error) {
     console.log(error);
