@@ -9,13 +9,14 @@ import { addPost } from "@/lib/actions/post.action";
 
 export const config = {
   api: {
-    bodyParser: false
-  }
+    bodyParser: false,
+  },
 };
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   cors(req, res, async () => {
     authenticateToken(req, res, async () => {
+      const isCreatePost = req.query;
       if (req.method === "POST") {
         const form = new IncomingForm();
 
@@ -26,12 +27,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           }
 
           if (files.file) {
-            try { 
+            try {
               const file = Array.isArray(files.file)
                 ? files.file[0]
                 : files.file;
               const result = await cloudinary.uploader.upload(file.filepath, {
-                folder: "Avatar"
+                folder: "Avatar",
               });
 
               await uploadBackground(
@@ -41,7 +42,22 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
               );
               // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
               const user = await findUserById(req.user?.id?.toString()!);
-              await addPost([file], [`${user.firstName + " "  + user.lastName} Update a new background`], req.user?.id,[],"","","","");
+              if (isCreatePost) {
+                await addPost(
+                  [file],
+                  [
+                    `${
+                      user.firstName + " " + user.lastName
+                    } Update a new background`,
+                  ],
+                  req.user?.id,
+                  [],
+                  "",
+                  "",
+                  "",
+                  ""
+                );
+              }
               return res
                 .status(200)
                 .json({ status: true, message: "Update successfully!" });

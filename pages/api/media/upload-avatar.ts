@@ -17,6 +17,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   cors(req, res, async () => {
     authenticateToken(req, res, async () => {
       if (req.method === "POST") {
+        const isCreatePost = req.query.isCreatePost;
         const form = new IncomingForm();
 
         form.parse(req, async (err, fields, files) => {
@@ -41,7 +42,22 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
               );
               // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
               const user = await findUserById(req.user?.id?.toString()!);
-              await addPost([file], [`${user.firstName + " "+ user.lastName} Update a new avatar`], req.user?.id,[],"","","","");
+              if (isCreatePost === "true") {
+                await addPost(
+                  [file],
+                  [
+                    `${
+                      user.firstName + " " + user.lastName
+                    } Update a new avatar`
+                  ],
+                  req.user?.id,
+                  [],
+                  "",
+                  "",
+                  "",
+                  ""
+                );
+              }
               return res
                 .status(200)
                 .json({ status: true, message: "Update successfully!" });
