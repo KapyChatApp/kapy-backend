@@ -5,7 +5,7 @@ import { io, onlineUsers } from "../server.js";
 //     _id: string;
 //     name: string;
 //     avatar: string;
-//     members: UserInfoBox[]; // UserInfoBox: { _id, name, ... }
+//     members: UserInfoBox[]; // export interface UserInfoBox {_id: string; firstName: string; lastName: string; nickName: string; avatar: string; isOnline: boolean;}
 //   },
 //   userId: string, // người đang yêu cầu
 //   socketId: string // socket hiện tại
