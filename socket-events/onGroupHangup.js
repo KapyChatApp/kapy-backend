@@ -14,7 +14,7 @@ const onGroupHangup = async (data) => {
     // 👉 TH thật sự là hangup: caller kết thúc hoặc chỉ còn 1 người
     console.log("🛑 Cuộc gọi kết thúc hoàn toàn");
 
-    currentJoiners.forEach((participant) => {
+    [caller, ...callees].forEach((participant) => {
       if (participant.socketId) {
         io.to(participant.socketId).emit("groupHangup");
       }
